@@ -37,31 +37,6 @@ __status__ = "Development"
 PROGNAME = os.path.basename(sys.argv[0])
 PROGVERSION = __version__
 
-class Qt4MplCanvas(FigureCanvas):
-
-    def __init__(self, parent = None, width = 5, height = 4, dpi = 100):
-        self.width = width
-        self.height = height
-        self.dpi = dpi
-        
-        #self.fig = Figure(figsize = (width, height), dpi = self.dpi)
-        self.fig = Figure()
-        
-        
-        self.axes = self.fig.add_subplot(111)
-        
-        # We want the axes cleared everytime plot() is called
-        self.axes.hold(False)
-        
-        self.canvas = FigureCanvas(self.fig)
-        
-        self.canvas.setParent(parent)
-        #self.canvas.setSizePolicy(QSizePolicy.Expanding,
-        #                          QSizePolicy.Expanding)
-        #self.canvas.updateGeometry()
-        
-        FigureCanvas.__init__(self, self.fig)
-
 class OffsetWidget(QWidget):
 
     def __init__(self, parent = None):
@@ -85,19 +60,28 @@ class MainWindow(QMainWindow):
 
         # Selectors on Left
         self.xSelector = QComboBox()
-        self.xSelector.addItems(["x1", "x2", "x3"])
+        self.xSelector.addItems(["None"])
         xSelectorLabel = QLabel("x axis channel")
 
         self.ySelector = QComboBox()
-        self.ySelector.addItems(["y1", "y2", "y3"])
+        self.ySelector.addItems(["None"])
         ySelectorLabel = QLabel("y axis channel")
 
         # File name and plot in the middle
         self.sourceFileName = QLabel("None")
+        self.sourceFileName.setSizePolicy(QSizePolicy.Expanding,
+                                          QSizePolicy.Fixed)
         sourceFileLabel = QLabel("current file")
+        sourceFileLabel.setSizePolicy(QSizePolicy.Expanding,
+                                          QSizePolicy.Fixed)
 
-        self.plotDisplay = Qt4MplCanvas()
-        self.plotNavigation = NavigationToolbar(self.plotDisplay.canvas, self)
+        # Matplotlib canvas
+        self.fig = Figure(dpi = 100)
+        self.canvas = FigureCanvas(self.fig)
+        mpl_toolbar = NavigationToolbar(self.canvas, self.canvas)
+
+        self.axes = self.fig.add_subplot(111)
+        self.axes.grid(True)
 
         # Offset and parameter widgets on the right
         self.offsetThing = OffsetWidget()
@@ -116,10 +100,12 @@ class MainWindow(QMainWindow):
 
         # Center
         centralLayout = QVBoxLayout()
-        centralLayout.addWidget(sourceFileLabel)
-        centralLayout.addWidget(self.sourceFileName)
-        centralLayout.addWidget(self.plotDisplay)
-        centralLayout.addWidget(self.plotNavigation)
+        fileNameLayout = QHBoxLayout()
+        fileNameLayout.addWidget(sourceFileLabel)
+        fileNameLayout.addWidget(self.sourceFileName)
+        centralLayout.addLayout(fileNameLayout)
+        centralLayout.addWidget(self.canvas)
+        centralLayout.addWidget(mpl_toolbar)
 
         # Right Side
         rightLayout = QVBoxLayout()
@@ -145,10 +131,11 @@ class MainWindow(QMainWindow):
         self.addActions(self.fileMenu, self.fileMenuActions)
 
         #5 Read in application's settings
-        #settings = QSettings()
+        settings = QSettings()
+        
         # Restore the geometry and state of the main window from last use
-        #self.restoreGeometry(settings.value("MainWindow/Geometry").toByteArray())
-        #self.restoreState(settings.value("MainWindow/State").toByteArray())
+        self.restoreGeometry(settings.value("MainWindow/Geometry").toByteArray())
+        self.restoreState(settings.value("MainWindow/State").toByteArray())
 
         self.setWindowTitle("TDMS to HDF5 Converter")
         
@@ -214,9 +201,7 @@ def main(argv=None):
     form = MainWindow()
     form.show()
 
-    print(type(form.offsetThing.offsetEntry.value()))
     sys.exit(app.exec_())
-
 
 if __name__ == "__main__":
     main()
