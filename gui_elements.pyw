@@ -15,8 +15,12 @@ from PyQt4.QtGui import (QAction, QApplication, QIcon, QKeySequence, QLabel,
                          QMainWindow, QMessageBox, QTableView, QComboBox,
                          QVBoxLayout, QHBoxLayout, QWidget, QGridLayout,
                          QPushButton, QDialog, QLineEdit, QDialogButtonBox,
-                         QGroupBox, QTextBrowser)
-from guiqwt.plot import (PlotManager, CurveWidget, CurveDialog)
+                         QGroupBox, QTextBrowser, QSizePolicy, QDoubleSpinBox,
+                         QSpinBox, QFrame)
+import numpy as np
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
 
 # Import our own modules
 #import qrc_resources
@@ -33,42 +37,94 @@ __status__ = "Development"
 PROGNAME = os.path.basename(sys.argv[0])
 PROGVERSION = __version__
 
+class Qt4MplCanvas(FigureCanvas):
+
+    def __init__(self, parent = None, width = 5, height = 4, dpi = 100):
+        self.width = width
+        self.height = height
+        self.dpi = dpi
+        
+        #self.fig = Figure(figsize = (width, height), dpi = self.dpi)
+        self.fig = Figure()
+        
+        
+        self.axes = self.fig.add_subplot(111)
+        
+        # We want the axes cleared everytime plot() is called
+        self.axes.hold(False)
+        
+        self.canvas = FigureCanvas(self.fig)
+        
+        self.canvas.setParent(parent)
+        #self.canvas.setSizePolicy(QSizePolicy.Expanding,
+        #                          QSizePolicy.Expanding)
+        #self.canvas.updateGeometry()
+        
+        FigureCanvas.__init__(self, self.fig)
+
+class OffsetWidget(QWidget):
+
+    def __init__(self, parent = None):
+        super(OffsetWidget, self).__init__(parent)
+
+        offsetLabel = QLabel("Offset")
+        self.offsetEntry = QDoubleSpinBox(self)
+
+        layout = QVBoxLayout()
+        layout.addWidget(offsetLabel)
+        layout.addWidget(self.offsetEntry)
+
+        self.setLayout(layout)
+
 class MainWindow(QMainWindow):
 
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
 
         #1 Create and Initialize data structures
-        
+
+        # Selectors on Left
         self.xSelector = QComboBox()
         self.xSelector.addItems(["x1", "x2", "x3"])
         xSelectorLabel = QLabel("x axis channel")
 
         self.ySelector = QComboBox()
         self.ySelector.addItems(["y1", "y2", "y3"])
-        xSelectorLabel = QLabel("y axis channel")
+        ySelectorLabel = QLabel("y axis channel")
 
-        self.sourceFileName = QLabel()
+        # File name and plot in the middle
+        self.sourceFileName = QLabel("None")
         sourceFileLabel = QLabel("current file")
 
-        self.plotDisplay = CurveWidget()
+        self.plotDisplay = Qt4MplCanvas()
+        self.plotNavigation = NavigationToolbar(self.plotDisplay.canvas, self)
+
+        # Offset and parameter widgets on the right
+        self.offsetThing = OffsetWidget()
+        
 
         #2 Create the central widget
         self.centralWidget = QWidget()
 
         # Left Side
         selectorLayout = QVBoxLayout()
+        selectorLayout.addWidget(xSelectorLabel)
         selectorLayout.addWidget(self.xSelector)
+        selectorLayout.addWidget(ySelectorLabel)
         selectorLayout.addWidget(self.ySelector)
         selectorLayout.addStretch()
 
         # Center
         centralLayout = QVBoxLayout()
+        centralLayout.addWidget(sourceFileLabel)
         centralLayout.addWidget(self.sourceFileName)
         centralLayout.addWidget(self.plotDisplay)
+        centralLayout.addWidget(self.plotNavigation)
 
         # Right Side
         rightLayout = QVBoxLayout()
+        rightLayout.addWidget(self.offsetThing)
+        rightLayout.addStretch()
 
         layout = QHBoxLayout()
         layout.addLayout(selectorLayout)
@@ -158,7 +214,9 @@ def main(argv=None):
     form = MainWindow()
     form.show()
 
+    print(type(form.offsetThing.offsetEntry.value()))
     sys.exit(app.exec_())
+
 
 if __name__ == "__main__":
     main()
