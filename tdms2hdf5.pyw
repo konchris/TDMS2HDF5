@@ -1,13 +1,6 @@
-<<<<<<< HEAD
 #!/usr/bin/env python3
 """ Testing groud for importing tdms files
 
-
-=======
-#!/usr/bin/env python
-""" Testing groud for importing tdms files
-
->>>>>>> 5af8345d70e84775e6c4a977d5af98b20157f863
 """
 
 __author__ = "Christopher Espy"
@@ -21,28 +14,33 @@ __status__ = "Development"
 
 import sys
 import os
-<<<<<<< HEAD
 
 # Import numpy
 import numpy as np
 
-#
-
 # Import guiqwt stuff
-=======
+
 import platform
 
 # Import thrid-party modules
-from PyQt4.QtGui import QApplication
+# PyQt4
+from PyQt4.QtGui import QApplication, QFileDialog
+# npTDMS
+from nptdms import TdmsFile
 
 # Import our own modules
-from gui_elements import MainWindow
 
+app = QApplication(sys.argv)
 
-class Main(MainWindow):
+qtFormat = "TDMS files (*.tdms)"
 
-    def __init__(self, parent = None):
-        super(Main, self).__init__(parent)
+File_in = QFileDialog.getOpenFileName(None, 'Open a TDMS File',
+                                             "~/Espy/MeasData", qtFormat)
+
+Tdms_file_object = TdmsFile(File_in)
+
+ADWin_Group_Object = tdms_file.object("ADWin")
+
 
 def main(argv=None):
 
@@ -59,11 +57,8 @@ def main(argv=None):
 
     home = os.path.expanduser("~")
 
-    form = MainWindow()
-    form.show()
-
     sys.exit(app.exec_())
 
-if __name__ == "__main__":
-    main()
->>>>>>> 5af8345d70e84775e6c4a977d5af98b20157f863
+#if __name__ == "__main__":
+#    main()
+
