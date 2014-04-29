@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env ipython
 """ Testing groud for importing tdms files
 
 """
@@ -29,18 +29,23 @@ from PyQt4.QtGui import QApplication, QFileDialog
 from nptdms import TdmsFile
 
 # Import our own modules
+from gui_elements import MainWindow
 
-app = QApplication(sys.argv)
+#app = QApplication(sys.argv)
 
-qtFormat = "TDMS files (*.tdms)"
+#qtFormat = "TDMS files (*.tdms)"
 
-File_in = QFileDialog.getOpenFileName(None, 'Open a TDMS File',
-                                             "~/Espy/MeasData", qtFormat)
+#File_in = QFileDialog.getOpenFileName(None, 'Open a TDMS File',
+#                                             "~/Espy/MeasData", qtFormat)
 
-Tdms_file_object = TdmsFile(File_in)
+#Tdms_file_object = TdmsFile(File_in)
 
-ADWin_Group_Object = tdms_file.object("ADWin")
+#ADWin_Group_Object = tdms_file.object("ADWin")
 
+class Main(MainWindow):
+
+    def __init__(self, parent = None):
+        super(Main, self).__init__(parent)
 
 def main(argv=None):
 
@@ -55,10 +60,11 @@ def main(argv=None):
     app.setOrganizationName("tdms2hdf5")
     app.setApplicationName("TDMS 2 HDF5 Converter")
 
-    home = os.path.expanduser("~")
+    form = Main()
+    form.show()
 
     sys.exit(app.exec_())
 
-#if __name__ == "__main__":
-#    main()
+if __name__ == "__main__":
+    main()
 

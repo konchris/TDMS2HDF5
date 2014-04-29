@@ -10,17 +10,19 @@ import platform
 
 # Import thrid-party modules
 from PyQt4.QtCore import (PYQT_VERSION_STR, QSettings, QT_VERSION_STR,
-                          QVariant, Qt, SIGNAL, QModelIndex, QSize)
+                          QVariant, Qt, SIGNAL, QModelIndex, QSize, QFile)
 from PyQt4.QtGui import (QAction, QApplication, QIcon, QKeySequence, QLabel,
                          QMainWindow, QMessageBox, QTableView, QComboBox,
                          QVBoxLayout, QHBoxLayout, QWidget, QGridLayout,
                          QPushButton, QDialog, QLineEdit, QDialogButtonBox,
                          QGroupBox, QTextBrowser, QSizePolicy, QDoubleSpinBox,
-                         QSpinBox, QFrame)
+                         QSpinBox, QFrame, QFileDialog)
 import numpy as np
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
+
+from nptdms.tdms import TdmsFile
 
 # Import our own modules
 #import qrc_resources
@@ -57,6 +59,10 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__(parent)
 
         #1 Create and Initialize data structures
+        # The dirty attribute is a boolean flag to indicate whether the
+        # file has unsaved changes.
+        self.dirty = False
+        self.filename = None
 
         # Selectors on Left
         self.xSelector = QComboBox()
@@ -125,17 +131,20 @@ class MainWindow(QMainWindow):
         #4 Create actions and insert them into menus and toolbars
         fileQuitAction = self.createAction("&Quit", self.close, "Ctrl+Q",
                                            "exit", "Close the application")
+        fileOpenAction = self.createAction("&Open TDMS File", self.fileOpen,
+                                           QKeySequence.Open, "fileopen",
+                                           "Open an existing TDMS file")
 
         self.fileMenu = self.menuBar().addMenu("&File")
-        self.fileMenuActions = (fileQuitAction,)
+        self.fileMenuActions = (fileOpenAction, fileQuitAction)
         self.addActions(self.fileMenu, self.fileMenuActions)
 
         #5 Read in application's settings
         settings = QSettings()
         
         # Restore the geometry and state of the main window from last use
-        self.restoreGeometry(settings.value("MainWindow/Geometry").toByteArray())
-        self.restoreState(settings.value("MainWindow/State").toByteArray())
+        #self.restoreGeometry(settings.value("MainWindow/Geometry"))
+        #self.restoreState(settings.value("MainWindow/State"))
 
         self.setWindowTitle("TDMS to HDF5 Converter")
         
@@ -167,6 +176,24 @@ class MainWindow(QMainWindow):
                 target.addSeparator()
             else:
                 target.addAction(action)
+
+    def fileOpen(self):
+        basedir = "~/Espy/MeasData"
+        formats = "TDMS files (*.tdms)"
+        fname = QFileDialog.getOpenFileName(self, "Open a TDMS File",
+                                            basedir, formats)
+        if fname and QFile.exists(fname):
+            self.loadFile(fname)
+
+    def loadFile(self, fname):
+        #TODO self.addRecentFile(fname) # see Rapid GUI ch06.pyw
+        self.tdms_file_object = TdmsFile(fname)
+        self.filename = fname
+        self.dirty = False
+        message = "Loaded {0}".format(os.path.basename(fname))
+        print(message)
+        #TODO self.updateStatus(message) # see Rapid GUI ch06.pyw
+        
                 
     def closeEvent(self, event):
         """Reimplementation of the close even handler.
@@ -177,11 +204,12 @@ class MainWindow(QMainWindow):
         exits.
 
         """
-        settings = QSettings()
-        settings.setValue("MainWindow/Geometry", QVariant(
-            self.saveGeometry()))
-        settings.setValue("MainWindow/State", QVariant(
-            self.saveState()))
+        #settings = QSettings()
+        #settings.setValue("MainWindow/Geometry", QVariant(
+        #    self.saveGeometry()))
+        #settings.setValue("MainWindow/State", QVariant(
+        #    self.saveState()))
+        pass
                 
 def main(argv=None):
 
