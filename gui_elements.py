@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """ Testing groud for importing tdms files
 
@@ -63,6 +63,8 @@ class MainWindow(QMainWindow):
         # file has unsaved changes.
         self.dirty = False
         self.filename = None
+
+        self.channel_registry = {}
 
         # Selectors on Left
         self.xSelector = QComboBox()
@@ -190,10 +192,38 @@ class MainWindow(QMainWindow):
         self.tdms_file_object = TdmsFile(fname)
         self.filename = fname
         self.dirty = False
+        # Get the ADWin data
+        self.sortADWinData()
         message = "Loaded {0}".format(os.path.basename(fname))
         print(message)
         #TODO self.updateStatus(message) # see Rapid GUI ch06.pyw
-        
+
+    def sortADWinData(self):
+        device = "ADWin"
+        if self.tdms_file_object:
+            #print(self.tdms_file_object.object("ADWin").properties.keys())
+            
+            for chan in self.tdms_file_object.group_channels("ADWin"):
+                chan_name = chan.path.split('/')[-1].strip("'")
+
+                # Get the generic stuff for each channel
+
+                self.channel_registry[chan_name] = {}
+                self.channel_registry[chan_name]["Device"] = "ADWin"
+                self.channel_registry[chan_name]["TimeInterval"] = chan.property("wf_increment")
+                self.channel_registry[chan_name]["Length"] = chan.data.size
+                self.channel_registry[chan_name]["StartTime"] = chan.property("wf_start_time")
+
+                # Get the channel-specific stuff
+                CHAN_DICT = {}
+                CHAN_DICT["ISample"] = ["IAmp"]
+                CHAN_DICT["VSample"] = ["VAmp"]
+                CHAN_DICT["dISample"] = ["IAmp", "LISens"]
+                CHAN_DICT["dVSample"] = ["VAmp", "LVSens"]
+                if chan_name == "ISample":
+                    print(chan_name)
+
+                
                 
     def closeEvent(self, event):
         """Reimplementation of the close even handler.

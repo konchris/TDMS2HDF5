@@ -1,4 +1,4 @@
-#!/usr/bin/env ipython
+#!/usr/bin/env python3
 """ Testing groud for importing tdms files
 
 """
