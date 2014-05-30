@@ -25,6 +25,22 @@ __status__ = "Development"
 
 PROGNAME = os.path.basename(sys.argv[0])
 PROGVERSION = __version__
+CHAN_DICT = {"ISample": ["IAmp"],
+             "VSample": ["VAmp"],
+             "dISample": ["IAmp", "LISens"],
+             "dVSample": ["VAmp", "LVSens"],
+             "xMagnet": [],
+             "TCap": [],
+             "zMagnet": [],
+             "VRuO": ["r max", "r min"],
+             "I": [],
+             "V": [],
+             "R": [],
+             "dI": [],
+             "dV": [],
+             "dR": [],
+             "Res_RuO": ["p0", "p1", "r0"],
+             "Temp_RuO": []}
 
 class Waveform(object):
     """A waveform object similar to those in LabView.
@@ -63,7 +79,7 @@ class Waveform(object):
     """
     
     def __init__(self, t0 = datetime.now(), dt = 0,
-                 Y = np.array([]), parent = None):
+                 Y = np.array([])):
         """Initiate the waveform object.
 
         Parameters
@@ -77,10 +93,10 @@ class Waveform(object):
         
         
         """
-        super(Waveform, self).__init__(parent)
-        self.t0 = 0
-        self.dt = 0
-        self.Y = np.array([])
+        super(Waveform, self).__init__()
+        self.t0 = t0
+        self.dt = dt
+        self.Y = Y
 
     def reset_t0(self):
         """Reset the waveform's start time to now.
@@ -120,8 +136,32 @@ class Channel(object):
 
     """
     
-    def __init__(self, parent = None):
-        super(Channel, self).__init__(parent)
-        self.attributes = {}
-        self.data = Wafeform()
+    def __init__(self, name, t0 = datetime.now(), dt = 0,
+                 Y = np.array([]), device = ''):
+        super(Channel, self).__init__()
+        self.attributes = {"Device" : device,
+                           "TimeInterval" : dt,
+                           "Length" : len(Y),
+                           "StartTime" : t0}
+        self.name = name
+        self.data = Y
         
+def main(argv=None):
+
+    if argv is None:
+        argv = sys.argv
+
+    CHAN_LIST = ['TestSine', 'TestCosine']
+    TEST_DEV = 'Test_Device'
+    chanRegistry = {}
+
+    test = Channel()
+    test.attributes["Device"] = "ADWin"
+    print(test.attributes)
+
+    for chan in CHAN_LIST:
+        chanRegistry[chan] = 0
+
+
+if __name__ == "__main__":
+    main()
