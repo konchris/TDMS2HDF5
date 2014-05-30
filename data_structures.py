@@ -27,12 +27,56 @@ PROGNAME = os.path.basename(sys.argv[0])
 PROGVERSION = __version__
 
 class Waveform(object):
-    """An implementation of the NI LabView Waveform
+    """A waveform object similar to those in LabView.
+    
+    Returns a waveform object which was inspired by LabView's waveforms.
+    A waveform is a specialized time-dependant array that includes a starting
+    time and an interval time between each data point.
+
+    Parameters
+    ----------
+    t0 : datetime_like or float
+       The starting time of the data series.
+    dt : float
+       The time interval between each data point in the time series.
+    Y : array_like
+       The time series data.
+
+    Attributes
+    ----------
+    t0 : datetime_like or float
+       The starting time of the data series.
+    dt : float
+       The time interval between each data point in the time series.
+    Y : array_like
+       The time series data.
+
+    Methods
+    -------
+    reset_t0()
+       Reset the waveform's starting time to now.
+
+    See Also
+    --------
+    numpy.array
 
     """
     
     def __init__(self, t0 = datetime.now(), dt = 0,
                  Y = np.array([]), parent = None):
+        """Initiate the waveform object.
+
+        Parameters
+        ----------
+        t0 : datetime_like or float
+           The starting time of the data series.
+        dt : float
+           The time interval between each data point in the time series.
+        Y : array_like
+           The time series data.
+        
+        
+        """
         super(Waveform, self).__init__(parent)
         self.t0 = 0
         self.dt = 0
@@ -50,7 +94,29 @@ class Waveform(object):
 
 
 class Channel(object):
-    """An implementation of a measurement channel
+    """A measurement channel containing a waveform and meta data.
+
+    Returns a channel object which contains a waveform object plus any
+    meta-data relevant to the measurement data. Examples of this include
+    amplification factors or parameters used for calculations.
+
+    Parameters
+    ----------
+
+    Attributes
+    ----------
+    attributes : dictionary_like
+       The channel's attributes correspond to the attributes found with
+       a channel in a HDF5 file. Here they are stored as key-value pairs.
+    data : waveform
+       The waveform object containing the measurement data.
+
+    Methods
+    -------
+
+    See Also
+    --------
+    Waveform, numpy.array
 
     """
     
