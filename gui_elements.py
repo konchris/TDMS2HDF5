@@ -23,9 +23,11 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
 
 from nptdms.tdms import TdmsFile
+import h5py
 
 # Import our own modules
 #import qrc_resources
+from data_structures import Waveform, Channel, CHAN_DICT
 
 __author__ = "Christopher Espy"
 __copyright__ = "Copyright (C) 2014, Christopher Espy"
@@ -136,9 +138,12 @@ class MainWindow(QMainWindow):
         fileOpenAction = self.createAction("&Open TDMS File", self.fileOpen,
                                            QKeySequence.Open, "fileopen",
                                            "Open an existing TDMS file")
-
+        fileExportAction = self.createAction("&Export", self.exprtToHDF5,
+                                             "Ctrl+E",
+                                             tip="Export the TDMS data to HDF5")
+        
         self.fileMenu = self.menuBar().addMenu("&File")
-        self.fileMenuActions = (fileOpenAction, fileQuitAction)
+        self.fileMenuActions = (fileOpenAction, fileExportAction, fileQuitAction)
         self.addActions(self.fileMenu, self.fileMenuActions)
 
         #5 Read in application's settings
@@ -192,38 +197,63 @@ class MainWindow(QMainWindow):
         self.tdms_file_object = TdmsFile(fname)
         self.filename = fname
         self.dirty = False
-        # Get the ADWin data
-        self.sortADWinData()
-        message = "Loaded {0}".format(os.path.basename(fname))
-        print(message)
+
+        if self.tdms_file_object:
+
+            # Get the ADWin data
+            self.sortADWinData()
+
+            message = "Loaded {0}".format(os.path.basename(fname))
+
+            print(message)
+        else:
+            message = "Failed to load {0}".format(os.path.basename(fname))
+
         #TODO self.updateStatus(message) # see Rapid GUI ch06.pyw
 
     def sortADWinData(self):
         device = "ADWin"
-        if self.tdms_file_object:
-            #print(self.tdms_file_object.object("ADWin").properties.keys())
-            
-            for chan in self.tdms_file_object.group_channels("ADWin"):
-                chan_name = chan.path.split('/')[-1].strip("'")
+        group_chans = self.tdms_file_object.group_channels(device)
+        group_props = self.tdms_file_object.object(device).properties
 
-                # Get the generic stuff for each channel
+        # Go through all of the channels in the adwin group and generate
+        # the channel data and place it into the channel registry
+        for chan in group_chans:
+            chan_name = chan.path.split('/')[-1].strip("'")
 
-                self.channel_registry[chan_name] = {}
-                self.channel_registry[chan_name]["Device"] = "ADWin"
-                self.channel_registry[chan_name]["TimeInterval"] = chan.property("wf_increment")
-                self.channel_registry[chan_name]["Length"] = chan.data.size
-                self.channel_registry[chan_name]["StartTime"] = chan.property("wf_start_time")
+            new_chan = Channel(chan_name,
+                               t0 = chan.property("wf_start_time"),
+                               dt = chan.property("wf_increment"),
+                               Y = chan.data,
+                               device = device)
 
-                # Get the channel-specific stuff
-                CHAN_DICT = {}
-                CHAN_DICT["ISample"] = ["IAmp"]
-                CHAN_DICT["VSample"] = ["VAmp"]
-                CHAN_DICT["dISample"] = ["IAmp", "LISens"]
-                CHAN_DICT["dVSample"] = ["VAmp", "LVSens"]
-                if chan_name == "ISample":
-                    print(chan_name)
+            # Some of the channel-specific properties were actually
+            # saved in the group object's properties list.
+            # We retrieve those here.
 
+            for atr_name in CHAN_DICT[chan_name]:
+                new_chan.attributes[atr_name] = \
+                  group_props[atr_name]
+
+            self.channel_registry[chan_name] = new_chan
+
+    def exprtToHDF5(self):
+        fname = self.filename.split('.')[0] + '.hdf5'
+
+        self.hdf5_file_object = h5py.File(fname)
+
+        raw = self.hdf5_file_object.create_group('raw')
+
+        for chan in self.channel_registry:
+            myDSet = raw.create_dataset(chan,
+                                      data = self.channel_registry[chan].data)
+            for attr in self.channel_registry[chan].attributes:
+                print(attr, self.channel_registry[chan].attributes[attr],
+                      type(self.channel_registry[chan].attributes[attr]))
                 
+                #myDSet.attrs.create(attr,
+                #                    self.channel_registry[chan].attributes[attr])
+
                 
     def closeEvent(self, event):
         """Reimplementation of the close even handler.
