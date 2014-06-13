@@ -25,6 +25,7 @@ __status__ = "Development"
 
 PROGNAME = os.path.basename(sys.argv[0])
 PROGVERSION = __version__
+
 CHAN_DICT = {"ISample": ["IAmp"],
              "VSample": ["VAmp"],
              "dISample": ["IAmp", "LISens"],

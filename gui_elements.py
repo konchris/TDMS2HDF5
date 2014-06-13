@@ -7,6 +7,7 @@
 import sys
 import os
 import platform
+from datetime import datetime
 
 # Import thrid-party modules
 from PyQt4.QtCore import (PYQT_VERSION_STR, QSettings, QT_VERSION_STR,
@@ -244,16 +245,41 @@ class MainWindow(QMainWindow):
             # Process 1.3.1.3.3
             self.channel_registry[chan_name] = new_chan
 
-    def exprtToHDF5(self):
+    def exprtToHDF5(self): # Process 5
         fname = self.filename.split('.')[0] + '.hdf5'
 
+        # Process 5.1
         self.hdf5_file_object = h5py.File(fname)
 
+        # Process 5.2
         raw = self.hdf5_file_object.create_group('raw')
 
+        # Process 5.3
         for chan in self.channel_registry:
-            myDSet = raw.create_dataset(chan,
-                                      data = self.channel_registry[chan].data)
+
+            # Process 5.3.1
+            HDF5_data = raw.create_dataset(chan,
+                                           data = self.channel_registry[chan].data)
+            # Process 5.3.2
+            for attr_name in self.channel_registry[chan].attributes:
+                attr_value = self.channel_registry[chan].attributes[attr_name]
+
+                # Convert the datetime format to a string
+                if type(attr_value) is datetime:
+                    attr_value = attr_value.isoformat()
+
+                # There's currently a wierd bug when dealing with python3 strings.
+                # This gets around that
+                if type(attr_value) is str:
+                    #attr_value = attr_value.encode('utf-8')
+                    #attr_value = np.string_(attr_value, dtype="S10")
+                    attr_value = np.string_(attr_value)
+
+                HDF5_data.attrs.create(attr_name, attr_value)
+
+        # Process 5.4
+        self.hdf5_file_object.flush()
+        self.hdf5_file_object.close()
                 
     def closeEvent(self, event):
         """Reimplementation of the close even handler.
