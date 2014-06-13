@@ -184,23 +184,25 @@ class MainWindow(QMainWindow):
             else:
                 target.addAction(action)
 
-    def fileOpen(self):
+    def fileOpen(self): # Process 1
         basedir = "~/Espy/MeasData"
         formats = "TDMS files (*.tdms)"
         fname = QFileDialog.getOpenFileName(self, "Open a TDMS File",
                                             basedir, formats)
-        if fname and QFile.exists(fname):
+        # Process 1.1
+        if fname and QFile.exists(fname): 
             self.loadFile(fname)
 
-    def loadFile(self, fname):
-        #TODO self.addRecentFile(fname) # see Rapid GUI ch06.pyw
+    def loadFile(self, fname): # Process 1.2
+        #TODO self.addRecentFile(fname)  see Rapid GUI ch06.pyw
         self.tdms_file_object = TdmsFile(fname)
         self.filename = fname
         self.dirty = False
 
+         # Process 1.3
         if self.tdms_file_object:
 
-            # Get the ADWin data
+            # Get the ADWin data Process 1.3.1
             self.sortADWinData()
 
             message = "Loaded {0}".format(os.path.basename(fname))
@@ -211,16 +213,20 @@ class MainWindow(QMainWindow):
 
         #TODO self.updateStatus(message) # see Rapid GUI ch06.pyw
 
-    def sortADWinData(self):
+    def sortADWinData(self): # Process 1.3.1
         device = "ADWin"
-        group_chans = self.tdms_file_object.group_channels(device)
-        group_props = self.tdms_file_object.object(device).properties
+        # Process 1.3.1.1
+        adwin_group_chans = self.tdms_file_object.group_channels(device)
+        # Process 1.3.1.2
+        adwin_group_props = self.tdms_file_object.object(device).properties 
 
         # Go through all of the channels in the adwin group and generate
         # the channel data and place it into the channel registry
-        for chan in group_chans:
+        # Process 1.3.1.3
+        for chan in adwin_group_chans:
             chan_name = chan.path.split('/')[-1].strip("'")
 
+            # Process 1.3.1.3.1
             new_chan = Channel(chan_name,
                                t0 = chan.property("wf_start_time"),
                                dt = chan.property("wf_increment"),
@@ -230,11 +236,12 @@ class MainWindow(QMainWindow):
             # Some of the channel-specific properties were actually
             # saved in the group object's properties list.
             # We retrieve those here.
-
+            # Process 1.3.1.3.2
             for atr_name in CHAN_DICT[chan_name]:
                 new_chan.attributes[atr_name] = \
-                  group_props[atr_name]
+                  adwin_group_props[atr_name]
 
+            # Process 1.3.1.3.3
             self.channel_registry[chan_name] = new_chan
 
     def exprtToHDF5(self):
@@ -247,13 +254,6 @@ class MainWindow(QMainWindow):
         for chan in self.channel_registry:
             myDSet = raw.create_dataset(chan,
                                       data = self.channel_registry[chan].data)
-            for attr in self.channel_registry[chan].attributes:
-                print(attr, self.channel_registry[chan].attributes[attr],
-                      type(self.channel_registry[chan].attributes[attr]))
-                
-                #myDSet.attrs.create(attr,
-                #                    self.channel_registry[chan].attributes[attr])
-
                 
     def closeEvent(self, event):
         """Reimplementation of the close even handler.
