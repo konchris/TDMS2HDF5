@@ -43,6 +43,18 @@ CHAN_DICT = {"ISample": ["IAmp"],
              "Res_RuO": ["p0", "p1", "r0"],
              "Temp_RuO": []}
 
+OFFSET_CHANS = ["VSample", "ISample", "VRuO", "I", "V", "R", "Res_RuO",
+                "zMagnet", "xMagnet", "Temp_RuO"]
+
+CHAN_PARAMETERS = {"Res_RuO" : ["p0", "p1", "r0"],
+                   "VRuO" : ["r max", "r min"],
+                   "zMagnet" : ["V2T"],
+                   "ISample" : ["IAmp"],
+                   "VSample" : ["VAmp"],
+                   "dISample" : ["IAmp", "LISens"],
+                   "dVSample" : ["VAmp", "LVSens"]
+                   }
+
 class Waveform(object):
     """A waveform object similar to those in LabView.
     
