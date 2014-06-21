@@ -17,7 +17,7 @@ from PyQt4.QtGui import (QAction, QApplication, QIcon, QKeySequence, QLabel,
                          QVBoxLayout, QHBoxLayout, QWidget, QGridLayout,
                          QPushButton, QDialog, QLineEdit, QDialogButtonBox,
                          QGroupBox, QTextBrowser, QSizePolicy, QDoubleSpinBox,
-                         QSpinBox, QFrame, QFileDialog)
+                         QSpinBox, QFrame, QFileDialog, QListWidget)
 import numpy as np
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
@@ -69,14 +69,10 @@ class MainWindow(QMainWindow):
 
         self.channel_registry = {}
 
-        # Selectors on Left
-        self.xSelector = QComboBox()
-        self.xSelector.addItems(["None"])
-        xSelectorLabel = QLabel("x axis channel")
-
-        self.ySelector = QComboBox()
-        self.ySelector.addItems(["None"])
+        # Y selector on Left
+        self.ySelector = QListWidget()
         ySelectorLabel = QLabel("y axis channel")
+        self.ySelector.setMaximumWidth(ySelectorLabel.sizeHint().width())
 
         # File name and plot in the middle
         self.sourceFileName = QLabel("None")
@@ -94,6 +90,13 @@ class MainWindow(QMainWindow):
         self.axes = self.fig.add_subplot(111)
         self.axes.grid(True)
 
+        # X selector on bottom
+        self.xSelector = QListWidget()
+        self.xSelector.addItem("Time")
+        self.xSelector.setFlow(0)
+        xSelectorLabel = QLabel("x axis channel")
+        self.xSelector.setMaximumHeight(self.xSelector.sizeHintForColumn(0))
+
         # Offset and parameter widgets on the right
         self.offsetThing = OffsetWidget()
         
@@ -103,8 +106,8 @@ class MainWindow(QMainWindow):
 
         # Left Side
         selectorLayout = QVBoxLayout()
-        selectorLayout.addWidget(xSelectorLabel)
-        selectorLayout.addWidget(self.xSelector)
+        #selectorLayout.addWidget(xSelectorLabel)
+        #selectorLayout.addWidget(self.xSelector)
         selectorLayout.addWidget(ySelectorLabel)
         selectorLayout.addWidget(self.ySelector)
         selectorLayout.addStretch()
@@ -112,11 +115,15 @@ class MainWindow(QMainWindow):
         # Center
         centralLayout = QVBoxLayout()
         fileNameLayout = QHBoxLayout()
+        xSelectorLayout = QHBoxLayout()
         fileNameLayout.addWidget(sourceFileLabel)
         fileNameLayout.addWidget(self.sourceFileName)
+        xSelectorLayout.addWidget(xSelectorLabel)
+        xSelectorLayout.addWidget(self.xSelector)
         centralLayout.addLayout(fileNameLayout)
         centralLayout.addWidget(self.canvas)
         centralLayout.addWidget(mpl_toolbar)
+        centralLayout.addLayout(xSelectorLayout)
 
         # Right Side
         rightLayout = QVBoxLayout()
