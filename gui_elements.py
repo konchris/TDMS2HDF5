@@ -34,7 +34,7 @@ __author__ = "Christopher Espy"
 __copyright__ = "Copyright (C) 2014, Christopher Espy"
 __credits__ = ["Christopher Espy"]
 __license__ = "GPL"
-__version__ = "0.3"
+__version__ = "0.3.1"
 __maintainer__ = "Christopher Espy"
 __email__ = "christopher.espy@uni-konstanz.de"
 __status__ = "Development"
@@ -85,6 +85,7 @@ class MainWindow(QMainWindow):
         # Matplotlib canvas
         self.fig = Figure(dpi = 100)
         self.canvas = FigureCanvas(self.fig)
+        self.canvas.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         mpl_toolbar = NavigationToolbar(self.canvas, self.canvas)
 
         self.axes = self.fig.add_subplot(111)
