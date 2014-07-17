@@ -1,3 +1,6 @@
 *~
 examples/*
 *.pyc
+build/*
+dist/*
+setup.py
