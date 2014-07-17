@@ -18,7 +18,7 @@ __author__ = "Christopher Espy"
 __copyright__ = "Copyright (C) 2014, Christopher Espy"
 __credits__ = ["Christopher Espy"]
 __license__ = "GPL"
-__version__ = "0.2"
+__version__ = "0.3"
 __maintainer__ = "Christopher Espy"
 __email__ = "christopher.espy@uni-konstanz.de"
 __status__ = "Development"
@@ -54,6 +54,18 @@ CHAN_PARAMETERS = {"Res_RuO" : ["p0", "p1", "r0"],
                    "dISample" : ["IAmp", "LISens"],
                    "dVSample" : ["VAmp", "LVSens"]
                    }
+
+DEFAULTX = "zMagnet"
+DEFAULTY = "dR"
+
+AXESLABELS = {"Resistance [$\Omega$]" : ["dR", "dRSample", "R", "RSample",
+                                         "Res_RuO"],
+              "Current [$\mu$A]" : ["I", "dI", "ISample", "dRSample"],
+              "Voltage [mV]" : ["V", "dV", "VSample", "dVSample", "VRuO"],
+              "Magnetfield [B]" : ["zMagnet", "xMagnet"],
+              "Time [s]" : ["Time"],
+              "Temperature [K]" : ["Temp_RuO"],
+              "Capacitance [nF]" : ["Cap"]}
 
 class Waveform(object):
     """A waveform object similar to those in LabView.
@@ -158,6 +170,8 @@ class Channel(object):
                            "StartTime" : t0}
         self.name = name
         self.data = Y
+        self.time = np.linspace(0, self.attributes['Length']*dt,
+                                self.attributes['Length'])
         
 def main(argv=None):
 

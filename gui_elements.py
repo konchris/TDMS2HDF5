@@ -28,13 +28,13 @@ import h5py
 
 # Import our own modules
 #import qrc_resources
-from data_structures import Waveform, Channel, CHAN_DICT
+from data_structures import Waveform, Channel, CHAN_DICT, DEFAULTY, AXESLABELS
 
 __author__ = "Christopher Espy"
 __copyright__ = "Copyright (C) 2014, Christopher Espy"
 __credits__ = ["Christopher Espy"]
 __license__ = "GPL"
-__version__ = "0.2"
+__version__ = "0.3"
 __maintainer__ = "Christopher Espy"
 __email__ = "christopher.espy@uni-konstanz.de"
 __status__ = "Development"
@@ -88,7 +88,6 @@ class MainWindow(QMainWindow):
         mpl_toolbar = NavigationToolbar(self.canvas, self.canvas)
 
         self.axes = self.fig.add_subplot(111)
-        self.axes.grid(True)
 
         # X selector on bottom
         self.xSelector = QListWidget()
@@ -154,6 +153,9 @@ class MainWindow(QMainWindow):
         self.fileMenuActions = (fileOpenAction, fileExportAction, fileQuitAction)
         self.addActions(self.fileMenu, self.fileMenuActions)
 
+        self.ySelector.itemSelectionChanged.connect(self.plotData)
+        self.xSelector.itemSelectionChanged.connect(self.plotData)
+
         #5 Read in application's settings
         settings = QSettings()
         
@@ -214,8 +216,21 @@ class MainWindow(QMainWindow):
             self.sortADWinData()
 
             message = "Loaded {0}".format(os.path.basename(fname))
+            self.sourceFileName.setText(os.path.basename(fname))
 
             print(message)
+
+            # Process 2.1
+            for key in self.channel_registry.keys():
+                self.xSelector.addItem(key)
+                self.ySelector.addItem(key)
+            self.xSelector.sortItems()
+            self.ySelector.sortItems()
+            zMagnet_item = self.xSelector.findItems('zMagnet', Qt.MatchExactly)
+            self.xSelector.setCurrentItem(zMagnet_item[0])
+            dR_item = self.ySelector.findItems('dR', Qt.MatchExactly)
+            self.ySelector.setCurrentItem(dR_item[0])
+            
         else:
             message = "Failed to load {0}".format(os.path.basename(fname))
 
@@ -287,6 +302,44 @@ class MainWindow(QMainWindow):
         # Process 5.4
         self.hdf5_file_object.flush()
         self.hdf5_file_object.close()
+
+    def plotData(self):
+
+        self.axes.cla()
+
+        self.axes.grid(True) 
+
+        try:
+            ySelection = self.ySelector.currentItem().text()
+        except AttributeError:
+            ySelection = DEFAULTY
+        xSelection = self.xSelector.currentItem().text()
+
+        #print(xSelection, ySelection)
+
+        for axlbl in AXESLABELS.keys():
+
+            for cn in AXESLABELS[axlbl]:
+                if xSelection == cn:
+                    xLabel = axlbl
+                if ySelection == cn:
+                    yLabel = axlbl
+
+        self.axes.set_xlabel(xLabel)
+        self.axes.set_ylabel(yLabel)
+
+        if xSelection == 'Time':
+            xArray = self.channel_registry[ySelection].time
+        else:
+            xArray = self.channel_registry[xSelection].data
+
+        yArray = self.channel_registry[ySelection].data
+
+        self.axes.plot(xArray, yArray, label = ySelection)
+
+        self.axes.legend(loc=0)
+
+        self.canvas.draw()
                 
     def closeEvent(self, event):
         """Reimplementation of the close even handler.
