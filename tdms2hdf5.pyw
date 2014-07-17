@@ -15,33 +15,21 @@ __status__ = "Development"
 
 import sys
 import os
+import platform
 
 # Import numpy
 import numpy as np
 
-# Import guiqwt stuff
-
-import platform
-
 # Import thrid-party modules
+
 # PyQt4
 from PyQt4.QtGui import QApplication, QFileDialog
+
 # npTDMS
 from nptdms import TdmsFile
 
 # Import our own modules
 from gui_elements import MainWindow
-
-#app = QApplication(sys.argv)
-
-#qtFormat = "TDMS files (*.tdms)"
-
-#File_in = QFileDialog.getOpenFileName(None, 'Open a TDMS File',
-#                                             "~/Espy/MeasData", qtFormat)
-
-#Tdms_file_object = TdmsFile(File_in)
-
-#ADWin_Group_Object = tdms_file.object("ADWin")
 
 class Main(MainWindow):
 
