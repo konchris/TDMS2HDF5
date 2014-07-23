@@ -246,8 +246,8 @@ class MainWindow(QMainWindow):
         #TODO self.updateStatus(message) # see Rapid GUI ch06.pyw
 
 
-    def sortTDMSGroupData(self, group): # Process 1.3.4 Sort Group data
-        print("Group:\t{g_name}".format(g_name=group))
+    def sortTDMSGroupData(self, group): # Process 1.3 Sort Group data
+        #print("Group:\t{g_name}".format(g_name=group))
 
         # Process 1.3.1 Get <Group> Channels
         group_props = self.tdms_file_object.object(group).properties
@@ -260,7 +260,6 @@ class MainWindow(QMainWindow):
         for chan in group_chans:
             chan_name = chan.path.split('/')[-1].strip("'")
 
-            print('\tChannel name:\t{ch_name}'.format(ch_name=chan_name))
 
             # TODO: update the process numbers, descriptions, and diagrams
             # Process 1.3.1.3.1
@@ -280,8 +279,7 @@ class MainWindow(QMainWindow):
                 # saved in the group object's properties list.
                 # We retrieve those here.
                 # Process 1.3.1.3.2
-                if group == "ADwin":
-                    print('\t\tIt is an ADWin group!')
+                if group == "ADWin":
                     for atr_name in CHAN_DICT[chan_name]:
                         try:
                             new_chan.attributes[atr_name] = group_props[atr_name]
@@ -289,13 +287,17 @@ class MainWindow(QMainWindow):
                             print('The key {a_name} was not found.'
                                   .format(a_name=atr_name))
                             print('The keys available are\n')
-                            print(adwin_group_props)
+                            print(group_props)
 
                 # Process 1.3.1.3.3
                 self.channel_registry[chan_name] = new_chan
+
+                #print('\tChannel name:\t{ch_name}'.format(ch_name=chan_name))
+
             except KeyError:
-                print('Error: Was unable to load {c3_name}'
-                      .format(c3_name=chan_name))
+                pass
+                #print('Error: Was unable to load {c3_name}'
+                #      .format(c3_name=chan_name))
 
     def exprtToHDF5(self): # Process 5
         fname = self.filename.split('.')[0] + '.hdf5'
