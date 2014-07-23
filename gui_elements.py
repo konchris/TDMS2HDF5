@@ -20,15 +20,17 @@ from PyQt4.QtGui import (QAction, QApplication, QIcon, QKeySequence, QLabel,
                          QSpinBox, QFrame, QFileDialog, QListWidget)
 import numpy as np
 from matplotlib.figure import Figure
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
+from matplotlib.backends.backend_qt4agg import (FigureCanvasQTAgg as
+                                                FigureCanvas)
+from matplotlib.backends.backend_qt4agg import (NavigationToolbar2QTAgg as 
+                                                NavigationToolbar)
 
 from nptdms.tdms import TdmsFile
 import h5py
 
 # Import our own modules
 #import qrc_resources
-from data_structures import Waveform, Channel, CHAN_DICT, DEFAULTY, AXESLABELS
+from data_structures import Channel, CHAN_DICT, DEFAULTY, AXESLABELS
 
 __author__ = "Christopher Espy"
 __copyright__ = "Copyright (C) 2014, Christopher Espy"
@@ -151,7 +153,8 @@ class MainWindow(QMainWindow):
                                              tip="Export the TDMS data to HDF5")
         
         self.fileMenu = self.menuBar().addMenu("&File")
-        self.fileMenuActions = (fileOpenAction, fileExportAction, fileQuitAction)
+        self.fileMenuActions = (fileOpenAction, fileExportAction,
+                                fileQuitAction)
         self.addActions(self.fileMenu, self.fileMenuActions)
 
         self.ySelector.itemSelectionChanged.connect(self.plotData)
@@ -172,7 +175,7 @@ class MainWindow(QMainWindow):
         action = QAction(text, self)
         # Give it its icon
         if icon is not None:
-            action.setIcon(QIcon(":/{0}.png".format(icon)))
+            action.setIcon(QIcon(":/{icon}.png".format(icon=icon)))
         # Give it its shortcut
         if shortcut is not None:
             action.setShortcut(shortcut)
@@ -200,28 +203,32 @@ class MainWindow(QMainWindow):
         formats = "TDMS files (*.tdms)"
         fname = QFileDialog.getOpenFileName(self, "Open a TDMS File",
                                             basedir, formats)
-        # Process 1.1
+        # Process 1.1 Collect file name
         if fname and QFile.exists(fname): 
             self.loadFile(fname)
 
-    def loadFile(self, fname): # Process 1.2
+    def loadFile(self, fname): # Process 1.2 Generate TDMS file object
         #TODO self.addRecentFile(fname)  see Rapid GUI ch06.pyw
         self.tdms_file_object = TdmsFile(fname)
         self.filename = fname
         self.dirty = False
 
-         # Process 1.3
+         # Process 1.3 Read data into local structure
         if self.tdms_file_object:
 
-            # Get the ADWin data Process 1.3.1
-            self.sortADWinData()
+            # Process 1.3.0 Generate group list
+            group_list = self.tdms_file_object.groups()
 
-            message = "Loaded {0}".format(os.path.basename(fname))
+            # Processes 1.3.1 through 1.3.3 Sort TDMS data
+            for group in group_list:
+                self.sortTDMSGroupData(group)
+
+            message = "Loaded {f_name}".format(f_name=os.path.basename(fname))
             self.sourceFileName.setText(os.path.basename(fname))
 
             print(message)
 
-            # Process 2.1
+            # Process 2.1 Populate channl selection lists
             for key in self.channel_registry.keys():
                 self.xSelector.addItem(key)
                 self.ySelector.addItem(key)
@@ -233,40 +240,62 @@ class MainWindow(QMainWindow):
             self.ySelector.setCurrentItem(dR_item[0])
             
         else:
-            message = "Failed to load {0}".format(os.path.basename(fname))
+            message = "Failed to load {f_name}".format(f_name=os.path.
+                                                       basename(fname))
 
         #TODO self.updateStatus(message) # see Rapid GUI ch06.pyw
 
-    def sortADWinData(self): # Process 1.3.1
-        device = "ADWin"
-        # Process 1.3.1.1
-        adwin_group_chans = self.tdms_file_object.group_channels(device)
-        # Process 1.3.1.2
-        adwin_group_props = self.tdms_file_object.object(device).properties 
 
-        # Go through all of the channels in the adwin group and generate
-        # the channel data and place it into the channel registry
-        # Process 1.3.1.3
-        for chan in adwin_group_chans:
+    def sortTDMSGroupData(self, group): # Process 1.3.4 Sort Group data
+        print("Group:\t{g_name}".format(g_name=group))
+
+        # Process 1.3.1 Get <Group> Channels
+        group_props = self.tdms_file_object.object(group).properties
+
+        # Process 1.3.2 Get <Group> Properties
+        group_chans = self.tdms_file_object.group_channels(group)
+
+        # Process 1.3.3 Create a new channel in the registry for each channel
+        # in the group
+        for chan in group_chans:
             chan_name = chan.path.split('/')[-1].strip("'")
 
+            print('\tChannel name:\t{ch_name}'.format(ch_name=chan_name))
+
+            # TODO: update the process numbers, descriptions, and diagrams
             # Process 1.3.1.3.1
             new_chan = Channel(chan_name,
-                               t0 = chan.property("wf_start_time"),
-                               dt = chan.property("wf_increment"),
-                               Y = chan.data,
-                               device = device)
+                               device = group,
+                               meas_array = chan.data)
+            try:
+                new_chan.set_start_time(chan.property("wf_start_time"))
 
-            # Some of the channel-specific properties were actually
-            # saved in the group object's properties list.
-            # We retrieve those here.
-            # Process 1.3.1.3.2
-            for atr_name in CHAN_DICT[chan_name]:
-                new_chan.attributes[atr_name] = \
-                  adwin_group_props[atr_name]
+                new_chan.set_delta_time(chan.property("wf_increment"))
 
-            # Process 1.3.1.3.3
-            self.channel_registry[chan_name] = new_chan
+                new_chan.set_location('raw/{c2_name}'.format(c2_name=chan_name))
+
+                new_chan.set_write()
+
+                # Some of the channel-specific properties were actually
+                # saved in the group object's properties list.
+                # We retrieve those here.
+                # Process 1.3.1.3.2
+                if group == "ADwin":
+                    print('\t\tIt is an ADWin group!')
+                    for atr_name in CHAN_DICT[chan_name]:
+                        try:
+                            new_chan.attributes[atr_name] = group_props[atr_name]
+                        except KeyError:
+                            print('The key {a_name} was not found.'
+                                  .format(a_name=atr_name))
+                            print('The keys available are\n')
+                            print(adwin_group_props)
+
+                # Process 1.3.1.3.3
+                self.channel_registry[chan_name] = new_chan
+            except KeyError:
+                print('Error: Was unable to load {c3_name}'
+                      .format(c3_name=chan_name))
 
     def exprtToHDF5(self): # Process 5
         fname = self.filename.split('.')[0] + '.hdf5'
@@ -282,7 +311,8 @@ class MainWindow(QMainWindow):
 
             # Process 5.3.1
             HDF5_data = raw.create_dataset(chan,
-                                           data = self.channel_registry[chan].data)
+                                           data = self
+                                           .channel_registry[chan].data)
             # Process 5.3.2
             for attr_name in self.channel_registry[chan].attributes:
                 attr_value = self.channel_registry[chan].attributes[attr_name]
@@ -291,7 +321,8 @@ class MainWindow(QMainWindow):
                 if type(attr_value) is datetime:
                     attr_value = attr_value.isoformat()
 
-                # There's currently a wierd bug when dealing with python3 strings.
+                # There's currently a wierd bug when dealing with python3 
+                # strings.
                 # This gets around that
                 if type(attr_value) is str:
                     #attr_value = attr_value.encode('utf-8')
@@ -364,9 +395,8 @@ def main(argv=None):
         argv = sys.argv
 
     #### Create the QApplication object
-    # This handles the dispatching of events to various widgets. It
-    # controls the GUI's control flow and main settings, the main event
-    # loop, etc.
+    # This handles the dispatching of events to various widgets. It controls the
+    # GUI's control flow and main settings, the main event loop, etc.
     app = QApplication(argv)
     app.setOrganizationName("tdms2hdf5")
     app.setApplicationName("TDMS 2 HDF5 Converter")

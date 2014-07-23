@@ -14,26 +14,18 @@ __email__ = "christopher.espy@uni-konstanz.de"
 __status__ = "Development"
 
 import sys
-import os
-import platform
-
-# Import numpy
-import numpy as np
 
 # Import thrid-party modules
 
 # PyQt4
-from PyQt4.QtGui import QApplication, QFileDialog
-
-# npTDMS
-from nptdms import TdmsFile
+from PyQt4.QtGui import QApplication
 
 # Import our own modules
 from gui_elements import MainWindow
 
 class Main(MainWindow):
 
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         super(Main, self).__init__(parent)
 
 def main(argv=None):
