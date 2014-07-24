@@ -66,72 +66,8 @@ AXESLABELS = {r"Resistance [$\Omega$]" : ["dR", "dRSample", "R", "RSample",
               "Temperature [K]" : ["Temp_RuO"],
               "Capacitance [nF]" : ["Cap"]}
 
-class Waveform(object):
-    """A waveform object similar to those in LabView.
-
-    Returns a waveform object which was inspired by LabView's waveforms.
-    A waveform is a specialized time-dependant array that includes a starting
-    time and an interval time between each data point.
-
-    Parameters
-    ----------
-    t0 : datetime_like or float
-       The starting time of the data series.
-    dt : float
-       The time interval between each data point in the time series.
-    Y : array_like
-       The time series data.
-
-    Attributes
-    ----------
-    t0 : datetime_like or float
-       The starting time of the data series.
-    dt : float
-       The time interval between each data point in the time series.
-    Y : array_like
-       The time series data.
-
-    Methods
-    -------
-    reset_t0()
-       Reset the waveform's starting time to now.
-
-    See Also
-    --------
-    numpy.array
-
-    """
-
-    def __init__(self, t0=datetime.now(), dt=0, Y=np.array([])):
-        """Initiate the waveform object.
-
-        Parameters
-        ----------
-        t0 : datetime_like or float
-           The starting time of the data series.
-        dt : float
-           The time interval between each data point in the time series.
-        Y : array_like
-           The time series data.
-
-
-        """
-
-        super(Waveform, self).__init__()
-        self.t0 = t0
-        self.dt = dt
-        self.Y = Y
-
-    def reset_t0(self):
-        """Reset the waveform's start time to now.
-
-        Because the waveform object is not necessarily created when the
-        measurement actually starts this makes it easy to syncronize t0
-        with the start of the measurement.
-
-        """
-        self.t0 = datetime.now()
-
+RDEPENDENCIES = {}
+DESCRIPTIONS = {}
 
 class Channel(object):
     """A measurement channel containing a waveform and meta data.
@@ -164,7 +100,7 @@ class Channel(object):
 
     See Also
     --------
-    Waveform, numpy.array
+    numpy.array
 
     """
 
@@ -203,13 +139,6 @@ class Channel(object):
 
         self.location = location
 
-    def set_measurement_data(self, meas_array):
-        "Replace the measurement data array with a new one."
-
-        self.data = meas_array
-
-        self.attributes['Length'] = len(meas_array)
-
     def set_start_time(self, init_time):
         "Reset the start time (datetimestamp) of the measurement"
 
@@ -226,20 +155,20 @@ class Channel(object):
         self.write_to_file = False
 
 def main(argv=None):
+    "The main loop, for testing purposes only"
 
     if argv is None:
         argv = sys.argv
 
-    CHAN_LIST = ['TestSine', 'TestCosine']
-    TEST_DEV = 'Test_Device'
-    chanRegistry = {}
+    chan_list = ['TestSine', 'TestCosine']
+    chan_registry = {}
 
-    test = Channel()
+    test = Channel('none')
     test.attributes["Device"] = "ADWin"
     print(test.attributes)
 
-    for chan in CHAN_LIST:
-        chanRegistry[chan] = 0
+    for chan in chan_list:
+        chan_registry[chan] = 0
 
 
 if __name__ == "__main__":
