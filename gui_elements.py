@@ -22,7 +22,7 @@ import numpy as np
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt4agg import (FigureCanvasQTAgg as
                                                 FigureCanvas)
-from matplotlib.backends.backend_qt4agg import (NavigationToolbar2QTAgg as 
+from matplotlib.backends.backend_qt4agg import (NavigationToolbar2QTAgg as
                                                 NavigationToolbar)
 
 from nptdms.tdms import TdmsFile
@@ -46,7 +46,7 @@ PROGVERSION = __version__
 
 class OffsetWidget(QWidget):
 
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         super(OffsetWidget, self).__init__(parent)
 
         offsetLabel = QLabel("Offset")
@@ -69,6 +69,9 @@ class MainWindow(QMainWindow):
         self.dirty = False
         self.filename = None
 
+        self.tdms_file_object = None
+        self.hdf5_file_object = None
+
         self.channel_registry = {}
 
         # Y selector on Left
@@ -81,11 +84,10 @@ class MainWindow(QMainWindow):
         self.sourceFileName.setSizePolicy(QSizePolicy.Expanding,
                                           QSizePolicy.Fixed)
         sourceFileLabel = QLabel("current file")
-        sourceFileLabel.setSizePolicy(QSizePolicy.Expanding,
-                                          QSizePolicy.Fixed)
+        sourceFileLabel.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         # Matplotlib canvas
-        self.fig = Figure(dpi = 100)
+        self.fig = Figure(dpi=100)
         self.canvas = FigureCanvas(self.fig)
         self.canvas.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         mpl_toolbar = NavigationToolbar(self.canvas, self.canvas)
@@ -101,7 +103,6 @@ class MainWindow(QMainWindow):
 
         # Offset and parameter widgets on the right
         self.offsetThing = OffsetWidget()
-        
 
         #2 Create the central widget
         self.centralWidget = QWidget()
@@ -151,7 +152,7 @@ class MainWindow(QMainWindow):
         fileExportAction = self.createAction("&Export", self.exprtToHDF5,
                                              "Ctrl+E",
                                              tip="Export the TDMS data to HDF5")
-        
+
         self.fileMenu = self.menuBar().addMenu("&File")
         self.fileMenuActions = (fileOpenAction, fileExportAction,
                                 fileQuitAction)
@@ -162,13 +163,13 @@ class MainWindow(QMainWindow):
 
         #5 Read in application's settings
         settings = QSettings()
-        
+
         # Restore the geometry and state of the main window from last use
         #self.restoreGeometry(settings.value("MainWindow/Geometry"))
         #self.restoreState(settings.value("MainWindow/State"))
 
         self.setWindowTitle("TDMS to HDF5 Converter")
-        
+
     def createAction(self, text, slot=None, shortcut=None, icon=None,
                      tip=None, checkable=False, signal="triggered()"):
         # Create the action
@@ -190,7 +191,7 @@ class MainWindow(QMainWindow):
         if checkable:
             action.setCheckable(True)
         return action
-        
+
     def addActions(self, target, actions):
         for action in actions:
             if action is None:
@@ -204,7 +205,7 @@ class MainWindow(QMainWindow):
         fname = QFileDialog.getOpenFileName(self, "Open a TDMS File",
                                             basedir, formats)
         # Process 1.1 Collect file name
-        if fname and QFile.exists(fname): 
+        if fname and QFile.exists(fname):
             self.loadFile(fname)
 
     def loadFile(self, fname): # Process 1.2 Generate TDMS file object
@@ -238,7 +239,7 @@ class MainWindow(QMainWindow):
             self.xSelector.setCurrentItem(zMagnet_item[0])
             dR_item = self.ySelector.findItems('dR', Qt.MatchExactly)
             self.ySelector.setCurrentItem(dR_item[0])
-            
+
         else:
             message = "Failed to load {f_name}".format(f_name=os.path.
                                                        basename(fname))
@@ -262,10 +263,12 @@ class MainWindow(QMainWindow):
 
 
             # TODO: update the process numbers, descriptions, and diagrams
-            # Process 1.3.1.3.1
+            # Process 1.3.3.1 Generate new channel object and fill with data
             new_chan = Channel(chan_name,
-                               device = group,
-                               meas_array = chan.data)
+                               device=group,
+                               meas_array=chan.data)
+            # Some of the TDMS channels were created, but never populated with
+            # data. The following weeds those out.
             try:
                 new_chan.set_start_time(chan.property("wf_start_time"))
 
@@ -278,18 +281,19 @@ class MainWindow(QMainWindow):
                 # Some of the channel-specific properties were actually
                 # saved in the group object's properties list.
                 # We retrieve those here.
-                # Process 1.3.1.3.2
+                # Process 1.3.3.2 Resort the group properties of TDMS ADWin
                 if group == "ADWin":
                     for atr_name in CHAN_DICT[chan_name]:
                         try:
-                            new_chan.attributes[atr_name] = group_props[atr_name]
+                            new_chan.attributes[atr_name] = \
+                              group_props[atr_name]
                         except KeyError:
                             print('The key {a_name} was not found.'
                                   .format(a_name=atr_name))
                             print('The keys available are\n')
                             print(group_props)
 
-                # Process 1.3.1.3.3
+                # Process 1.3.3.3 Add new channel to the registry
                 self.channel_registry[chan_name] = new_chan
 
                 #print('\tChannel name:\t{ch_name}'.format(ch_name=chan_name))
@@ -299,23 +303,28 @@ class MainWindow(QMainWindow):
                 #print('Error: Was unable to load {c3_name}'
                 #      .format(c3_name=chan_name))
 
-    def exprtToHDF5(self): # Process 5
+    def exprtToHDF5(self): # Process 5 Save to HDF5
         fname = self.filename.split('.')[0] + '.hdf5'
 
-        # Process 5.1
+        # Process 5.1 Create HDF5 file object
         self.hdf5_file_object = h5py.File(fname)
 
-        # Process 5.2
-        raw = self.hdf5_file_object.create_group('raw')
-
-        # Process 5.3
+        # Process 5.2 Create channels at their locations
         for chan in self.channel_registry:
 
-            # Process 5.3.1
-            HDF5_data = raw.create_dataset(chan,
-                                           data = self
-                                           .channel_registry[chan].data)
-            # Process 5.3.2
+            chan_obj = self.channel_registry[chan]
+            chan_name = chan
+
+            #print(chan, self.channel_registry[chan].location,
+            #      self.channel_registry[chan].write_to_file)
+
+            # Process 5.2.1 Write channel data
+            if self.channel_registry[chan].write_to_file:
+
+                dset = self.hdf5_file_object.create_dataset(chan_obj.location,
+                                                            data=chan_obj.data)
+
+            # Process 5.2.2 Write channel attributes
             for attr_name in self.channel_registry[chan].attributes:
                 attr_value = self.channel_registry[chan].attributes[attr_name]
 
@@ -323,7 +332,7 @@ class MainWindow(QMainWindow):
                 if type(attr_value) is datetime:
                     attr_value = attr_value.isoformat()
 
-                # There's currently a wierd bug when dealing with python3 
+                # There's currently a wierd bug when dealing with python3
                 # strings.
                 # This gets around that
                 if type(attr_value) is str:
@@ -331,9 +340,9 @@ class MainWindow(QMainWindow):
                     #attr_value = np.string_(attr_value, dtype="S10")
                     attr_value = np.string_(attr_value)
 
-                HDF5_data.attrs.create(attr_name, attr_value)
+                dset.attrs.create(attr_name, attr_value)
 
-        # Process 5.4
+        # Process 5.3 Write data to file
         self.hdf5_file_object.flush()
         self.hdf5_file_object.close()
 
@@ -341,7 +350,7 @@ class MainWindow(QMainWindow):
 
         self.axes.cla()
 
-        self.axes.grid(True) 
+        self.axes.grid(True)
 
         try:
             ySelection = self.ySelector.currentItem().text()
@@ -369,15 +378,15 @@ class MainWindow(QMainWindow):
 
         yArray = self.channel_registry[ySelection].data
 
-        self.axes.plot(xArray, yArray, label = ySelection)
+        self.axes.plot(xArray, yArray, label=ySelection)
 
         self.axes.legend(loc=0)
 
         self.canvas.draw()
-                
+
     def closeEvent(self, event):
         """Reimplementation of the close even handler.
-        
+
         We have to reimplement this because not all close actions, e.g. clicking
         the X button, call the close() method.  We want to catch this so we can
         give the user the opportunity to save unsaved changes before the program
@@ -390,7 +399,7 @@ class MainWindow(QMainWindow):
         #settings.setValue("MainWindow/State", QVariant(
         #    self.saveState()))
         pass
-                
+
 def main(argv=None):
 
     if argv is None:
