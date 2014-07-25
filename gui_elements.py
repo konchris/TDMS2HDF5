@@ -17,7 +17,7 @@ from PyQt4.QtGui import (QAction, QApplication, QIcon, QKeySequence, QLabel,
                          QVBoxLayout, QHBoxLayout, QWidget, QGridLayout,
                          QPushButton, QDialog, QLineEdit, QDialogButtonBox,
                          QGroupBox, QTextBrowser, QSizePolicy, QDoubleSpinBox,
-                         QSpinBox, QFrame, QFileDialog, QListWidget)
+                         QSpinBox, QFrame, QFileDialog, QListWidget, QCheckBox)
 import numpy as np
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt4agg import (FigureCanvasQTAgg as
@@ -45,18 +45,37 @@ PROGNAME = os.path.basename(sys.argv[0])
 PROGVERSION = __version__
 
 class OffsetWidget(QWidget):
+    "This widet displays the elements for editing the offset."
 
     def __init__(self, parent=None):
         super(OffsetWidget, self).__init__(parent)
 
-        offsetLabel = QLabel("Offset")
-        self.offsetEntry = QDoubleSpinBox(self)
+        offset_label = QLabel("Offset")
+        self.offset_entry = QDoubleSpinBox(self)
+
+        preview_chkbx_lbl = QLabel("preview")
+        self.preview_chkbx = QCheckBox()
+
+        self.show_btn = QPushButton("Show")
+        self.save_btn = QPushButton("Save")
+
+        btn_layout = QHBoxLayout()
+        btn_layout.addWidget(self.preview_chkbx)
+        btn_layout.addWidget(preview_chkbx_lbl)
+        btn_layout.addWidget(self.show_btn)
+        btn_layout.addWidget(self.save_btn)
 
         layout = QVBoxLayout()
-        layout.addWidget(offsetLabel)
-        layout.addWidget(self.offsetEntry)
+        layout.addWidget(offset_label)
+        layout.addWidget(self.offset_entry)
+        layout.addLayout(btn_layout)
 
         self.setLayout(layout)
+
+    def deactivate(self):
+        "A quick function to deactivate all elements."
+
+        pass
 
 class MainWindow(QMainWindow):
 
@@ -100,6 +119,7 @@ class MainWindow(QMainWindow):
         self.xSelector.setFlow(0)
         xSelectorLabel = QLabel("x axis channel")
         self.xSelector.setMaximumHeight(self.xSelector.sizeHintForColumn(0))
+        #self.xSelector.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Expanding)
 
         # Offset and parameter widgets on the right
         self.offsetThing = OffsetWidget()
@@ -160,6 +180,8 @@ class MainWindow(QMainWindow):
 
         self.ySelector.itemSelectionChanged.connect(self.plotData)
         self.xSelector.itemSelectionChanged.connect(self.plotData)
+
+        self.offsetThing.preview_chkbx.stateChanged.connect(self.toggle_preview)
 
         #5 Read in application's settings
         settings = QSettings()
@@ -244,6 +266,8 @@ class MainWindow(QMainWindow):
             message = "Failed to load {f_name}".format(f_name=os.path.
                                                        basename(fname))
 
+        self.xSelector.setMaximumHeight(self.xSelector.sizeHintForColumn(0))
+        self.ySelector.setMaximumWidth(self.ySelector.sizeHintForColumn(0))
         #TODO self.updateStatus(message) # see Rapid GUI ch06.pyw
 
 
@@ -383,6 +407,19 @@ class MainWindow(QMainWindow):
         self.axes.legend(loc=0)
 
         self.canvas.draw()
+
+    def toggle_preview(self):
+        "Toggle automatic preview on or off."
+
+        if self.offsetThing.preview_chkbx.isChecked():
+            self.offset_entry.editingFinished.connect()
+
+    def subtract_offset(self):
+        "Subtract the offset entered from the currently selected y channel."
+
+        offset = self.offsetThing.offset_entry.value()
+
+        print(offset)
 
     def closeEvent(self, event):
         """Reimplementation of the close even handler.
