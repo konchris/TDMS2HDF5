@@ -58,6 +58,7 @@ class OffsetWidget(QWidget):
 
         self.show_btn = QPushButton("Show")
         self.save_btn = QPushButton("Save")
+        self.save_btn.setEnabled(False)
 
         btn_layout = QHBoxLayout()
         btn_layout.addWidget(self.preview_chkbx)
@@ -72,10 +73,18 @@ class OffsetWidget(QWidget):
 
         self.setLayout(layout)
 
+        self.preview_chkbx.stateChanged.connect(self.toggle_preview)
+
     def deactivate(self):
         "A quick function to deactivate all elements."
 
         pass
+
+    def toggle_preview(self):
+        "Toggle previewing offset changes automatically."
+
+        self.show_btn.setEnabled(not self.preview_chkbx.isChecked())
+        
 
 class MainWindow(QMainWindow):
 
@@ -181,7 +190,7 @@ class MainWindow(QMainWindow):
         self.ySelector.itemSelectionChanged.connect(self.plotData)
         self.xSelector.itemSelectionChanged.connect(self.plotData)
 
-        self.offsetThing.preview_chkbx.stateChanged.connect(self.toggle_preview)
+        #self.offsetThing.preview_chkbx.stateChanged.connect(self.toggle_preview)
 
         #5 Read in application's settings
         settings = QSettings()
@@ -265,6 +274,8 @@ class MainWindow(QMainWindow):
         else:
             message = "Failed to load {f_name}".format(f_name=os.path.
                                                        basename(fname))
+
+        self.offsetThing.offset_entry.editingFinished.connect(lambda ch_name = '01-Offset/{0}'.format(self.ySelector.currentItem().text()): self.create_new_channel(ch_name))
 
         self.xSelector.setMaximumHeight(self.xSelector.sizeHintForColumn(0))
         self.ySelector.setMaximumWidth(self.ySelector.sizeHintForColumn(0))
@@ -408,11 +419,33 @@ class MainWindow(QMainWindow):
 
         self.canvas.draw()
 
+    def create_new_channel(self, ch_name):
+        "Create a new channel in the registry."
+
+        print(ch_name)
+
     def toggle_preview(self):
         "Toggle automatic preview on or off."
 
         if self.offsetThing.preview_chkbx.isChecked():
-            self.offset_entry.editingFinished.connect()
+            self.offsetThing.offset_entry.editingFinished.connect(
+                self.subtract_offset)
+            self.offsetThing.show_btn.setEnabled(
+                not self.offsetThing.preview_chkbx.isChecked())
+            try:
+                self.offsetThing.show_btn.clicked.disconnect(self.subtract_offset)
+            except TypeError:
+                pass
+        else:
+            self.offsetThing.show_btn.clicked.connect(self.subtract_offset)
+            self.offsetThing.show_btn.setEnabled(
+                not self.offsetThing.preview_chkbx.isChecked())
+            try:
+                self.offsetThing.offset_entry.editingFinished.disconnect(
+                    self.subtract_offset)
+            except TypeError:
+                    pass
+
 
     def subtract_offset(self):
         "Subtract the offset entered from the currently selected y channel."
