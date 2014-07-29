@@ -37,7 +37,7 @@ __author__ = "Christopher Espy"
 __copyright__ = "Copyright (C) 2014, Christopher Espy"
 __credits__ = ["Christopher Espy"]
 __license__ = "GPL"
-__version__ = "0.4.1"
+__version__ = "0.4.2"
 __maintainer__ = "Christopher Espy"
 __email__ = "christopher.espy@uni-konstanz.de"
 __status__ = "Development"
@@ -191,7 +191,7 @@ class MainWindow(QMainWindow):
         self.yLabel = None
         self.ySelection = None
         self.yArray = None
-        
+
         # The dirty attribute is a boolean flag to indicate whether the
         # file has unsaved changes.
         self.dirty = False
@@ -230,8 +230,12 @@ class MainWindow(QMainWindow):
         self.xSelector.setMaximumHeight(self.xSelector.sizeHintForColumn(0))
         #self.xSelector.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Expanding)
 
-        # Offset and parameter widgets on the right
+        # Offset and parameter widgets on the right top
         self.offsetThing = OffsetWidget()
+
+        # Save channel on right bottom
+        self.save_chan_chkbx = QCheckBox()
+        save_chan_label = QLabel("Save Channel")
 
         #2 Create the central widget
         self.centralWidget = QWidget()
@@ -257,10 +261,16 @@ class MainWindow(QMainWindow):
         centralLayout.addWidget(mpl_toolbar)
         centralLayout.addLayout(xSelectorLayout)
 
+        # Right bottom
+        save_chan_layout = QHBoxLayout()
+        save_chan_layout.addWidget(self.save_chan_chkbx)
+        save_chan_layout.addWidget(save_chan_label)
+
         # Right Side
         rightLayout = QVBoxLayout()
         rightLayout.addWidget(self.offsetThing)
         rightLayout.addStretch()
+        rightLayout.addLayout(save_chan_layout)
 
         layout = QHBoxLayout()
         layout.addLayout(selectorLayout)
@@ -292,6 +302,8 @@ class MainWindow(QMainWindow):
         #self.ySelector.itemSelectionChanged.connect(self.plotData)
         self.ySelector.itemSelectionChanged.connect(self.make_y_selection)
         self.offsetThing.new_offset.connect(self.subtract_offset)
+
+        self.save_chan_chkbx.stateChanged.connect(self.toggle_save)
 
         #self.offsetThing.preview_chkbx.stateChanged.connect(self.toggle_preview)
 
@@ -511,6 +523,10 @@ class MainWindow(QMainWindow):
         except AttributeError:
             self.ySelection = DEFAULTY
 
+        # Set save channel checkbox state
+        self.save_chan_chkbx.setChecked(self.channel_registry[self.ySelection]
+                                        .write_to_file)
+
         # Get the axis label
         self.yLabel = self.gen_axis_label(self.ySelection)
 
@@ -572,17 +588,22 @@ class MainWindow(QMainWindow):
             print("{y_chan} and {x_chan} are not the same length!"
                   .format(y_chan=self.ySelection, x_chan=self.xSelection))
 
-    def create_new_channel(self, ch_name):
-        "Create a new channel in the registry."
-
-        print(ch_name)
-
     def subtract_offset(self):
         "Subtract the offset entered from the currently selected y channel."
 
         offset = self.offsetThing.offset_entry.value()
 
         self.make_y_selection(offset=offset)
+
+    def toggle_save(self):
+
+        self.channel_registry[self.ySelection].write_to_file = \
+          self.save_chan_chkbx.isChecked()
+
+    def create_new_channel(self, ch_name):
+        "Create a new channel in the registry."
+
+        print(ch_name)
 
     def closeEvent(self, event):
         """Reimplementation of the close even handler.

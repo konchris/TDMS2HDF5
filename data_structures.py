@@ -18,7 +18,7 @@ __author__ = "Christopher Espy"
 __copyright__ = "Copyright (C) 2014, Christopher Espy"
 __credits__ = ["Christopher Espy"]
 __license__ = "GPL"
-__version__ = "0.4.1"
+__version__ = "0.4.2"
 __maintainer__ = "Christopher Espy"
 __email__ = "christopher.espy@uni-konstanz.de"
 __status__ = "Development"
@@ -149,11 +149,6 @@ class Channel(object):
         "Turn on writing this channel to the HDF5 file."
 
         self.write_to_file = True
-
-    def unset_write(self):
-        "Turn off writing this channel to the HDF5 file."
-
-        self.write_to_file = False
 
 def main(argv=None):
     "The main loop, for testing purposes only"
