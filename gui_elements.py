@@ -91,6 +91,7 @@ class OffsetWidget(QWidget):
         offset_label = QLabel("Offset")
         self.offset_entry = QDoubleSpinBox(self)
         self.offset_entry.setDecimals(10)
+        self.offset_entry.setRange(-1000000,1000000)
 
         # Create the preview checkbox and its label
         preview_chkbx_lbl = QLabel("preview")
@@ -182,6 +183,15 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__(parent)
 
         #1 Create and Initialize data structures
+
+        self.xLabel = None
+        self.xSelection = None
+        self.xArray = None
+
+        self.yLabel = None
+        self.ySelection = None
+        self.yArray = None
+        
         # The dirty attribute is a boolean flag to indicate whether the
         # file has unsaved changes.
         self.dirty = False
@@ -277,8 +287,10 @@ class MainWindow(QMainWindow):
                                 fileQuitAction)
         self.addActions(self.fileMenu, self.fileMenuActions)
 
-        self.ySelector.itemSelectionChanged.connect(self.plotData)
-        self.xSelector.itemSelectionChanged.connect(self.plotData)
+        #self.xSelector.itemSelectionChanged.connect(self.plotData)
+        self.xSelector.itemSelectionChanged.connect(self.make_x_selection)
+        #self.ySelector.itemSelectionChanged.connect(self.plotData)
+        self.ySelector.itemSelectionChanged.connect(self.make_y_selection)
         self.offsetThing.new_offset.connect(self.subtract_offset)
 
         #self.offsetThing.preview_chkbx.stateChanged.connect(self.toggle_preview)
@@ -388,9 +400,12 @@ class MainWindow(QMainWindow):
 
             # TODO: update the process numbers, descriptions, and diagrams
             # Process 1.3.3.1 Generate new channel object and fill with data
-            new_chan = Channel(chan_name,
-                               device=group,
-                               meas_array=chan.data)
+            try:
+                new_chan = Channel(chan_name,
+                                device=group,
+                                meas_array=chan.data)
+            except TypeError:
+                print("Could not load {chan}".format(chan=chan_name))
             # Some of the TDMS channels were created, but never populated with
             # data. The following weeds those out.
             try:
@@ -422,7 +437,7 @@ class MainWindow(QMainWindow):
 
                 #print('\tChannel name:\t{ch_name}'.format(ch_name=chan_name))
 
-            except KeyError:
+            except (KeyError, UnboundLocalError):
                 pass
                 #print('Error: Was unable to load {c3_name}'
                 #      .format(c3_name=chan_name))
@@ -470,20 +485,41 @@ class MainWindow(QMainWindow):
         self.hdf5_file_object.flush()
         self.hdf5_file_object.close()
 
-    def plotData(self, offset=0.0):
+    def make_x_selection(self):
 
-        # Clear the plot
-        self.axes.cla()
+        # Get the name of the newly selected channel
+        self.xSelection = self.xSelector.currentItem().text()
 
-        # Turn on the grid
-        self.axes.grid(True)
+        # Get the axis label
+        self.xLabel = self.gen_axis_label(self.xSelection)
+
+        # If the xSelection is time, use the time data instead of measurement
+        # data
+        if self.xSelection == 'Time':
+            self.xArray = self.channel_registry[self.ySelection].time
+        else:
+            self.xArray = self.channel_registry[self.xSelection].data
+
+        if self.yLabel:
+            self.plotData()
+
+    def make_y_selection(self, offset=0.0):
 
         # Get the names of the selected channels from the selectors
         try:
-            ySelection = self.ySelector.currentItem().text()
+            self.ySelection = self.ySelector.currentItem().text()
         except AttributeError:
-            ySelection = DEFAULTY
-        xSelection = self.xSelector.currentItem().text()
+            self.ySelection = DEFAULTY
+
+        # Get the axis label
+        self.yLabel = self.gen_axis_label(self.ySelection)
+
+        # Generate the y-channel array to be plotted
+        self.yArray = self.channel_registry[self.ySelection].data - offset
+
+        self.plotData()
+
+    def gen_axis_label(self, chan_name):
 
         # Generate the axis labels based on the selected channels
         # Cycle through the labes in the AXESLABELS dictionary
@@ -493,38 +529,36 @@ class MainWindow(QMainWindow):
             for cn in AXESLABELS[axlbl]:
 
                 # If a channel equals one of the selections, save the label 
-                if xSelection == cn:
-                    xLabel = axlbl
-                elif ySelection == cn:
-                    yLabel = axlbl
+                if chan_name == cn:
+                    label = axlbl
+
+        return label
+
+    def plotData(self):
+
+        # Clear the plot
+        self.axes.cla()
+
+        # Turn on the grid
+        self.axes.grid(True)
 
         # Set the labels
         try: 
-            self.axes.set_xlabel(xLabel)
+            self.axes.set_xlabel(self.xLabel)
         except UnboundLocalError:
             print("Could not generate an axis label for {chan}"
-                  .format(chan=xSelection))
+                  .format(chan=self.xSelection))
         try:
-            self.axes.set_ylabel(yLabel)
+            self.axes.set_ylabel(self.yLabel)
         except UnboundLocalError:
             print("Could not generate an axis label for {chan}"
-                  .format(chan=ySelection))
-
-        # If the xSelection is time, use the time data instead of measurement
-        # data
-        if xSelection == 'Time':
-            xArray = self.channel_registry[ySelection].time
-        else:
-            xArray = self.channel_registry[xSelection].data
-
-        # Generate the y-channel array to be plotted
-        yArray = self.channel_registry[ySelection].data - offset
+                  .format(chan=self.ySelection))
 
         # Try plotting the data. There are still no checks in place to make sure
         # the arrays are of the same length.
         try:
             # Plot the data and label it
-            self.axes.plot(xArray, yArray, label=ySelection)
+            self.axes.plot(self.xArray, self.yArray, label=self.ySelection)
 
             # Show the legend
             self.axes.legend(loc=0)
@@ -533,7 +567,7 @@ class MainWindow(QMainWindow):
             self.canvas.draw()
         except ValueError:
             print("{y_chan} and {x_chan} are not the same length!"
-                  .format(y_chan=ySelection, x_chan=xSelection))
+                  .format(y_chan=self.ySelection, x_chan=self.xSelection))
 
     def create_new_channel(self, ch_name):
         "Create a new channel in the registry."
@@ -545,7 +579,7 @@ class MainWindow(QMainWindow):
 
         offset = self.offsetThing.offset_entry.value()
 
-        self.plotData(offset=offset)
+        self.make_y_selection(offset=offset)
 
     def closeEvent(self, event):
         """Reimplementation of the close even handler.
