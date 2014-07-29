@@ -18,7 +18,8 @@ from PyQt4.QtGui import (QAction, QApplication, QIcon, QKeySequence, QLabel,
                          QVBoxLayout, QHBoxLayout, QWidget, QGridLayout,
                          QPushButton, QDialog, QLineEdit, QDialogButtonBox,
                          QGroupBox, QTextBrowser, QSizePolicy, QDoubleSpinBox,
-                         QSpinBox, QFrame, QFileDialog, QListWidget, QCheckBox)
+                         QSpinBox, QFrame, QFileDialog, QListWidget, QCheckBox,
+                         QDateTimeEdit)
 import numpy as np
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt4agg import (FigureCanvasQTAgg as
@@ -31,7 +32,7 @@ import h5py
 
 # Import our own modules
 #import qrc_resources
-from data_structures import Channel, CHAN_DICT, DEFAULTY, AXESLABELS
+from data_structures import Channel, CHAN_DICT, DEFAULTY, AXESLABELS, SENSVECTOR
 
 __author__ = "Christopher Espy"
 __copyright__ = "Copyright (C) 2014, Christopher Espy"
@@ -182,8 +183,32 @@ class Attribute(QWidget):
 
         ### CREATE GRAPHICAL ELEMENTS ###
         label = QLabel(attr_name)
-        value = QLineEdit()
-        value.setText(str(attr_val))
+
+        if type(attr_val) is int:
+            value = QSpinBox()
+            value.setMaximum(1E9)
+            value.setValue(attr_val)
+        elif type(attr_val) is float:
+            if "Sens" in attr_name:
+                value = QSpinBox()
+                value.setMaximum(1E10)
+                value.setMinimum(1)
+                attr_val = SENSVECTOR[int(attr_val)]
+                for ex in [(1E-3, 'mV'), (1E-6, 'uV'), (1E-9, 'nV')]:
+                    if attr_val / ex[0] > 1 and attr_val / ex[0] < 1000:
+                        value.setValue(attr_val / ex[0])
+                        value.setSuffix(' {units}'.format(units=ex[1]))
+            else:
+                value = QDoubleSpinBox()
+                value.setMaximum(1E9)
+                value.setMinimum(-1E9)
+                value.setValue(attr_val)
+        elif type(attr_val) is datetime:
+            value = QDateTimeEdit()
+            value.setDateTime(attr_val)
+        else:
+            value = QLineEdit()
+            value.setText(str(attr_val))
 
         ### CREATE LAYOUTS ###
         layout = QHBoxLayout()
@@ -217,7 +242,7 @@ class AttributesWidget(QWidget):
         self.layout.addLayout(self.lbl_layout)
 
         if not chan:
-            for i in np.arange(3):
+            for i in range(3):
                 new_attr = Attribute("Parameter {n}".format(n=i), i)
                 self.layout.addWidget(new_attr)
 
@@ -238,13 +263,9 @@ class AttributesWidget(QWidget):
 
     def add_chan(self, chan):
 
-        
-        for i in range(self.layout.count()):
-            print(type(self.layout.itemAt(i)))
-
-        for attr_name in chan.attributes:
+        for attr_name in sorted(chan.attributes.keys()):
             attr_val = chan.attributes[attr_name]
-            self.layout.addWidget(Attribute(attr_name, attr_val))
+            self.layout.insertWidget(self.layout.count()-1, Attribute(attr_name, attr_val))
             
 
     def emit_new_attributes(self):
@@ -284,6 +305,7 @@ class MainWindow(QMainWindow):
 
         self.xLabel = None
         self.xSelection = None
+        self.xSelection_old = None
         self.xArray = None
 
         self.yLabel = None
@@ -323,7 +345,7 @@ class MainWindow(QMainWindow):
 
         # X selector on bottom
         self.xSelector = QListWidget()
-        #self.xSelector.addItem("Time")
+        self.xSelector.addItem("Time")
         self.xSelector.setFlow(0)
         xSelectorLabel = QLabel("x axis channel")
         self.xSelector.setMaximumHeight(self.xSelector.sizeHintForColumn(0))
@@ -609,6 +631,8 @@ class MainWindow(QMainWindow):
 
     def make_x_selection(self):
 
+        self.x_change = True
+
         # Get the name of the newly selected channel
         self.xSelection = self.xSelector.currentItem().text()
 
@@ -625,7 +649,13 @@ class MainWindow(QMainWindow):
         if self.yLabel:
             self.plotData()
 
+        self.xSelection_old = self.xSelector.currentItem()
+
+        self.x_change = False
+
     def make_y_selection(self, offset=0.0):
+
+        self.y_change = True
 
         # Get the names of the selected channels from the selectors
         try:
@@ -645,7 +675,7 @@ class MainWindow(QMainWindow):
 
         # Update the attributes view
         self.attributesThing.clear_widgets()
-        print('cleared')
+
         self.attributesThing.add_chan(self.channel_registry[self.ySelection])
 
         if self.xSelection == 'Time':
@@ -655,6 +685,7 @@ class MainWindow(QMainWindow):
 
         self.ySelection_old = self.ySelector.currentItem()
 
+        self.y_change = False
 
     def gen_axis_label(self, chan_name):
 
@@ -709,7 +740,10 @@ class MainWindow(QMainWindow):
                                         x_chan=self.xSelection) + \
                                         "are not the same length!")
 
-            self.ySelector.setCurrentItem(self.ySelection_old)
+            if self.x_change:
+                self.xSelector.setCurrentItem(self.xSelection_old)
+            elif self.y_change:
+                self.ySelector.setCurrentItem(self.ySelection_old)
 
     def subtract_offset(self):
         "Subtract the offset entered from the currently selected y channel."

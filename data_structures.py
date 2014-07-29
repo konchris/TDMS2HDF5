@@ -54,8 +54,8 @@ CHAN_PARAMETERS = {"Res_RuO" : ["p0", "p1", "r0"],
                    "dISample" : ["IAmp", "LISens"],
                    "dVSample" : ["VAmp", "LVSens"]}
 
-DEFAULTX = "zMagnet"
-DEFAULTY = "dR"
+DEFAULTX = "Time"
+DEFAULTY = "ISample"
 
 AXESLABELS = {r"Resistance [$\Omega$]" : ["dR", "dRSample", "R", "RSample",
                                           "Res_RuO"],
@@ -67,8 +67,11 @@ AXESLABELS = {r"Resistance [$\Omega$]" : ["dR", "dRSample", "R", "RSample",
                                    "Sorption"],
               "Capacitance [nF]" : ["Cap", "TCap"]}
 
-RDEPENDENCIES = {}
 DESCRIPTIONS = {}
+
+SENSVECTOR = [2e-9, 5e-9, 10e-9, 20e-9, 50e-9, 100e-9, 200e-9, 500e-9, 1e-6,
+              2e-6, 5e-6, 10e-6, 20e-6, 50e-6, 100e-6, 200e-6, 500e-6, 1e-3,
+              2e-3, 5e-3, 10e-3, 20e-3, 50e-3, 100e-3, 200e-3, 500e-3, 1]
 
 class Channel(object):
     """A measurement channel containing a waveform and meta data.
@@ -110,9 +113,7 @@ class Channel(object):
         self.attributes = {"Device" : device,
                            "TimeInterval" : 0,
                            "Length" : len(meas_array),
-                           "StartTime" : datetime.now(),
-                           "Description" : "",
-                           "RDepends" : []}
+                           "StartTime" : datetime.now()}
 
         self.name = name
         self.data = meas_array
