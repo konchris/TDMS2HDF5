@@ -37,7 +37,7 @@ __author__ = "Christopher Espy"
 __copyright__ = "Copyright (C) 2014, Christopher Espy"
 __credits__ = ["Christopher Espy"]
 __license__ = "GPL"
-__version__ = "0.4"
+__version__ = "0.4.1"
 __maintainer__ = "Christopher Espy"
 __email__ = "christopher.espy@uni-konstanz.de"
 __status__ = "Development"
@@ -517,7 +517,10 @@ class MainWindow(QMainWindow):
         # Generate the y-channel array to be plotted
         self.yArray = self.channel_registry[self.ySelection].data - offset
 
-        self.plotData()
+        if self.xSelection == 'Time':
+            self.make_x_selection()
+        else:
+            self.plotData()
 
     def gen_axis_label(self, chan_name):
 
