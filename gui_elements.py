@@ -418,6 +418,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("TDMS to HDF5 Converter")
 
     def update_ui(self):
+        pass
 
     def createAction(self, text, slot=None, shortcut=None, icon=None,
                      tip=None, checkable=False, signal="triggered()"):
