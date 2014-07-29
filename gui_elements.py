@@ -165,14 +165,112 @@ class OffsetWidget(QWidget):
         self.show_btn.setEnabled(not self.preview_chkbx.isChecked())
 
     def emit_new_offset(self):
-        """Emit the 'new_offset' signal
+        """Emit the 'new_offset' signal.
 
-        The function just provied as easy way to connect other signals to
+        The function just provides an easy way to connect other signals to
         emitting the widget's new_offset signal.
 
         """
 
         self.new_offset.emit()
+
+class Attribute(QWidget):
+    """This class is displays an attribute and label."""
+
+    def __init__(self, attr_name, attr_val, parent=None):
+        super(Attribute, self).__init__(parent)
+
+        ### CREATE GRAPHICAL ELEMENTS ###
+        label = QLabel(attr_name)
+        value = QLineEdit()
+        value.setText(str(attr_val))
+
+        ### CREATE LAYOUTS ###
+        layout = QHBoxLayout()
+        layout.addWidget(label)
+        layout.addWidget(value)
+
+        self.setLayout(layout)
+
+class AttributesWidget(QWidget):
+    """This widget displays the attributes of a channel for editing."""
+
+    new_attributes = pyqtSignal()
+
+    def __init__(self, chan = None, parent=None):
+        super(AttributesWidget, self).__init__(parent)
+
+        ### CREATE GRAPHICAL ELEMENTS ###
+        self.apply_btn = QPushButton("Apply")
+        self.label = QLabel("Attributes")
+
+        ### CREATE LAYOUTS ###
+        self.lbl_layout = QHBoxLayout()
+        self.lbl_layout.addWidget(self.label)
+        self.lbl_layout.addStretch()
+        
+        self.btn_layout = QHBoxLayout()
+        self.btn_layout.addStretch()
+        self.btn_layout.addWidget(self.apply_btn)
+
+        self.layout = QVBoxLayout()
+        self.layout.addLayout(self.lbl_layout)
+
+        if not chan:
+            for i in np.arange(3):
+                new_attr = Attribute("Parameter {n}".format(n=i), i)
+                self.layout.addWidget(new_attr)
+
+        self.layout.addLayout(self.btn_layout)
+
+        self.setLayout(self.layout)
+
+        ### CONNECT SIGNALS ###
+        self.apply_btn.clicked.connect(self.emit_new_attributes)
+
+    def clear_widgets(self):
+
+        for i in range(self.layout.count()):
+            try:
+                self.layout.itemAt(i).widget().close()
+            except AttributeError:
+                pass
+
+    def add_chan(self, chan):
+
+        
+        for i in range(self.layout.count()):
+            print(type(self.layout.itemAt(i)))
+
+        for attr_name in chan.attributes:
+            attr_val = chan.attributes[attr_name]
+            self.layout.addWidget(Attribute(attr_name, attr_val))
+            
+
+    def emit_new_attributes(self):
+        """Emit the 'new_attributes' signal.
+
+        The function just provides an easy way to connect other signals to
+        emitting the widget's new_attributes signal.
+
+        """
+
+        print("Come and get 'em! New attributes!")
+        self.new_attributes.emit()
+
+    ## def update_ui(self, chan):
+
+    ##     layout = QVBoxLayout()
+    ##     label = QLabel("Attributes")
+    ##     layout.addWidget(label)
+
+    ##     for attr_name in chan.attributes:
+    ##         attr_val = chan.attributes[attr_name]
+    ##         layout.addWidget(Attribute(attr_name, attr_val))
+
+    ##     layout.addLayout(btn_layout)
+
+    ##     self.setLayout(layout)
 
 class MainWindow(QMainWindow):
     """The main window widget for the program.
@@ -190,6 +288,7 @@ class MainWindow(QMainWindow):
 
         self.yLabel = None
         self.ySelection = None
+        self.ySelection_old = None
         self.yArray = None
 
         # The dirty attribute is a boolean flag to indicate whether the
@@ -224,7 +323,7 @@ class MainWindow(QMainWindow):
 
         # X selector on bottom
         self.xSelector = QListWidget()
-        self.xSelector.addItem("Time")
+        #self.xSelector.addItem("Time")
         self.xSelector.setFlow(0)
         xSelectorLabel = QLabel("x axis channel")
         self.xSelector.setMaximumHeight(self.xSelector.sizeHintForColumn(0))
@@ -232,6 +331,7 @@ class MainWindow(QMainWindow):
 
         # Offset and parameter widgets on the right top
         self.offsetThing = OffsetWidget()
+        self.attributesThing = AttributesWidget()
 
         # Save channel on right bottom
         self.save_chan_chkbx = QCheckBox()
@@ -269,6 +369,7 @@ class MainWindow(QMainWindow):
         # Right Side
         rightLayout = QVBoxLayout()
         rightLayout.addWidget(self.offsetThing)
+        rightLayout.addWidget(self.attributesThing)
         rightLayout.addStretch()
         rightLayout.addLayout(save_chan_layout)
 
@@ -316,6 +417,8 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("TDMS to HDF5 Converter")
 
+    def update_ui(self):
+
     def createAction(self, text, slot=None, shortcut=None, icon=None,
                      tip=None, checkable=False, signal="triggered()"):
         # Create the action
@@ -350,6 +453,7 @@ class MainWindow(QMainWindow):
         formats = "TDMS files (*.tdms)"
         fname = QFileDialog.getOpenFileName(self, "Open a TDMS File",
                                             basedir, formats)
+
         # Process 1.1 Collect file name
         if fname and QFile.exists(fname):
             self.loadFile(fname)
@@ -383,8 +487,11 @@ class MainWindow(QMainWindow):
             self.ySelector.sortItems()
             zMagnet_item = self.xSelector.findItems('zMagnet', Qt.MatchExactly)
             self.xSelector.setCurrentItem(zMagnet_item[0])
-            dR_item = self.ySelector.findItems('dR', Qt.MatchExactly)
-            self.ySelector.setCurrentItem(dR_item[0])
+            try:
+                dR_item = self.ySelector.findItems('dR', Qt.MatchExactly)
+                self.ySelector.setCurrentItem(dR_item[0])
+            except IndexError:
+                self.ySelector.setCurrentRow(0)
 
         else:
             message = "Failed to load {f_name}".format(f_name=os.path.
@@ -417,7 +524,8 @@ class MainWindow(QMainWindow):
                                 device=group,
                                 meas_array=chan.data)
             except TypeError:
-                print("Could not load {chan}".format(chan=chan_name))
+                print("Channel {chan} in {dev} has no data"
+                      .format(chan=chan_name, dev=group))
             # Some of the TDMS channels were created, but never populated with
             # data. The following weeds those out.
             try:
@@ -439,10 +547,11 @@ class MainWindow(QMainWindow):
                             new_chan.attributes[atr_name] = \
                               group_props[atr_name]
                         except KeyError:
-                            print('The key {a_name} was not found.'
-                                  .format(a_name=atr_name))
-                            print('The keys available are\n')
-                            print(group_props)
+                            #print('The key {a_name} was not found.'
+                            #      .format(a_name=atr_name))
+                            #print('The keys available are\n')
+                            #print(group_props)
+                            pass
 
                 # Process 1.3.3.3 Add new channel to the registry
                 self.channel_registry[chan_name] = new_chan
@@ -533,10 +642,18 @@ class MainWindow(QMainWindow):
         # Generate the y-channel array to be plotted
         self.yArray = self.channel_registry[self.ySelection].data - offset
 
+        # Update the attributes view
+        self.attributesThing.clear_widgets()
+        print('cleared')
+        self.attributesThing.add_chan(self.channel_registry[self.ySelection])
+
         if self.xSelection == 'Time':
             self.make_x_selection()
         else:
             self.plotData()
+
+        self.ySelection_old = self.ySelector.currentItem()
+
 
     def gen_axis_label(self, chan_name):
 
@@ -585,8 +702,13 @@ class MainWindow(QMainWindow):
             # Draw everything
             self.canvas.draw()
         except ValueError:
-            print("{y_chan} and {x_chan} are not the same length!"
-                  .format(y_chan=self.ySelection, x_chan=self.xSelection))
+
+            QMessageBox.warning(self, "Unequal Arrays", "{y_chan} and {x_chan} "
+                                .format(y_chan=self.ySelection,
+                                        x_chan=self.xSelection) + \
+                                        "are not the same length!")
+
+            self.ySelector.setCurrentItem(self.ySelection_old)
 
     def subtract_offset(self):
         "Subtract the offset entered from the currently selected y channel."
