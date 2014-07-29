@@ -11,7 +11,8 @@ from datetime import datetime
 
 # Import thrid-party modules
 from PyQt4.QtCore import (PYQT_VERSION_STR, QSettings, QT_VERSION_STR,
-                          QVariant, Qt, SIGNAL, QModelIndex, QSize, QFile)
+                          QVariant, Qt, SIGNAL, QModelIndex, QSize, QFile,
+                          pyqtSignal)
 from PyQt4.QtGui import (QAction, QApplication, QIcon, QKeySequence, QLabel,
                          QMainWindow, QMessageBox, QTableView, QComboBox,
                          QVBoxLayout, QHBoxLayout, QWidget, QGridLayout,
@@ -45,48 +46,137 @@ PROGNAME = os.path.basename(sys.argv[0])
 PROGVERSION = __version__
 
 class OffsetWidget(QWidget):
-    "This widet displays the elements for editing the offset."
+    """This widet displays the elements for editing the offset.
+
+    This widget deals with the logic of when the new offset should be taken into
+    account internally. When it determines that the new offset should be used,
+    it emits the 'new_offset' signal.
+
+    Parameters
+    ----------
+    parent : ?
+
+    Attributes
+    ----------
+    offset_entry : QDoubleSpinBox
+        The numerical element where the user can enter the offset. The units are
+        determined by the currently displayed channel.
+
+    Methods
+    -------
+    toggle_preview
+        Determine how the new_offset signal should be emitted and connect the
+        proper element to the emit_new_offset method.
+    emit_new_offset
+        Wrapper function for connected one of the widget's element's signals to
+        the new_offset signal.
+
+    Signals
+    -------
+    new_offset
+        Indicates that a new offset has been entered and is ready to be used in
+        calculations.
+
+    """
+
+    # Define a new signal called 'new_offset'
+    new_offset = pyqtSignal()
 
     def __init__(self, parent=None):
         super(OffsetWidget, self).__init__(parent)
 
+        ### CREATE GRAPHICAL ELEMENTS ###
+
+        # Create the numerical entry spinbox and its label
         offset_label = QLabel("Offset")
         self.offset_entry = QDoubleSpinBox(self)
+        self.offset_entry.setDecimals(10)
 
+        # Create the preview checkbox and its label
         preview_chkbx_lbl = QLabel("preview")
         self.preview_chkbx = QCheckBox()
 
+        # Create the 'Show' and 'Save' push buttons
         self.show_btn = QPushButton("Show")
         self.save_btn = QPushButton("Save")
+        # The save feature is planned for later, so the button is disabled for
+        # now
         self.save_btn.setEnabled(False)
 
+        ### CREATE LAYOUTS ###
+
+        # Create the layout for the checkbox/button strip at the bottom of the
+        # widget's layout:
+        # | checkbox | checkbox label | show button | save button |
         btn_layout = QHBoxLayout()
         btn_layout.addWidget(self.preview_chkbx)
         btn_layout.addWidget(preview_chkbx_lbl)
         btn_layout.addWidget(self.show_btn)
         btn_layout.addWidget(self.save_btn)
 
+        # Create the main layout of the widget:
+        # |      spinbox label     |
+        # |         spinbox        |
+        # | checkbox/button layout |
         layout = QVBoxLayout()
         layout.addWidget(offset_label)
         layout.addWidget(self.offset_entry)
         layout.addLayout(btn_layout)
 
+        # Set the layout
         self.setLayout(layout)
 
+        ### CONNECT SIGNALS ###
+
+        # Connect the checkbox's 'stateChanged' signal to the toggle_preview
+        # method
         self.preview_chkbx.stateChanged.connect(self.toggle_preview)
-
-    def deactivate(self):
-        "A quick function to deactivate all elements."
-
-        pass
+        # Connect the show button's 'clicked' signal to the emit_new_offset
+        # method.
+        # By default the checkbox is not selected, thus the default is that the
+        # show button is how the user indicates that there is a new offset.
+        self.show_btn.clicked.connect(self.emit_new_offset)
 
     def toggle_preview(self):
-        "Toggle previewing offset changes automatically."
+        """Toggle previewing offset changes automatically.
 
+        This function checks the state of the preview checkbox and establishes
+        the Offset_Widget's method of emitting the new_offset signal.
+
+        """
+
+        # Connect and disconnect the spinbox's and show button's signals to the
+        # widget's new_offset signal.
+        if self.preview_chkbx.isChecked():
+            # Preview is selected:
+            #  show button is disconnected from new_offset
+            #  spinbox is connected to new_offset
+            self.show_btn.clicked.disconnect(self.emit_new_offset)
+            self.offset_entry.editingFinished.connect(self.emit_new_offset)
+        elif not self.preview_chkbx.isChecked():
+            # Preview is not selected:
+            #  spinbox is disconnected from new_offset
+            #  show button is connected to new_offset
+            self.offset_entry.editingFinished.disconnect(self.emit_new_offset)
+            self.show_btn.clicked.connect(self.emit_new_offset)
+
+        # Enable or disable the show button depending on checkbox's state
         self.show_btn.setEnabled(not self.preview_chkbx.isChecked())
-        
+
+    def emit_new_offset(self):
+        """Emit the 'new_offset' signal
+
+        The function just provied as easy way to connect other signals to
+        emitting the widget's new_offset signal.
+
+        """
+
+        self.new_offset.emit()
 
 class MainWindow(QMainWindow):
+    """The main window widget for the program.
+
+    """
 
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
@@ -189,6 +279,7 @@ class MainWindow(QMainWindow):
 
         self.ySelector.itemSelectionChanged.connect(self.plotData)
         self.xSelector.itemSelectionChanged.connect(self.plotData)
+        self.offsetThing.new_offset.connect(self.subtract_offset)
 
         #self.offsetThing.preview_chkbx.stateChanged.connect(self.toggle_preview)
 
@@ -274,8 +365,6 @@ class MainWindow(QMainWindow):
         else:
             message = "Failed to load {f_name}".format(f_name=os.path.
                                                        basename(fname))
-
-        self.offsetThing.offset_entry.editingFinished.connect(lambda ch_name = '01-Offset/{0}'.format(self.ySelector.currentItem().text()): self.create_new_channel(ch_name))
 
         self.xSelector.setMaximumHeight(self.xSelector.sizeHintForColumn(0))
         self.ySelector.setMaximumWidth(self.ySelector.sizeHintForColumn(0))
@@ -381,78 +470,82 @@ class MainWindow(QMainWindow):
         self.hdf5_file_object.flush()
         self.hdf5_file_object.close()
 
-    def plotData(self):
+    def plotData(self, offset=0.0):
 
+        # Clear the plot
         self.axes.cla()
 
+        # Turn on the grid
         self.axes.grid(True)
 
+        # Get the names of the selected channels from the selectors
         try:
             ySelection = self.ySelector.currentItem().text()
         except AttributeError:
             ySelection = DEFAULTY
         xSelection = self.xSelector.currentItem().text()
 
-        #print(xSelection, ySelection)
-
+        # Generate the axis labels based on the selected channels
+        # Cycle through the labes in the AXESLABELS dictionary
         for axlbl in AXESLABELS.keys():
 
+            # Cycle through the channel names in each label's dictionary entry
             for cn in AXESLABELS[axlbl]:
+
+                # If a channel equals one of the selections, save the label 
                 if xSelection == cn:
                     xLabel = axlbl
-                if ySelection == cn:
+                elif ySelection == cn:
                     yLabel = axlbl
 
-        self.axes.set_xlabel(xLabel)
-        self.axes.set_ylabel(yLabel)
+        # Set the labels
+        try: 
+            self.axes.set_xlabel(xLabel)
+        except UnboundLocalError:
+            print("Could not generate an axis label for {chan}"
+                  .format(chan=xSelection))
+        try:
+            self.axes.set_ylabel(yLabel)
+        except UnboundLocalError:
+            print("Could not generate an axis label for {chan}"
+                  .format(chan=ySelection))
 
+        # If the xSelection is time, use the time data instead of measurement
+        # data
         if xSelection == 'Time':
             xArray = self.channel_registry[ySelection].time
         else:
             xArray = self.channel_registry[xSelection].data
 
-        yArray = self.channel_registry[ySelection].data
+        # Generate the y-channel array to be plotted
+        yArray = self.channel_registry[ySelection].data - offset
 
-        self.axes.plot(xArray, yArray, label=ySelection)
+        # Try plotting the data. There are still no checks in place to make sure
+        # the arrays are of the same length.
+        try:
+            # Plot the data and label it
+            self.axes.plot(xArray, yArray, label=ySelection)
 
-        self.axes.legend(loc=0)
+            # Show the legend
+            self.axes.legend(loc=0)
 
-        self.canvas.draw()
+            # Draw everything
+            self.canvas.draw()
+        except ValueError:
+            print("{y_chan} and {x_chan} are not the same length!"
+                  .format(y_chan=ySelection, x_chan=xSelection))
 
     def create_new_channel(self, ch_name):
         "Create a new channel in the registry."
 
         print(ch_name)
 
-    def toggle_preview(self):
-        "Toggle automatic preview on or off."
-
-        if self.offsetThing.preview_chkbx.isChecked():
-            self.offsetThing.offset_entry.editingFinished.connect(
-                self.subtract_offset)
-            self.offsetThing.show_btn.setEnabled(
-                not self.offsetThing.preview_chkbx.isChecked())
-            try:
-                self.offsetThing.show_btn.clicked.disconnect(self.subtract_offset)
-            except TypeError:
-                pass
-        else:
-            self.offsetThing.show_btn.clicked.connect(self.subtract_offset)
-            self.offsetThing.show_btn.setEnabled(
-                not self.offsetThing.preview_chkbx.isChecked())
-            try:
-                self.offsetThing.offset_entry.editingFinished.disconnect(
-                    self.subtract_offset)
-            except TypeError:
-                    pass
-
-
     def subtract_offset(self):
         "Subtract the offset entered from the currently selected y channel."
 
         offset = self.offsetThing.offset_entry.value()
 
-        print(offset)
+        self.plotData(offset=offset)
 
     def closeEvent(self, event):
         """Reimplementation of the close even handler.
