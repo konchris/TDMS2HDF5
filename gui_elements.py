@@ -32,7 +32,8 @@ import h5py
 
 # Import our own modules
 #import qrc_resources
-from data_structures import Channel, CHAN_DICT, DEFAULTY, AXESLABELS, SENSVECTOR
+from data_structures import (Channel, CHAN_DICT, DEFAULTY, AXESLABELS,
+                             SENSVECTOR, DEFAULTX)
 
 __author__ = "Christopher Espy"
 __copyright__ = "Copyright (C) 2014, Christopher Espy"
@@ -69,7 +70,7 @@ class OffsetWidget(QWidget):
         Determine how the new_offset signal should be emitted and connect the
         proper element to the emit_new_offset method.
     emit_new_offset
-        Wrapper function for connected one of the widget's element's signals to
+        Wrapper function for connecting one of the widget's element's signals to
         the new_offset signal.
 
     Signals
@@ -176,41 +177,77 @@ class OffsetWidget(QWidget):
         self.new_offset.emit()
 
 class Attribute(QWidget):
-    """This class is displays an attribute and label."""
+    """This widget displays an attribute and label.
+
+    The widget displays an HDF5 attribute: the name is in a label, and the value
+    is in an edit element depending on what it's data type is.
+
+    Parameters
+    ----------
+    attr_name : str
+        The name of the attribute, which is also its key in the channel's
+        attributes dictionary.
+    attr_val : int or float or datetime or string
+        The value of the attribute, i.e. the key's value in the channel's
+        attributes dictionary.
+
+    Returns
+    -------
+    Attribute
+        The Attribute is then the combination of a QLabel and whatever editing
+        element cooresponds to the value. These are arranged in a QHBoxLayout.
+
+    """
 
     def __init__(self, attr_name, attr_val, parent=None):
         super(Attribute, self).__init__(parent)
 
         ### CREATE GRAPHICAL ELEMENTS ###
+        # The label with the attribute's name
         label = QLabel(attr_name)
 
+        # Now create the editing element, initialized with the attribute's
+        # value.
+        # First, if the value is an integer, use a spinbox
         if type(attr_val) is int:
             value = QSpinBox()
             value.setMaximum(1E9)
             value.setValue(attr_val)
+        # Second, if the value is a float, use a doublespinbox, with some
+        # customizations for certain attributes.
         elif type(attr_val) is float:
+            # We want to display the sensitivities in useful units, which should
+            # simulate scientific notation. The attribute value is the
+            # sensitivity's index in the SENSVECTOR.
             if "Sens" in attr_name:
                 value = QSpinBox()
                 value.setMaximum(1E10)
                 value.setMinimum(1)
                 attr_val = SENSVECTOR[int(attr_val)]
+                # Figure out which units to use
                 for ex in [(1E-3, 'mV'), (1E-6, 'uV'), (1E-9, 'nV')]:
                     if attr_val / ex[0] > 1 and attr_val / ex[0] < 1000:
                         value.setValue(attr_val / ex[0])
                         value.setSuffix(' {units}'.format(units=ex[1]))
+            # If the value is a float, but not a sensitivity, just use a normal
+            # doublespinbox
             else:
                 value = QDoubleSpinBox()
                 value.setMaximum(1E9)
                 value.setMinimum(-1E9)
                 value.setValue(attr_val)
+        # Third, if the value is a datetime, dispaly it in a datetimeedit
+        # element.
         elif type(attr_val) is datetime:
             value = QDateTimeEdit()
             value.setDateTime(attr_val)
+        # Finally, for everything else just display it in a lineedit element.
         else:
             value = QLineEdit()
             value.setText(str(attr_val))
 
         ### CREATE LAYOUTS ###
+
         layout = QHBoxLayout()
         layout.addWidget(label)
         layout.addWidget(value)
@@ -218,42 +255,82 @@ class Attribute(QWidget):
         self.setLayout(layout)
 
 class AttributesWidget(QWidget):
-    """This widget displays the attributes of a channel for editing."""
+    """This widget displays the attributes of a channel.
 
+    This widget displays all attributes of a HDF5 channel.
+
+    Parameters
+    ----------
+    chan : Channel, optional
+        A channel whose attributes should be displayed at instantiation.
+
+    Attributes
+    ----------
+    label : QLabel
+        The label of this widget, which is "Attributes".
+    lbl_layout : QHBoxLayout
+        The layout for the label
+    layout : QVBoxLayout
+        The layout for all elements of the widget
+
+    Methods
+    -------
+    clear_attributes
+        Delete all of the Attribute widgets contained by this widget
+    select_chan
+        Select the channel whose attributes are to be shown
+    emit_new_attributes
+        Wrapper function for connecting the editing of a widget to the
+        new_attribute signal.
+
+    Signals
+    -------
+    new_attribute
+        Indicates that a new attributes has been entered and is ready to be
+        incorporated into the channel's data.
+
+    """
+
+    # Define the new signal 'new_attributes'
     new_attributes = pyqtSignal()
 
-    def __init__(self, chan = None, parent=None):
+    def __init__(self, chan=None, parent=None):
         super(AttributesWidget, self).__init__(parent)
 
         ### CREATE GRAPHICAL ELEMENTS ###
-        self.apply_btn = QPushButton("Apply")
         self.label = QLabel("Attributes")
+        #self.apply_btn = QPushButton("Apply")
 
         ### CREATE LAYOUTS ###
         self.lbl_layout = QHBoxLayout()
         self.lbl_layout.addWidget(self.label)
         self.lbl_layout.addStretch()
-        
-        self.btn_layout = QHBoxLayout()
-        self.btn_layout.addStretch()
-        self.btn_layout.addWidget(self.apply_btn)
+
+        #self.btn_layout = QHBoxLayout()
+        #self.btn_layout.addStretch()
+        #self.btn_layout.addWidget(self.apply_btn)
 
         self.layout = QVBoxLayout()
         self.layout.addLayout(self.lbl_layout)
 
+        # Generate some temporary filler attributes when the program initially
+        # starts.
         if not chan:
             for i in range(3):
-                new_attr = Attribute("Parameter {n}".format(n=i), i)
+                new_attr = Attribute("Attribute {n}".format(n=i), i)
                 self.layout.addWidget(new_attr)
+        else:
+            self.select_chan(chan)
 
-        self.layout.addLayout(self.btn_layout)
+        #self.layout.addLayout(self.btn_layout)
 
         self.setLayout(self.layout)
 
         ### CONNECT SIGNALS ###
-        self.apply_btn.clicked.connect(self.emit_new_attributes)
+        #self.apply_btn.clicked.connect(self.emit_new_attributes)
 
-    def clear_widgets(self):
+    def clear_attributes(self):
+        """Delete the attribute widgets from the display."""
 
         for i in range(self.layout.count()):
             try:
@@ -261,12 +338,22 @@ class AttributesWidget(QWidget):
             except AttributeError:
                 pass
 
-    def add_chan(self, chan):
+    def select_chan(self, chan):
+        """Select the channel whose attributes are to be displayed.
+
+        Pass the channel so its attributes can be collected and displayed.
+
+        Parameters
+        ----------
+        chan : Channel
+            The channel whose attributes are to be displayed.
+
+        """
 
         for attr_name in sorted(chan.attributes.keys()):
             attr_val = chan.attributes[attr_name]
-            self.layout.insertWidget(self.layout.count()-1, Attribute(attr_name, attr_val))
-            
+            self.layout.insertWidget(self.layout.count()-1,
+                                     Attribute(attr_name, attr_val))
 
     def emit_new_attributes(self):
         """Emit the 'new_attributes' signal.
@@ -276,22 +363,8 @@ class AttributesWidget(QWidget):
 
         """
 
-        print("Come and get 'em! New attributes!")
+        #print("Come and get 'em! New attributes!")
         self.new_attributes.emit()
-
-    ## def update_ui(self, chan):
-
-    ##     layout = QVBoxLayout()
-    ##     label = QLabel("Attributes")
-    ##     layout.addWidget(label)
-
-    ##     for attr_name in chan.attributes:
-    ##         attr_val = chan.attributes[attr_name]
-    ##         layout.addWidget(Attribute(attr_name, attr_val))
-
-    ##     layout.addLayout(btn_layout)
-
-    ##     self.setLayout(layout)
 
 class MainWindow(QMainWindow):
     """The main window widget for the program.
@@ -301,25 +374,22 @@ class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
 
-        #1 Create and Initialize data structures
+        #### 1 CREATE AND INITIALIZE DATA STRUCTURES ####
 
         self.xLabel = None
-        self.xSelection = None
+        self.xSelection = DEFAULTX
         self.xSelection_old = None
         self.xArray = None
 
         self.yLabel = None
-        self.ySelection = None
+        self.ySelection = DEFAULTY
         self.ySelection_old = None
+
         self.yArray = None
 
-        # The dirty attribute is a boolean flag to indicate whether the
-        # file has unsaved changes.
-        self.dirty = False
         self.filename = None
 
         self.tdms_file_object = None
-        self.hdf5_file_object = None
 
         self.channel_registry = {}
 
@@ -336,12 +406,12 @@ class MainWindow(QMainWindow):
         sourceFileLabel.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         # Matplotlib canvas
-        self.fig = Figure(dpi=100)
-        self.canvas = FigureCanvas(self.fig)
+        fig = Figure(dpi=100)
+        self.canvas = FigureCanvas(fig)
         self.canvas.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         mpl_toolbar = NavigationToolbar(self.canvas, self.canvas)
 
-        self.axes = self.fig.add_subplot(111)
+        self.axes = fig.add_subplot(111)
 
         # X selector on bottom
         self.xSelector = QListWidget()
@@ -485,7 +555,6 @@ class MainWindow(QMainWindow):
         #TODO self.addRecentFile(fname)  see Rapid GUI ch06.pyw
         self.tdms_file_object = TdmsFile(fname)
         self.filename = fname
-        self.dirty = False
 
          # Process 1.3 Read data into local structure
         if self.tdms_file_object:
@@ -502,31 +571,49 @@ class MainWindow(QMainWindow):
 
             print(message)
 
-            # Process 2.1 Populate channl selection lists
-            for key in self.channel_registry.keys():
-                self.xSelector.addItem(key)
-                self.ySelector.addItem(key)
-            self.xSelector.sortItems()
-            self.ySelector.sortItems()
-            zMagnet_item = self.xSelector.findItems('zMagnet', Qt.MatchExactly)
-            self.xSelector.setCurrentItem(zMagnet_item[0])
-            try:
-                dR_item = self.ySelector.findItems('dR', Qt.MatchExactly)
-                self.ySelector.setCurrentItem(dR_item[0])
-            except IndexError:
-                self.ySelector.setCurrentRow(0)
+            # Process 2.1 Populate channel selection lists
+            self.update_selectors()
 
         else:
             message = "Failed to load {f_name}".format(f_name=os.path.
                                                        basename(fname))
 
-        self.xSelector.setMaximumHeight(self.xSelector.sizeHintForColumn(0))
-        self.ySelector.setMaximumWidth(self.ySelector.sizeHintForColumn(0))
         #TODO self.updateStatus(message) # see Rapid GUI ch06.pyw
 
+    def update_selectors(self):
+
+        # Clear the selectors
+        self.xSelector.clear()
+        self.ySelector.clear()
+
+        # Add the names of the channels in the registry to both selectors
+        for key in self.channel_registry.keys():
+            self.xSelector.addItem(key)
+            self.ySelector.addItem(key)
+
+        # Add the time "channel" to the x selector
+        self.xSelector.addItem('Time')
+
+        # Sort the lists (alphabetically) otherwise the order constantly changes
+        self.xSelector.sortItems()
+        self.ySelector.sortItems()
+
+        # Set the current x selector default
+        default_x_item = self.xSelector.findItems(DEFAULTX, Qt.MatchExactly)
+        self.xSelector.setCurrentItem(default_x_item[0])
+
+        # Set the current y selector default
+        try:
+            default_y_item = self.ySelector.findItems(DEFAULTY,
+                                                      Qt.MatchExactly)
+            self.ySelector.setCurrentItem(default_y_item[0])
+        except IndexError:
+            self.ySelector.setCurrentRow(0)
+
+        self.xSelector.setMinimumHeight(self.xSelector.sizeHintForRow(0)*3)
+        self.ySelector.setMinimumWidth(self.ySelector.sizeHintForColumn(0)+10)
 
     def sortTDMSGroupData(self, group): # Process 1.3 Sort Group data
-        #print("Group:\t{g_name}".format(g_name=group))
 
         # Process 1.3.1 Get <Group> Channels
         group_props = self.tdms_file_object.object(group).properties
@@ -590,7 +677,7 @@ class MainWindow(QMainWindow):
         fname = self.filename.split('.')[0] + '.hdf5'
 
         # Process 5.1 Create HDF5 file object
-        self.hdf5_file_object = h5py.File(fname)
+        hdf5_file_object = h5py.File(fname)
 
         # Process 5.2 Create channels at their locations
         for chan in self.channel_registry:
@@ -604,7 +691,7 @@ class MainWindow(QMainWindow):
             # Process 5.2.1 Write channel data
             if self.channel_registry[chan].write_to_file:
 
-                dset = self.hdf5_file_object.create_dataset(chan_obj.location,
+                dset = hdf5_file_object.create_dataset(chan_obj.location,
                                                             data=chan_obj.data)
 
             # Process 5.2.2 Write channel attributes
@@ -626,8 +713,8 @@ class MainWindow(QMainWindow):
                 dset.attrs.create(attr_name, attr_value)
 
         # Process 5.3 Write data to file
-        self.hdf5_file_object.flush()
-        self.hdf5_file_object.close()
+        hdf5_file_object.flush()
+        hdf5_file_object.close()
 
     def make_x_selection(self):
 
@@ -674,9 +761,9 @@ class MainWindow(QMainWindow):
         self.yArray = self.channel_registry[self.ySelection].data - offset
 
         # Update the attributes view
-        self.attributesThing.clear_widgets()
+        self.attributesThing.clear_attributes()
 
-        self.attributesThing.add_chan(self.channel_registry[self.ySelection])
+        self.attributesThing.select_chan(self.channel_registry[self.ySelection])
 
         if self.xSelection == 'Time':
             self.make_x_selection()
