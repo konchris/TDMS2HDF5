@@ -91,6 +91,7 @@ class OffsetWidget(QWidget):
 
         # Create the numerical entry spinbox and its label
         offset_label = QLabel("Offset")
+
         self.offset_entry = QDoubleSpinBox(self)
         self.offset_entry.setDecimals(10)
         self.offset_entry.setRange(-1000000,1000000)
@@ -326,6 +327,8 @@ class AttributesWidget(QWidget):
 
         self.setLayout(self.layout)
 
+        self.setMaximumWidth(self.sizeHint().width())
+
         ### CONNECT SIGNALS ###
         #self.apply_btn.clicked.connect(self.emit_new_attributes)
 
@@ -419,7 +422,6 @@ class MainWindow(QMainWindow):
         self.xSelector.setFlow(0)
         xSelectorLabel = QLabel("x axis channel")
         self.xSelector.setMaximumHeight(self.xSelector.sizeHintForColumn(0))
-        #self.xSelector.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Expanding)
 
         # Offset and parameter widgets on the right top
         self.offsetThing = OffsetWidget()
@@ -428,6 +430,7 @@ class MainWindow(QMainWindow):
         # Save channel on right bottom
         self.save_chan_chkbx = QCheckBox()
         save_chan_label = QLabel("Save Channel")
+
 
         #2 Create the central widget
         self.centralWidget = QWidget()
@@ -473,6 +476,8 @@ class MainWindow(QMainWindow):
         self.centralWidget.setLayout(layout)
         self.setCentralWidget(self.centralWidget)
 
+        self.resize(self.sizeHint())
+
         #3 Create and set up any dock windows
 
         #4 Create actions and insert them into menus and toolbars
@@ -490,15 +495,11 @@ class MainWindow(QMainWindow):
                                 fileQuitAction)
         self.addActions(self.fileMenu, self.fileMenuActions)
 
-        #self.xSelector.itemSelectionChanged.connect(self.plotData)
         self.xSelector.itemSelectionChanged.connect(self.make_x_selection)
-        #self.ySelector.itemSelectionChanged.connect(self.plotData)
         self.ySelector.itemSelectionChanged.connect(self.make_y_selection)
         self.offsetThing.new_offset.connect(self.subtract_offset)
 
         self.save_chan_chkbx.stateChanged.connect(self.toggle_save)
-
-        #self.offsetThing.preview_chkbx.stateChanged.connect(self.toggle_preview)
 
         #5 Read in application's settings
         settings = QSettings()
