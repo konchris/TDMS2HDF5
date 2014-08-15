@@ -431,7 +431,28 @@ class MainWindow(QMainWindow):
         self.save_chan_chkbx = QCheckBox()
         save_chan_label = QLabel("Save Channel")
 
+        # Status bar at the bottom
 
+        self.fileSizeLabel = QLabel("File Size: {f_size:0>7.3f} MB".format(f_size=0.0))
+        self.fileSizeLabel.setFixedWidth(self.fileSizeLabel.sizeHint().width()+10)
+        self.fileSizeLabel.setFrameStyle(QFrame.Panel|QFrame.Sunken)
+
+        self.yChanLength = QLabel("Y Channel Length: {y_len:0>7.0f}".format(y_len=0.0))
+        self.yChanLength.setFixedWidth(self.yChanLength.sizeHint().width()+10)
+        self.yChanLength.setFrameStyle(QFrame.Panel|QFrame.Sunken)
+        
+        self.xChanLength = QLabel("X Channel Length: {x_len:0>7.0f}".format(x_len=0.0))
+        self.xChanLength.setFixedWidth(self.xChanLength.sizeHint().width()+10)
+        self.xChanLength.setFrameStyle(QFrame.Panel|QFrame.Sunken)
+
+        status = self.statusBar()
+        status.setSizeGripEnabled(False)
+        status.addPermanentWidget(self.fileSizeLabel)
+        status.addPermanentWidget(self.yChanLength)
+        status.addPermanentWidget(self.xChanLength)
+
+        status.showMessage("Ready", 5000)
+        
         #2 Create the central widget
         self.centralWidget = QWidget()
 
@@ -570,8 +591,6 @@ class MainWindow(QMainWindow):
             message = "Loaded {f_name}".format(f_name=os.path.basename(fname))
             self.sourceFileName.setText(os.path.basename(fname))
 
-            print(message)
-
             # Process 2.1 Populate channel selection lists
             self.update_selectors()
 
@@ -579,40 +598,11 @@ class MainWindow(QMainWindow):
             message = "Failed to load {f_name}".format(f_name=os.path.
                                                        basename(fname))
 
+        self.statusBar().showMessage(message, 5000)
+
+        fsize = os.path.getsize(self.filename)
+        self.fileSizeLabel.setText("File Size: {file_size:>7.3f} MB".format(file_size=fsize/1E6))
         #TODO self.updateStatus(message) # see Rapid GUI ch06.pyw
-
-    def update_selectors(self):
-
-        # Clear the selectors
-        self.xSelector.clear()
-        self.ySelector.clear()
-
-        # Add the names of the channels in the registry to both selectors
-        for key in self.channel_registry.keys():
-            self.xSelector.addItem(key)
-            self.ySelector.addItem(key)
-
-        # Add the time "channel" to the x selector
-        self.xSelector.addItem('Time')
-
-        # Sort the lists (alphabetically) otherwise the order constantly changes
-        self.xSelector.sortItems()
-        self.ySelector.sortItems()
-
-        # Set the current x selector default
-        default_x_item = self.xSelector.findItems(DEFAULTX, Qt.MatchExactly)
-        self.xSelector.setCurrentItem(default_x_item[0])
-
-        # Set the current y selector default
-        try:
-            default_y_item = self.ySelector.findItems(DEFAULTY,
-                                                      Qt.MatchExactly)
-            self.ySelector.setCurrentItem(default_y_item[0])
-        except IndexError:
-            self.ySelector.setCurrentRow(0)
-
-        self.xSelector.setMinimumHeight(self.xSelector.sizeHintForRow(0)*3)
-        self.ySelector.setMinimumWidth(self.ySelector.sizeHintForColumn(0)+10)
 
     def sortTDMSGroupData(self, group): # Process 1.3 Sort Group data
 
@@ -627,18 +617,18 @@ class MainWindow(QMainWindow):
         for chan in group_chans:
             chan_name = chan.path.split('/')[-1].strip("'")
 
-
-            # TODO: update the process numbers, descriptions, and diagrams
             # Process 1.3.3.1 Generate new channel object and fill with data
+            # Some of the TDMS channels were created, but never populated with
+            # data. The following weeds those out.
             try:
                 new_chan = Channel(chan_name,
                                 device=group,
                                 meas_array=chan.data)
             except TypeError:
-                print("Channel {chan} in {dev} has no data"
-                      .format(chan=chan_name, dev=group))
-            # Some of the TDMS channels were created, but never populated with
-            # data. The following weeds those out.
+                self.statusBar().showMessage("Channel {chan} in {dev} has no data"
+                                             .format(chan=chan_name, dev=group),
+                                             5000)
+
             try:
                 new_chan.set_start_time(chan.property("wf_start_time"))
 
@@ -673,6 +663,39 @@ class MainWindow(QMainWindow):
                 pass
                 #print('Error: Was unable to load {c3_name}'
                 #      .format(c3_name=chan_name))
+
+    def update_selectors(self):
+
+        # Clear the selectors
+        self.xSelector.clear()
+        self.ySelector.clear()
+
+        # Add the names of the channels in the registry to both selectors
+        for key in self.channel_registry.keys():
+            self.xSelector.addItem(key)
+            self.ySelector.addItem(key)
+
+        # Add the time "channel" to the x selector
+        self.xSelector.addItem('Time')
+
+        # Sort the lists (alphabetically) otherwise the order constantly changes
+        self.xSelector.sortItems()
+        self.ySelector.sortItems()
+
+        # Set the current x selector default
+        default_x_item = self.xSelector.findItems(DEFAULTX, Qt.MatchExactly)
+        self.xSelector.setCurrentItem(default_x_item[0])
+
+        # Set the current y selector default
+        try:
+            default_y_item = self.ySelector.findItems(DEFAULTY,
+                                                      Qt.MatchExactly)
+            self.ySelector.setCurrentItem(default_y_item[0])
+        except IndexError:
+            self.ySelector.setCurrentRow(0)
+
+        self.xSelector.setMinimumHeight(self.xSelector.sizeHintForRow(0)*3)
+        self.ySelector.setMinimumWidth(self.ySelector.sizeHintForColumn(0)+10)
 
     def exprtToHDF5(self): # Process 5 Save to HDF5
         fname = self.filename.split('.')[0] + '.hdf5'
@@ -741,6 +764,8 @@ class MainWindow(QMainWindow):
 
         self.x_change = False
 
+        self.xChanLength.setText("X Channel Length: {x_len:>7.0f}".format(x_len=len(self.xArray)))
+
     def make_y_selection(self, offset=0.0):
 
         self.y_change = True
@@ -775,6 +800,8 @@ class MainWindow(QMainWindow):
 
         self.y_change = False
 
+        self.yChanLength.setText("Y Channel Length: {y_len:>7.0f}".format(y_len=len(self.yArray)))
+
     def gen_axis_label(self, chan_name):
 
         # Generate the axis labels based on the selected channels
@@ -802,13 +829,13 @@ class MainWindow(QMainWindow):
         try: 
             self.axes.set_xlabel(self.xLabel)
         except UnboundLocalError:
-            print("Could not generate an axis label for {chan}"
-                  .format(chan=self.xSelection))
+            self.statusBar().showMessage("Could not generate an axis label for {chan}"
+                                         .format(chan=self.xSelection), 5000)
         try:
             self.axes.set_ylabel(self.yLabel)
         except UnboundLocalError:
-            print("Could not generate an axis label for {chan}"
-                  .format(chan=self.ySelection))
+            self.statusBar().showMessage("Could not generate an axis label for {chan}"
+                                         .format(chan=self.ySelection), 5000)
 
         # Try plotting the data. There are still no checks in place to make sure
         # the arrays are of the same length.
@@ -848,7 +875,8 @@ class MainWindow(QMainWindow):
     def create_new_channel(self, ch_name):
         "Create a new channel in the registry."
 
-        print(ch_name)
+        #print(ch_name)
+        pass
 
     def closeEvent(self, event):
         """Reimplementation of the close even handler.
