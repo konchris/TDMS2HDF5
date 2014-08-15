@@ -48,14 +48,14 @@ OFFSET_CHANS = ["VSample", "ISample", "VRuO", "I", "V", "R", "Res_RuO",
 
 CHAN_PARAMETERS = {"Res_RuO" : ["p0", "p1", "r0"],
                    "VRuO" : ["r max", "r min"],
-                   "zMagnet" : ["V2T"],
+                   "zMagnet" : ["T_Start", "T_End", "B_Start", "B_End"],
                    "ISample" : ["IAmp"],
                    "VSample" : ["VAmp"],
                    "dISample" : ["IAmp", "LISens"],
                    "dVSample" : ["VAmp", "LVSens"]}
 
 DEFAULTX = "Time"
-DEFAULTY = "ISample"
+DEFAULTY = "dR"
 
 AXESLABELS = {r"Resistance [$\Omega$]" : ["dR", "dRSample", "R", "RSample",
                                           "Res_RuO"],
