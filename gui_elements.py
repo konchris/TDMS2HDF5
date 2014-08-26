@@ -32,7 +32,7 @@ import h5py
 
 # Import our own modules
 #import qrc_resources
-from data_structures import (Channel, CHAN_DICT, DEFAULTY, AXESLABELS,
+from data_structures import (Channel, ADWIN_DICT, DEFAULTY, AXESLABELS,
                              SENSVECTOR, DEFAULTX)
 
 __author__ = "Christopher Espy"
@@ -676,7 +676,7 @@ class MainWindow(QMainWindow):
                 # We retrieve those here.
                 # Process 1.3.3.2 Resort the group properties of TDMS ADWin
                 if group == "ADWin":
-                    for atr_name in CHAN_DICT[chan_name]:
+                    for atr_name in ADWIN_DICT[chan_name]:
                         try:
                             new_chan.attributes[atr_name] = \
                               group_props[atr_name]
