@@ -12,7 +12,7 @@ from datetime import datetime
 # Import thrid-party modules
 from PyQt4.QtCore import (PYQT_VERSION_STR, QSettings, QT_VERSION_STR,
                           QVariant, Qt, SIGNAL, QModelIndex, QSize, QFile,
-                          pyqtSignal)
+                          pyqtSignal, QFileInfo)
 from PyQt4.QtGui import (QAction, QApplication, QIcon, QKeySequence, QLabel,
                          QMainWindow, QMessageBox, QTableView, QComboBox,
                          QVBoxLayout, QHBoxLayout, QWidget, QGridLayout,
@@ -514,11 +514,12 @@ class MainWindow(QMainWindow):
         self.fileMenu = self.menuBar().addMenu("&File")
         self.fileMenuActions = (fileOpenAction, fileExportAction,
                                 fileQuitAction)
-        self.addActions(self.fileMenu, self.fileMenuActions)
+        #self.addActions(self.fileMenu, self.fileMenuActions)
 
         self.xSelector.itemSelectionChanged.connect(self.make_x_selection)
         self.ySelector.itemSelectionChanged.connect(self.make_y_selection)
         self.offsetThing.new_offset.connect(self.subtract_offset)
+        self.fileMenu.triggered.connect(self.update_file_menu)
 
         self.save_chan_chkbx.stateChanged.connect(self.toggle_save)
 
@@ -530,6 +531,11 @@ class MainWindow(QMainWindow):
         #self.restoreState(settings.value("MainWindow/State"))
 
         self.setWindowTitle("TDMS to HDF5 Converter")
+        self.recentFiles = settings.value("RecentFiles")
+        if not self.recentFiles:
+            self.recentFiles = []
+
+        self.update_file_menu()
 
     def update_ui(self):
         pass
@@ -563,8 +569,27 @@ class MainWindow(QMainWindow):
             else:
                 target.addAction(action)
 
+    def update_file_menu(self):
+        self.fileMenu.clear()
+        self.addActions(self.fileMenu, self.fileMenuActions[:-1])
+        current = self.filename if self.filename is not None else None
+        recentFiles = []
+        for fname in self.recentFiles:
+            if fname != current and QFile.exists(fname):
+                recentFiles.append(fname)
+        if recentFiles:
+            self.fileMenu.addSeparator()
+            for i, fname in enumerate(recentFiles):
+                action = QAction("&{num} {name}".format(num=i+1, name=QFileInfo(fname).fileName()), self)
+                action.setData(fname)
+                action.triggered.connect(lambda: self.loadFile(fname))
+                self.fileMenu.addAction(action)
+        self.fileMenu.addSeparator()
+        self.fileMenu.addAction(self.fileMenuActions[-1])
+
     def fileOpen(self): # Process 1
-        basedir = "~/Espy/MeasData"
+        basedir = os.path.dirname(self.filename) if self.filename is not None \
+          else "~/Espy/MeasData"
         formats = "TDMS files (*.tdms)"
         fname = QFileDialog.getOpenFileName(self, "Open a TDMS File",
                                             basedir, formats)
@@ -574,7 +599,7 @@ class MainWindow(QMainWindow):
             self.loadFile(fname)
 
     def loadFile(self, fname): # Process 1.2 Generate TDMS file object
-        #TODO self.addRecentFile(fname)  see Rapid GUI ch06.pyw
+        self.add_recent_file(fname)
         self.tdms_file_object = TdmsFile(fname)
         self.filename = fname
 
@@ -603,6 +628,14 @@ class MainWindow(QMainWindow):
         fsize = os.path.getsize(self.filename)
         self.fileSizeLabel.setText("File Size: {file_size:>7.3f} MB".format(file_size=fsize/1E6))
         #TODO self.updateStatus(message) # see Rapid GUI ch06.pyw
+
+    def add_recent_file(self, fname):
+        if fname is None:
+            return
+        if not fname in self.recentFiles:
+            self.recentFiles.insert(0, fname)
+            while len(self.recentFiles) > 9:
+                self.recentFiles.pop()
 
     def sortTDMSGroupData(self, group): # Process 1.3 Sort Group data
 
@@ -753,7 +786,10 @@ class MainWindow(QMainWindow):
         # If the xSelection is time, use the time data instead of measurement
         # data
         if self.xSelection == 'Time':
-            self.xArray = self.channel_registry[self.ySelection].time
+            try:
+                self.xArray = self.channel_registry[self.ySelection].time
+            except KeyError:
+                self.xArray = np.array([])
         else:
             self.xArray = self.channel_registry[self.xSelection].data
 
@@ -887,12 +923,16 @@ class MainWindow(QMainWindow):
         exits.
 
         """
-        #settings = QSettings()
+        settings = QSettings()
         #settings.setValue("MainWindow/Geometry", QVariant(
         #    self.saveGeometry()))
         #settings.setValue("MainWindow/State", QVariant(
         #    self.saveState()))
-        pass
+        if self.recentFiles:
+            recentFiles = self.recentFiles
+        else:
+            recentFiles = []
+        settings.setValue("RecentFiles", recentFiles)
 
 def main(argv=None):
 
