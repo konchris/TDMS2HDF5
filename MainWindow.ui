@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1213</width>
-    <height>846</height>
+    <width>1324</width>
+    <height>899</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,124 +18,142 @@
     <normaloff>:/science-icon.png</normaloff>:/science-icon.png</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QWidget" name="horizontalLayoutWidget">
-    <property name="geometry">
-     <rect>
-      <x>9</x>
-      <y>9</y>
-      <width>1191</width>
-      <height>791</height>
-     </rect>
-    </property>
-    <layout class="QHBoxLayout" name="mainLayout">
-     <property name="sizeConstraint">
-      <enum>QLayout::SetNoConstraint</enum>
-     </property>
-     <item>
-      <layout class="QVBoxLayout" name="ySelectorLayout">
-       <item>
-        <widget class="QLabel" name="ySelectorLabel">
-         <property name="text">
-          <string>Y-Axis Channel</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QTreeView" name="ySelectorView"/>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <layout class="QVBoxLayout" name="centralLayout">
-       <item>
-        <layout class="QHBoxLayout" name="xSelectorLayout">
-         <item>
-          <widget class="QLabel" name="xSelectorLabel">
-           <property name="text">
-            <string>X-Axis Channel</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QListView" name="xSelectorView"/>
-         </item>
-        </layout>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <layout class="QVBoxLayout" name="rightLayout">
-       <item>
-        <layout class="QVBoxLayout" name="offsetDisplayLayout">
-         <item>
-          <widget class="QLabel" name="offsetLabel">
-           <property name="text">
-            <string>Channel Offset</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QDoubleSpinBox" name="offsetSpinBox"/>
-         </item>
-         <item>
-          <layout class="QHBoxLayout" name="offsetDisplayButtonLayout">
-           <item>
-            <widget class="QCheckBox" name="offsetPreviewCheckBox">
-             <property name="text">
-              <string>Preview</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="offsetShowButton">
-             <property name="text">
-              <string>Show</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="offsetSaveButton">
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
-             <property name="text">
-              <string>Save</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <widget class="QLabel" name="attributesLabel">
-         <property name="text">
-          <string>Channel Attributes</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QTableView" name="attributesTableView"/>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="saveChannelCheckBox">
-         <property name="text">
-          <string>Save Channel</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-    </layout>
-   </widget>
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="0" column="0">
+     <layout class="QHBoxLayout" name="mainLayout">
+      <property name="sizeConstraint">
+       <enum>QLayout::SetNoConstraint</enum>
+      </property>
+      <item>
+       <layout class="QVBoxLayout" name="ySelectorLayout">
+        <item>
+         <widget class="QLabel" name="ySelectorLabel">
+          <property name="text">
+           <string>Y-Axis Channel</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QTreeView" name="ySelectorView">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="centralLayout">
+        <item>
+         <layout class="QHBoxLayout" name="xSelectorLayout">
+          <item>
+           <widget class="QLabel" name="xSelectorLabel">
+            <property name="text">
+             <string>X-Axis Channel</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QListView" name="xSelectorView">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="rightLayout">
+        <item>
+         <layout class="QVBoxLayout" name="offsetDisplayLayout">
+          <item>
+           <widget class="QLabel" name="offsetLabel">
+            <property name="text">
+             <string>Channel Offset</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QDoubleSpinBox" name="offsetSpinBox"/>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="offsetDisplayButtonLayout">
+            <item>
+             <widget class="QCheckBox" name="offsetPreviewCheckBox">
+              <property name="text">
+               <string>Preview</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="offsetShowButton">
+              <property name="text">
+               <string>Show</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="offsetSaveButton">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="text">
+               <string>Save</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QLabel" name="attributesLabel">
+          <property name="text">
+           <string>Channel Attributes</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QTableView" name="attributesTableView">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="saveChannelCheckBox">
+          <property name="text">
+           <string>Save Channel</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+   </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1213</width>
-     <height>20</height>
+     <width>1324</width>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">

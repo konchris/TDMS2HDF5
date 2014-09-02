@@ -45,11 +45,9 @@ class MyMainWindow(MainWindow):
         self.centralLayout.insertWidget(0, self.canvas)
         self.centralLayout.insertWidget(1, mpl_toolbar)
 
-        # Size Hints for the selectors
-        self.ySelectorView.setMaximumWidth(self.ySelectorLabel.sizeHint()
-                                           .width()+50)
-        self.xSelectorView.setMaximumHeight(self.xSelectorView
-                                            .sizeHintForColumn(0)+50)
+        # Adjust the offset spinbox range and significant digits
+        self.offsetSpinBox.setDecimals(10)
+        self.offsetSpinBox.setRange(-1000000,1000000)
 
 
 def main(argv=None):
