@@ -4,16 +4,6 @@
 
 """
 
-import sys
-import os
-#import platform
-from datetime import datetime
-
-# Import third-party modules
-import numpy as np
-
-# Import our own modules
-
 __author__ = "Christopher Espy"
 __copyright__ = "Copyright (C) 2014, Christopher Espy"
 __credits__ = ["Christopher Espy"]
@@ -23,8 +13,15 @@ __maintainer__ = "Christopher Espy"
 __email__ = "christopher.espy@uni-konstanz.de"
 __status__ = "Development"
 
-PROGNAME = os.path.basename(sys.argv[0])
-PROGVERSION = __version__
+import sys
+import os
+#import platform
+from datetime import datetime
+
+# Import third-party modules
+import numpy as np
+
+# Import our own modules
 
 ADWIN_DICT = {"ISample": ["IAmp"],
              "VSample": ["VAmp"],
