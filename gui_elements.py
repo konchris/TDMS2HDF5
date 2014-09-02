@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env ipython3
 # -*- coding: utf-8 -*-
 """ Testing ground for importing tdms files
 
@@ -10,16 +10,12 @@ import platform
 from datetime import datetime
 
 # Import thrid-party modules
-from PyQt4.QtCore import (PYQT_VERSION_STR, QSettings, QT_VERSION_STR,
-                          QVariant, Qt, SIGNAL, QModelIndex, QSize, QFile,
-                          pyqtSignal, QFileInfo)
+from PyQt4.QtCore import (QSettings, Qt, SIGNAL, QFile, pyqtSignal, QFileInfo)
 from PyQt4.QtGui import (QAction, QApplication, QIcon, QKeySequence, QLabel,
-                         QMainWindow, QMessageBox, QTableView, QComboBox,
-                         QVBoxLayout, QHBoxLayout, QWidget, QGridLayout,
-                         QPushButton, QDialog, QLineEdit, QDialogButtonBox,
-                         QGroupBox, QTextBrowser, QSizePolicy, QDoubleSpinBox,
-                         QSpinBox, QFrame, QFileDialog, QListWidget, QCheckBox,
-                         QDateTimeEdit)
+                         QMainWindow, QMessageBox, QVBoxLayout, QHBoxLayout,
+                         QWidget, QPushButton, QLineEdit, QSizePolicy,
+                         QDoubleSpinBox, QSpinBox, QFrame, QFileDialog,
+                         QListWidget, QCheckBox, QDateTimeEdit)
 import numpy as np
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt4agg import (FigureCanvasQTAgg as
