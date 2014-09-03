@@ -18,6 +18,8 @@ import sys
 from PyQt4.QtCore import (QAbstractItemModel, QModelIndex, Qt)
 from PyQt4.QtGui import (QApplication, QTreeView)
 
+from nptdms import TdmsFile
+
 class TreeNode(object):
 
     def __init__(self, name, parent=None):
@@ -54,6 +56,7 @@ class TreeModel(QAbstractItemModel):
 
         super(TreeModel, self).__init__(parent)
         self._rootNode = root
+        self.filename = None
 
     def rowCount(self, parent):
         if not parent.isValid():
@@ -120,6 +123,31 @@ class TreeModel(QAbstractItemModel):
             return self.createIndex(row, column, childItem)
         else:
             return QModelIndex()
+
+    def loadFile(self, filename=None):
+        """
+        Load a file
+        """
+        if not QFileInfo(filename).exits():
+            return
+
+        tdmsFileObject = TdmsFile(filename)
+
+        groupList = tdmsFileObject.groups()
+
+        for group in groupList:
+            groupProperties = tdmsFileObject.object(group).properties
+
+            groupChannels = tdmsFileObject.group_channels(group)
+
+            for chan in groupChannels:
+                channelName = chan.path.split('/')[-1].strip("'")
+
+                newChannel = Channel(channelName, device=group,
+                                     meas_array=chan.data)
+
+            #update selectors
+
 
     
 def main(argv=None):
