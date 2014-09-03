@@ -20,6 +20,8 @@ from PyQt4.QtGui import (QApplication, QTreeView)
 
 from nptdms import TdmsFile
 
+from model import (Channel, ChannelRegistry)
+
 class TreeNode(object):
 
     def __init__(self, name, parent=None):
@@ -57,6 +59,7 @@ class TreeModel(QAbstractItemModel):
         super(TreeModel, self).__init__(parent)
         self._rootNode = root
         self.filename = None
+        self.channels = ChannelRegistry()
 
     def rowCount(self, parent):
         if not parent.isValid():
