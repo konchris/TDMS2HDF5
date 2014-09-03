@@ -23,7 +23,7 @@ from matplotlib.backends.backend_qt4agg import (NavigationToolbar2QT as
                                                 NavigationToolbar)
 
 from Ui_MainWindow import MainWindow
-
+from view_model import SelectorModel
 
 class MyMainWindow(MainWindow):
     """My main window class
@@ -32,6 +32,10 @@ class MyMainWindow(MainWindow):
 
     def __init__(self, parent=None):
         super(MyMainWindow, self).__init__(parent)
+
+        # Set models
+        self.selectorModel = SelectorModel("raw")
+        self.ySelectorView.setModel(self.selectorModel)
 
         # Matplotlib canvas
         fig = Figure(dpi=100)
