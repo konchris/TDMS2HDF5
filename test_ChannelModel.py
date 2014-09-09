@@ -74,10 +74,19 @@ class TestChannelRegistry(unittest.TestCase):
             self.assertIsInstance(v, Channel)
 
     def test_load_from_channel(self):
-        self.channel_registry.loadFromFile("/home/chris/Espy/MeasData/HelioxTesting/2014-04-09T10-48-33-Cool-Down.tdms")
+        self.channel_registry.loadFromFile("/home/chris/Documents/PhD/root/raw-data/sio2al149/CryoMeasurement/2014-02-14T14-39-08-First-Cooldown.tdms")
         for k, v in self.channel_registry.items():
             self.assertIsInstance(k, str)
             self.assertIsInstance(v, Channel)
+
+    def test_add_resistance(self):
+        for key in self.channel_registry.keys():
+            print(key)
+        #self.assertTrue('ISample' in self.channel_registry.keys())
+            
+
+    def test_add_diff_resistance(self):
+        pass
 
 if __name__ == "__main__":
     unittest.main()
