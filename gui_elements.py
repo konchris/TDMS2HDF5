@@ -20,7 +20,7 @@ import numpy as np
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt4agg import (FigureCanvasQTAgg as
                                                 FigureCanvas)
-from matplotlib.backends.backend_qt4agg import (NavigationToolbar2QTAgg as
+from matplotlib.backends.backend_qt4agg import (NavigationToolbar2QT as
                                                 NavigationToolbar)
 
 from nptdms.tdms import TdmsFile
@@ -585,7 +585,7 @@ class MainWindow(QMainWindow):
 
     def fileOpen(self): # Process 1
         basedir = os.path.dirname(self.filename) if self.filename is not None \
-          else "~/Espy/MeasData"
+          else "~/Documents/PhD/root/raw-data/sio2al149/CryoMeasurement"
         formats = "TDMS files (*.tdms)"
         fname = QFileDialog.getOpenFileName(self, "Open a TDMS File",
                                             basedir, formats)
