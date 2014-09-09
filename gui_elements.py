@@ -20,14 +20,13 @@ import numpy as np
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt4agg import (FigureCanvasQTAgg as
                                                 FigureCanvas)
-from matplotlib.backends.backend_qt4agg import (NavigationToolbar2QTAgg as
+from matplotlib.backends.backend_qt4agg import (NavigationToolbar2QT as
                                                 NavigationToolbar)
 
 from nptdms.tdms import TdmsFile
 import h5py
 
 # Import our own modules
-#import qrc_resources
 from data_structures import (Channel, ADWIN_DICT, DEFAULTY, AXESLABELS,
                              SENSVECTOR, DEFAULTX)
 
@@ -46,9 +45,9 @@ PROGVERSION = __version__
 class OffsetWidget(QWidget):
     """This widet displays the elements for editing the offset.
 
-    This widget deals with the logic of when the new offset should be taken into
-    account internally. When it determines that the new offset should be used,
-    it emits the 'new_offset' signal.
+    This widget deals with the logic of when the new offset should be
+    taken into account internally. When it determines that the new
+    offset should be used, it emits the 'new_offset' signal.
 
     Parameters
     ----------
@@ -57,8 +56,8 @@ class OffsetWidget(QWidget):
     Attributes
     ----------
     offset_entry : QDoubleSpinBox
-        The numerical element where the user can enter the offset. The units are
-        determined by the currently displayed channel.
+        The numerical element where the user can enter the offset. The units
+        are determined by the currently displayed channel.
 
     Methods
     -------
@@ -66,8 +65,8 @@ class OffsetWidget(QWidget):
         Determine how the new_offset signal should be emitted and connect the
         proper element to the emit_new_offset method.
     emit_new_offset
-        Wrapper function for connecting one of the widget's element's signals to
-        the new_offset signal.
+        Wrapper function for connecting one of the widget's element's signals
+        to the new_offset signal.
 
     Signals
     -------
@@ -82,8 +81,6 @@ class OffsetWidget(QWidget):
 
     def __init__(self, parent=None):
         super(OffsetWidget, self).__init__(parent)
-
-        ### CREATE GRAPHICAL ELEMENTS ###
 
         # Create the numerical entry spinbox and its label
         offset_label = QLabel("Offset")
@@ -102,8 +99,6 @@ class OffsetWidget(QWidget):
         # The save feature is planned for later, so the button is disabled for
         # now
         self.save_btn.setEnabled(False)
-
-        ### CREATE LAYOUTS ###
 
         # Create the layout for the checkbox/button strip at the bottom of the
         # widget's layout:
@@ -125,8 +120,6 @@ class OffsetWidget(QWidget):
 
         # Set the layout
         self.setLayout(layout)
-
-        ### CONNECT SIGNALS ###
 
         # Connect the checkbox's 'stateChanged' signal to the toggle_preview
         # method
@@ -199,7 +192,6 @@ class Attribute(QWidget):
     def __init__(self, attr_name, attr_val, parent=None):
         super(Attribute, self).__init__(parent)
 
-        ### CREATE GRAPHICAL ELEMENTS ###
         # The label with the attribute's name
         label = QLabel(attr_name)
 
@@ -242,8 +234,6 @@ class Attribute(QWidget):
         else:
             value = QLineEdit()
             value.setText(str(attr_val))
-
-        ### CREATE LAYOUTS ###
 
         layout = QHBoxLayout()
         layout.addWidget(label)
@@ -294,18 +284,11 @@ class AttributesWidget(QWidget):
     def __init__(self, chan=None, parent=None):
         super(AttributesWidget, self).__init__(parent)
 
-        ### CREATE GRAPHICAL ELEMENTS ###
         self.label = QLabel("Attributes")
-        #self.apply_btn = QPushButton("Apply")
 
-        ### CREATE LAYOUTS ###
         self.lbl_layout = QHBoxLayout()
         self.lbl_layout.addWidget(self.label)
         self.lbl_layout.addStretch()
-
-        #self.btn_layout = QHBoxLayout()
-        #self.btn_layout.addStretch()
-        #self.btn_layout.addWidget(self.apply_btn)
 
         self.layout = QVBoxLayout()
         self.layout.addLayout(self.lbl_layout)
@@ -319,14 +302,9 @@ class AttributesWidget(QWidget):
         else:
             self.select_chan(chan)
 
-        #self.layout.addLayout(self.btn_layout)
-
         self.setLayout(self.layout)
 
         self.setMaximumWidth(self.sizeHint().width())
-
-        ### CONNECT SIGNALS ###
-        #self.apply_btn.clicked.connect(self.emit_new_attributes)
 
     def clear_attributes(self):
         """Delete the attribute widgets from the display."""
@@ -362,7 +340,6 @@ class AttributesWidget(QWidget):
 
         """
 
-        #print("Come and get 'em! New attributes!")
         self.new_attributes.emit()
 
 class MainWindow(QMainWindow):
@@ -536,6 +513,24 @@ class MainWindow(QMainWindow):
     def update_ui(self):
         pass
 
+    def initVariables(self):
+        self.xLabel = None
+        self.xSelection = DEFAULTX
+        self.xSelection_old = None
+        self.xArray = None
+
+        self.yLabel = None
+        self.ySelection = DEFAULTY
+        self.ySelection_old = None
+
+        self.yArray = None
+
+        self.filename = None
+
+        self.tdms_file_object = None
+
+        self.channel_registry = {}
+
     def createAction(self, text, slot=None, shortcut=None, icon=None,
                      tip=None, checkable=False, signal="triggered()"):
         # Create the action
@@ -584,8 +579,9 @@ class MainWindow(QMainWindow):
         self.fileMenu.addAction(self.fileMenuActions[-1])
 
     def fileOpen(self): # Process 1
+        self.initVariables()
         basedir = os.path.dirname(self.filename) if self.filename is not None \
-          else "~/Espy/MeasData"
+          else "~/Documents/PhD/root/raw-data/sio2al149/CryoMeasurement"
         formats = "TDMS files (*.tdms)"
         fname = QFileDialog.getOpenFileName(self, "Open a TDMS File",
                                             basedir, formats)
@@ -665,7 +661,8 @@ class MainWindow(QMainWindow):
 
                 new_chan.set_location('raw/{c2_name}'.format(c2_name=chan_name))
 
-                new_chan.set_write()
+                if chan_name not in ['TCap', 'xMagnet']:
+                    new_chan.set_write()
 
                 # Some of the channel-specific properties were actually
                 # saved in the group object's properties list.
@@ -728,9 +725,25 @@ class MainWindow(QMainWindow):
 
     def exprtToHDF5(self): # Process 5 Save to HDF5
         fname = self.filename.split('.')[0] + '.hdf5'
+        basedir = "/home/chris/Documents/PhD/root/data/sio2al149/cryo_measurement"
+
+        if not os.path.exists(basedir):
+            os.makedirs(basedir)
+
+        formats = "TDMS files (*.hdf5 *.h5 *.he5 *.hdf)"
+    
+        dialog = QFileDialog()
+        dialog.setFilter(formats)
+        dialog.setDefaultSuffix("*.hdf5")
+        dialog.selectFile(os.path.join(basedir, fname))
+        dialog.setDirectory(basedir)
+        if dialog.exec_():
+            fname = dialog.selectedFiles()
+        else:
+            return
 
         # Process 5.1 Create HDF5 file object
-        hdf5_file_object = h5py.File(fname)
+        hdf5_file_object = h5py.File(fname[0])
 
         # Process 5.2 Create channels at their locations
         for chan in self.channel_registry:
