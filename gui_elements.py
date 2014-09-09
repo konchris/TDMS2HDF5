@@ -719,6 +719,8 @@ class MainWindow(QMainWindow):
         dialog.setDirectory(basedir)
         if dialog.exec_():
             fname = dialog.selectedFiles()
+        else:
+            return
 
         # Process 5.1 Create HDF5 file object
         hdf5_file_object = h5py.File(fname[0])
