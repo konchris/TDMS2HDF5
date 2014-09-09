@@ -513,6 +513,24 @@ class MainWindow(QMainWindow):
     def update_ui(self):
         pass
 
+    def initVariables(self):
+        self.xLabel = None
+        self.xSelection = DEFAULTX
+        self.xSelection_old = None
+        self.xArray = None
+
+        self.yLabel = None
+        self.ySelection = DEFAULTY
+        self.ySelection_old = None
+
+        self.yArray = None
+
+        self.filename = None
+
+        self.tdms_file_object = None
+
+        self.channel_registry = {}
+
     def createAction(self, text, slot=None, shortcut=None, icon=None,
                      tip=None, checkable=False, signal="triggered()"):
         # Create the action
@@ -561,6 +579,7 @@ class MainWindow(QMainWindow):
         self.fileMenu.addAction(self.fileMenuActions[-1])
 
     def fileOpen(self): # Process 1
+        self.initVariables()
         basedir = os.path.dirname(self.filename) if self.filename is not None \
           else "~/Documents/PhD/root/raw-data/sio2al149/CryoMeasurement"
         formats = "TDMS files (*.tdms)"
