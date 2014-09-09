@@ -661,7 +661,8 @@ class MainWindow(QMainWindow):
 
                 new_chan.set_location('raw/{c2_name}'.format(c2_name=chan_name))
 
-                new_chan.set_write()
+                if chan_name not in ['TCap', 'xMagnet']:
+                    new_chan.set_write()
 
                 # Some of the channel-specific properties were actually
                 # saved in the group object's properties list.
