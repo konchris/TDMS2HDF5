@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'MainWindow.ui'
 #
-# Created: Tue Sep  2 19:46:35 2014
+# Created: Wed Sep 10 13:28:35 2014
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -113,8 +113,6 @@ class Ui_MainWindow(object):
         self.menubar = QtGui.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 1324, 21))
         self.menubar.setObjectName(_fromUtf8("menubar"))
-        self.menu_File = QtGui.QMenu(self.menubar)
-        self.menu_File.setObjectName(_fromUtf8("menu_File"))
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QtGui.QStatusBar(MainWindow)
         self.statusbar.setSizeGripEnabled(False)
@@ -140,13 +138,6 @@ class Ui_MainWindow(object):
         icon4.addPixmap(QtGui.QPixmap(_fromUtf8(":/open_recent.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.actionOpen_Recent.setIcon(icon4)
         self.actionOpen_Recent.setObjectName(_fromUtf8("actionOpen_Recent"))
-        self.menu_File.addAction(self.actionOpen_TDMS_File)
-        self.menu_File.addAction(self.actionOpen_Recent)
-        self.menu_File.addSeparator()
-        self.menu_File.addAction(self.action_Export_to_HDF5)
-        self.menu_File.addSeparator()
-        self.menu_File.addAction(self.action_Quit)
-        self.menubar.addAction(self.menu_File.menuAction())
 
         self.retranslateUi(MainWindow)
         QtCore.QObject.connect(self.action_Quit, QtCore.SIGNAL(_fromUtf8("triggered()")), MainWindow.close)
@@ -164,7 +155,6 @@ class Ui_MainWindow(object):
         self.offsetSaveButton.setText(_translate("MainWindow", "Save", None))
         self.attributesLabel.setText(_translate("MainWindow", "Channel Attributes", None))
         self.saveChannelCheckBox.setText(_translate("MainWindow", "Save Channel", None))
-        self.menu_File.setTitle(_translate("MainWindow", "&File", None))
         self.actionOpen_TDMS_File.setText(_translate("MainWindow", "Open &TDMS File", None))
         self.actionOpen_TDMS_File.setShortcut(_translate("MainWindow", "Ctrl+O", None))
         self.action_Export_to_HDF5.setText(_translate("MainWindow", "&Export to HDF5", None))
@@ -174,10 +164,3 @@ class Ui_MainWindow(object):
         self.actionOpen_Recent.setText(_translate("MainWindow", "Open Recent", None))
 
 import resources_rc
-
-class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
-    def __init__(self, parent=None, f=QtCore.Qt.WindowFlags()):
-        QtGui.QMainWindow.__init__(self, parent, f)
-
-        self.setupUi(self)
-
