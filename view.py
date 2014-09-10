@@ -15,25 +15,28 @@ __status__ = "Development"
 
 import sys
 
-from PyQt4.QtGui import (QApplication, QDialog, QSizePolicy)
+from PyQt4.QtCore import (SIGNAL)
+from PyQt4.QtGui import (QApplication, QDialog, QSizePolicy, QMainWindow,
+                         QAction, QIcon, QKeySequence)
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt4agg import (FigureCanvasQTAgg as
                                                 FigureCanvas)
 from matplotlib.backends.backend_qt4agg import (NavigationToolbar2QT as
                                                 NavigationToolbar)
 
-from Ui_MainWindow import MainWindow
+from Ui_MainWindow import Ui_MainWindow as MainWindow
 from view_model import (TreeNode, TreeModel)
+import resources_rc
 
-BASEDIR = '/home/chris/Documents/PhD/root/raw-data/sio2al149/CryoMeasurement'
-
-class MyMainWindow(MainWindow):
+class MyMainWindow(QMainWindow, MainWindow):
     """My main window class
 
     """
 
     def __init__(self, parent=None):
         super(MyMainWindow, self).__init__(parent)
+
+        self.setupUi(self)
 
         # Set models
         self.ySelectorModel = TreeModel(TreeNode(""))
@@ -54,6 +57,36 @@ class MyMainWindow(MainWindow):
         # Adjust the offset spinbox range and significant digits
         self.offsetSpinBox.setDecimals(10)
         self.offsetSpinBox.setRange(-1000000,1000000)
+
+    def createAction(self, text, slot=None, shortcut=None, icon=None,
+                     tip=None, checkable=False, signal="triggered()"):
+        # Create the action
+        action = QAction(text, self)
+        # Give it its icon
+        if icon is not None:
+            action.setIcon(QIcon(":/{icon}.png".format(icon=icon)))
+        # Give it its shortcut
+        if shortcut is not None:
+            action.setShortcut(shortcut)
+        # Set up its help/tip text
+        if tip is not None:
+            action.setToolTip(tip)
+            action.setStatusTip(tip)
+        # Connect it to a signal
+        if slot is not None:
+            self.connect(action, SIGNAL(signal), slot)
+        # Make it checkable
+        if checkable:
+            action.setCheckable(True)
+        return action
+
+    def addActions(self, target, actions):
+        for action in actions:
+            if action is None:
+                target.addSeparator()
+            else:
+                target.addAction(action)
+
 
 def main(argv=None):
 
