@@ -20,6 +20,9 @@ import numpy as np
 
 from model import Channel, ChannelRegistry
 
+TESTFILE01 = "/home/chris/Documents/PhD/root/raw-data/sio2al149/CryoMeasurement/2014-02-14T14-39-08-First-Cooldown.tdms"
+TESTFILE02 = "/home/chris/Espy/MeasData/HelioxTesting/2014-04-09T10-48-33-Cool-Down.tdms"
+
 class TestChannel(unittest.TestCase):
     """Tests the channel object used by the model."""
 
@@ -73,17 +76,18 @@ class TestChannelRegistry(unittest.TestCase):
             self.assertIsInstance(k, str)
             self.assertIsInstance(v, Channel)
 
-    def test_load_from_channel(self):
-        self.channel_registry.loadFromFile("/home/chris/Documents/PhD/root/raw-data/sio2al149/CryoMeasurement/2014-02-14T14-39-08-First-Cooldown.tdms")
+    def test_load_clear_load_from_file(self):
+        self.channel_registry.loadFromFile(TESTFILE01)
+        for k, v in self.channel_registry.items():
+            self.assertIsInstance(k, str)
+            self.assertIsInstance(v, Channel)
+        self.channel_registry.loadFromFile(TESTFILE02)
         for k, v in self.channel_registry.items():
             self.assertIsInstance(k, str)
             self.assertIsInstance(v, Channel)
 
     def test_add_resistance(self):
-        for key in self.channel_registry.keys():
-            print(key)
-        #self.assertTrue('ISample' in self.channel_registry.keys())
-            
+        pass
 
     def test_add_diff_resistance(self):
         pass
