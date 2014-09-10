@@ -245,6 +245,7 @@ class ChannelRegistry(dict):
             The name of the file to be loaded
 
         """
+        self.clear()
         tdmsFileObject = TdmsFile(filename)
 
         # Generate channels one group at a time
@@ -257,10 +258,10 @@ class ChannelRegistry(dict):
             groupChannels = tdmsFileObject.group_channels(group)
 
             for chan in groupChannels:
+                channelName = chan.path.split('/')[-1].strip("'")
                 # Some channels are empty. This becomes apparent when trying
                 # load th properties
                 try:
-                    channelName = chan.path.split('/')[-1].strip("'")
 
                     newChannel = Channel(channelName, device=group,
                                          meas_array=chan.data)
@@ -272,13 +273,170 @@ class ChannelRegistry(dict):
                             try:
                                 newChannel.attributes[attributeName] = \
                                   groupProperties[attributeName]
+                            # If LISens or LVSens is not present a key error is
+                            # thrown here!
+                            # This is where to catch the missing data and allow
+                            # the user to enter it.
                             except KeyError as err:
-                                print('Key Error: {0}'.format(err))
+                                #print('Key Error: {0} on channel {1}'.format(err, channelName))
+                                pass
 
                     self.addChannel(newChannel)
 
-                except KeyError:
+                except KeyError as err:
+                    # print('Key Error: {0} on channel {1}'.format(err, channelName))
                     pass
+                except TypeError as err:
+                    # print('Type Error: {0} on channel {1}'.format(err, channelName))
+                    pass
+
+        self.addTransportChannels()
+
+    def addV(self):
+        if 'raw/VSample' in self.keys():
+            # print('We can calculate V')
+            chanVSample = self['raw/VSample']
+        else:
+            # print('We cannot caluculate V')
+            return
+        vMeasArray = (chanVSample.data / chanVSample.attributes['VAmp']) * 1E3
+        chanV = Channel('V', meas_array=vMeasArray)
+        chanV.setParent('proc')
+        chanV.setStartTime(chanVSample.getStartTime())
+        chanV.setTimeStep(chanVSample.getTimeStep())
+        self.addChannel(chanV)
+
+    def adddV(self):
+        if 'raw/dVSample' in self.keys() and \
+          'LVSens' in self['raw/dVSample'].attributes.keys():
+            # print('We can calculate dV')
+            chandVSample = self['raw/dVSample']
+        else:
+            # print('We cannot caluculate dV')
+            return
+        dVMeasArray = ((chandVSample.data / chandVSample.attributes['VAmp']) /
+                       10) * chandVSample.attributes['LVSens'] * 1E3
+        chandV = Channel('dV', meas_array=dVMeasArray)
+        chandV.setParent('proc')
+        chandV.setStartTime(chandVSample.getStartTime())
+        chandV.setTimeStep(chandVSample.getTimeStep())
+        self.addChannel(chandV)
+
+    def addI(self):
+        if 'raw/ISample' in self.keys():
+            # print('We can calculate I')
+            chanISample = self['raw/ISample']
+        else:
+            # print('We cannot caluculate I')
+            return
+        iMeasArray = (chanISample.data / chanISample.attributes['IAmp']) * 1E6
+        chanI = Channel('I', meas_array=iMeasArray)
+        chanI.setParent('proc')
+        chanI.setStartTime(chanISample.getStartTime())
+        chanI.setTimeStep(chanISample.getTimeStep())
+        self.addChannel(chanI)
+
+    def adddI(self):
+        if 'raw/dISample' in self.keys() and \
+          'LISens' in self['raw/dISample'].attributes.keys():
+            # print('We can calculate dI')
+            chandISample = self['raw/dISample']
+        else:
+            # print('We cannot caluculate dI')
+            return
+        dIMeasArray = ((chandISample.data / chandISample.attributes['IAmp']) /
+                       10) * chandISample.attributes['LISens'] * 1E6
+        chandI = Channel('dI', meas_array=dIMeasArray)
+        chandI.setParent('proc')
+        chandI.setStartTime(chandISample.getStartTime())
+        chandI.setTimeStep(chandISample.getTimeStep())
+        self.addChannel(chandI)
+
+    def addR(self):
+        if ('raw/I' and 'raw/V') in self.keys():
+            # print('We can calculate R')
+            chanI = self['raw/I']
+            chanV = self['raw/V']
+        elif ('proc/I' and 'proc/V') in self.keys():
+            # print('We can calculate R')
+            chanI = self['proc/I']
+            chanV = self['proc/V']
+        else:
+            # print('We cannot caluculate R')
+            return
+        rMeasArray = chanV.data/chanI.data
+        chanR = Channel('R', meas_array=rMeasArray)
+        chanR.setParent('proc')
+        chanR.setStartTime(chanI.getStartTime())
+        chanR.setTimeStep(chanI.getTimeStep())
+        self.addChannel(chanR)
+
+    def addRSample(self):
+        if ('raw/ISample' and 'raw/VSample') in self.keys():
+            # print('We can calculate RSample')
+            chanISample = self['raw/ISample']
+            chanVSample = self['raw/VSample']
+        elif ('proc/ISample' and 'proc/VSample') in self.keys():
+            # print('We can calculate RSample')
+            chanISample = self['proc/ISample']
+            chanVSample = self['proc/VSample']
+        else:
+            # print('We cannot calculate RSample')
+            return
+        rMeasArray = chanVSample.data/chanISample.data
+        chanRSample = Channel('RSample', meas_array=rMeasArray)
+        chanRSample.setParent('proc')
+        chanRSample.setStartTime(chanISample.getStartTime())
+        chanRSample.setTimeStep(chanISample.getTimeStep())
+        self.addChannel(chanRSample)
+
+    def adddRSample(self):
+        if ('raw/dISample' and 'raw/dVSample') in self.keys():
+            # print('We can calculate dRSample')
+            chandISample = self['raw/dISample']
+            chandVSample = self['raw/dVSample']
+        elif ('proc/dISample' and 'proc/dVSample') in self.keys():
+            # print('We can calculate dRSample')
+            chandISample = self['proc/dISample']
+            chandVSample = self['proc/dVSample']
+        else:
+            # print('We cannot calculate dRSample')
+            return
+        dRMeasArray = chandVSample.data/chandISample.data
+        chandRSample = Channel('dRSample', meas_array=dRMeasArray)
+        chandRSample.setParent('proc')
+        chandRSample.setStartTime(chandISample.getStartTime())
+        chandRSample.setTimeStep(chandISample.getTimeStep())
+        self.addChannel(chandRSample)
+
+    def adddR(self):
+        if ('raw/dI' and 'raw/dV') in self.keys():
+            # print('We can calculate dR')
+            chandI = self['raw/dI']
+            chandV = self['raw/dV']
+        elif ('proc/dI' and 'proc/dV') in self.keys():
+            # print('We can calculate dR')
+            chandI = self['proc/dI']
+            chandV = self['proc/dV']
+        else:
+            # print('We cannot caluculate dR')
+            return
+        dRMeasArray = chandV.data/chandI.data
+        chandR = Channel('dR', meas_array=dRMeasArray)
+        chandR.setParent('proc')
+        chandR.setStartTime(chandI.getStartTime())
+        chandR.setTimeStep(chandI.getTimeStep())
+        self.addChannel(chandR)
+
+    def addTransportChannels(self):
+        self.addV()
+        self.adddV()
+        self.addI()
+        self.adddI()
+        self.addRSample()
+        self.adddRSample()
+        self.addR()
+        self.adddR()
 
 
 def main(argv=None):
@@ -286,8 +444,19 @@ def main(argv=None):
     if argv is None:
         argv = sys.argv
 
+    testfile01 = "/home/chris/Documents/PhD/root/raw-data/sio2al149/CryoMeasurement/2014-02-14T14-39-08-First-Cooldown.tdms"
+    testfile02 = "/home/chris/Espy/MeasData/HelioxTesting/2014-04-09T10-48-33-Cool-Down.tdms"
+
     chanReg = ChannelRegistry()
-    chanReg.loadFromFile("/home/chris/Espy/MeasData/HelioxTesting/2014-04-09T10-48-33-Cool-Down.tdms")
+    chanReg.loadFromFile(testfile01)
+    ## chanReg.addV()
+    ## chanReg.adddV()
+    ## chanReg.addI()
+    ## chanReg.adddI()
+    ## chanReg.addRSample()
+    ## chanReg.adddRSample()
+    ## chanReg.addR()
+    ## chanReg.adddR()
 
     for k, v in chanReg.items():
         print(k)
