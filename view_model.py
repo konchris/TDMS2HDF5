@@ -18,9 +18,7 @@ import sys
 from PyQt4.QtCore import (QAbstractItemModel, QModelIndex, Qt)
 from PyQt4.QtGui import (QApplication, QTreeView)
 
-from nptdms import TdmsFile
-
-from model import (Channel, ChannelRegistry)
+from model import ChannelRegistry
 
 class TreeNode(object):
 
@@ -51,7 +49,7 @@ class TreeNode(object):
         if self._parent is not None:
             return self._parent._children.index(self)
 
-        
+
 class TreeModel(QAbstractItemModel):
 
     def __init__(self, root, parent=None):
@@ -127,32 +125,13 @@ class TreeModel(QAbstractItemModel):
         else:
             return QModelIndex()
 
-    def loadFile(self, filename=None):
-        """
-        Load a file
-        """
-        if not QFileInfo(filename).exits():
-            return
+def print_clicked(msg=None):
+    if isinstance(msg, QModelIndex):
+        if not msg.data() in ['proc', 'raw']:
+            selectedItemName = msg.data()
+            selectedItemParent = msg.parent().data()
+            print('Item {0}/{1} was clicked.'.format(selectedItemParent, selectedItemName))
 
-        tdmsFileObject = TdmsFile(filename)
-
-        groupList = tdmsFileObject.groups()
-
-        for group in groupList:
-            groupProperties = tdmsFileObject.object(group).properties
-
-            groupChannels = tdmsFileObject.group_channels(group)
-
-            for chan in groupChannels:
-                channelName = chan.path.split('/')[-1].strip("'")
-
-                newChannel = Channel(channelName, device=group,
-                                     meas_array=chan.data)
-
-            #update selectors
-
-
-    
 def main(argv=None):
 
     if argv is None:
@@ -160,22 +139,22 @@ def main(argv=None):
 
     app = QApplication(sys.argv)
 
-    rootNode0 = TreeNode("")
-    childNodeA = TreeNode("raw", rootNode0)
-    childNode0 = TreeNode("I", childNodeA)
-    childNode1 = TreeNode("V", childNodeA)
-    childNode2 = TreeNode("R", childNodeA)
-    childNode3 = TreeNode("dI", childNodeA)
-    childNode4 = TreeNode("dV", childNodeA)
-    childNode5 = TreeNode("dR", childNodeA)
+    testfile01 = "/home/chris/Documents/PhD/root/raw-data/sio2al149/CryoMeasurement/2014-02-14T14-39-08-First-Cooldown.tdms"
+    testfile02 = "/home/chris/Espy/MeasData/HelioxTesting/2014-04-09T10-48-33-Cool-Down.tdms"
 
-    childNodeB = TreeNode("proc", rootNode0)
-    childNode6 = TreeNode("I", childNodeB)
-    childNode7 = TreeNode("V", childNodeB)
-    childNode8 = TreeNode("R", childNodeB)
-    childNode9 = TreeNode("dI", childNodeB)
-    childNode10 = TreeNode("dV", childNodeB)
-    childNode11 = TreeNode("dR", childNodeB)
+    chanReg = ChannelRegistry()
+    chanReg.loadFromFile(testfile02)
+
+    rootNode0 = TreeNode("")
+    raw = 'raw'
+    proc = 'proc'
+    rawNode = TreeNode(raw, rootNode0)
+    procNode = TreeNode(proc, rootNode0)
+    for k, v in chanReg.items():
+        if raw in k:
+            childNode = TreeNode(v.name, rawNode)
+        elif proc in k:
+            childNode = TreeNode(v.name, procNode)
 
     model = TreeModel(rootNode0)
 
@@ -183,6 +162,8 @@ def main(argv=None):
     treeView.show()
 
     treeView.setModel(model)
+
+    treeView.clicked.connect(print_clicked)
 
     sys.exit(app.exec_())
 
