@@ -449,14 +449,6 @@ def main(argv=None):
 
     chanReg = ChannelRegistry()
     chanReg.loadFromFile(testfile01)
-    ## chanReg.addV()
-    ## chanReg.adddV()
-    ## chanReg.addI()
-    ## chanReg.adddI()
-    ## chanReg.addRSample()
-    ## chanReg.adddRSample()
-    ## chanReg.addR()
-    ## chanReg.adddR()
 
     for k, v in chanReg.items():
         print(k)

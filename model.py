@@ -30,8 +30,6 @@ class ChannelTreeModel(QAbstractItemModel):
         super(ChannelTreeModel, self).__init__(parent)
         self.channelRegistry = ChannelRegistry()
 
-        
-
     def loadFile(self, filename):
 
         self.channelRegistry.loadFromFile(filename)
