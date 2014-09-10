@@ -23,7 +23,9 @@ from matplotlib.backends.backend_qt4agg import (NavigationToolbar2QT as
                                                 NavigationToolbar)
 
 from Ui_MainWindow import MainWindow
-from view_model import SelectorModel
+from view_model import (TreeNode, TreeModel)
+
+BASEDIR = '/home/chris/Documents/PhD/root/raw-data/sio2al149/CryoMeasurement'
 
 class MyMainWindow(MainWindow):
     """My main window class
@@ -34,8 +36,8 @@ class MyMainWindow(MainWindow):
         super(MyMainWindow, self).__init__(parent)
 
         # Set models
-        self.selectorModel = SelectorModel("raw")
-        self.ySelectorView.setModel(self.selectorModel)
+        self.ySelectorModel = TreeModel(TreeNode(""))
+        self.ySelectorView.setModel(self.ySelectorModel)
 
         # Matplotlib canvas
         fig = Figure(dpi=100)
@@ -52,7 +54,6 @@ class MyMainWindow(MainWindow):
         # Adjust the offset spinbox range and significant digits
         self.offsetSpinBox.setDecimals(10)
         self.offsetSpinBox.setRange(-1000000,1000000)
-
 
 def main(argv=None):
 
