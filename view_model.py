@@ -16,7 +16,7 @@ __status__ = "Development"
 import sys
 
 from PyQt4.QtCore import (QAbstractItemModel, QModelIndex, Qt)
-from PyQt4.QtGui import (QApplication, QTreeView)
+from PyQt4.QtGui import (QApplication, QTreeView, QStringListModel)
 
 from model import ChannelRegistry
 
@@ -124,6 +124,9 @@ class TreeModel(QAbstractItemModel):
             return self.createIndex(row, column, childItem)
         else:
             return QModelIndex()
+
+class MyListModel(QStringListModel):
+    pass
 
 def print_clicked(msg=None):
     if isinstance(msg, QModelIndex):
