@@ -266,7 +266,16 @@ class ChannelRegistry(dict):
                     newChannel = Channel(channelName, device=group,
                                          meas_array=chan.data)
                     newChannel.setStartTime(chan.property('wf_start_time'))
-                    newChannel.setTimeStep(chan.property("wf_increment"))
+
+                    # Sometimes the wf_increment is not saved in seconds, but in
+                    # milliseconds
+
+                    timeStep = chan.property("wf_increment")
+
+                    if timeStep > 1:
+                        timeStep = timeStep / 1000
+
+                    newChannel.setTimeStep(timeStep)
 
                     if group == "ADWin":
                         for attributeName in ADWIN_DICT[channelName]:
