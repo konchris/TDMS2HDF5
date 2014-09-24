@@ -14,6 +14,7 @@ __maintainer__ = "Christopher Espy"
 __email__ = "christopher.espy@uni-konstanz.de"
 __status__ = "Development"
 
+import os
 import sys
 
 # Import thrid-party modules
@@ -27,7 +28,7 @@ from view import (MyMainWindow, AXESLABELS)
 from ChannelModel import  (ChannelRegistry)
 from view_model import (TreeNode, TreeModel, MyListModel)
 
-BASEDIR = '/home/chris/Documents/PhD/root/raw-data/sio2al149/CryoMeasurement'
+BASEDIR = '/home/chris/Documents/PhD/root/raw-data/'
 
 class Main(MyMainWindow):
     """ The main window of the program.
@@ -45,6 +46,8 @@ class Presenter(object):
 
     def __init__(self):
         super(Presenter, self).__init__()
+
+        self.baseDir = BASEDIR
 
         self.view = None
         self.yModel = None
@@ -116,11 +119,13 @@ class Presenter(object):
         self.view.xSelectorView.setFlow(0)
 
         # Actions
-        fileQuitAction = self.view.createAction("&Quit", self.view.close, "Ctrl+Q",
-                                           "exit", "Close the application")
-        fileOpenAction = self.view.createAction("&Open TDMS File", self.fileOpen,
-                                           QKeySequence.Open, "open",
-                                           "Open an existing TDMS file")
+        fileQuitAction = self.view.createAction("&Quit", self.view.close,
+                                                "Ctrl+Q", "exit",
+                                                "Close the application")
+        fileOpenAction = self.view.createAction("&Open TDMS File",
+                                                self.fileOpen,
+                                                QKeySequence.Open, "open",
+                                                "Open an existing TDMS file")
         fileExportAction = self.view.createAction("&Export", self.exprtToHDF5,
                                              "Ctrl+E", 'export',
                                              tip="Export the TDMS data to HDF5")
@@ -137,9 +142,11 @@ class Presenter(object):
     def fileOpen(self):
         """Open a file."""
         formats = "TDMS files (*.tdms)"
-        fname = QFileDialog.getOpenFileName(self.view, "Open a TDMS File", BASEDIR,
-                                            formats)
+        fname = QFileDialog.getOpenFileName(self.view, "Open a TDMS File",
+                                            self.baseDir, formats)
         self.channelRegistry.loadFromFile(fname)
+
+        self.baseDir = os.path.dirname(fname)
 
         self.populateSelectors()
 
