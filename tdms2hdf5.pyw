@@ -16,8 +16,11 @@ __status__ = "Development"
 
 import os
 import sys
+from datetime import datetime
 
 # Import thrid-party modules
+import h5py
+import numpy as np
 
 # PyQt4
 from PyQt4.QtGui import (QApplication, QFileDialog, QKeySequence, QMessageBox)
@@ -48,6 +51,7 @@ class Presenter(object):
         super(Presenter, self).__init__()
 
         self.baseDir = BASEDIR
+        self.fileName = None
 
         self.view = None
         self.yModel = None
@@ -147,6 +151,8 @@ class Presenter(object):
         self.channelRegistry.loadFromFile(fname)
 
         self.baseDir = os.path.dirname(fname)
+
+        self.fileName = fname
 
         self.populateSelectors()
 
@@ -257,7 +263,58 @@ class Presenter(object):
         return label
 
     def exprtToHDF5(self):
-        pass
+        fname = self.fileName.split('.')[0] + '.hdf5'
+
+        baseDir = self.baseDir.replace('raw-data', 'data')
+
+        if not os.path.exists(baseDir):
+            os.makedirs(baseDir)
+
+        formats = "HDF5 files (*.hdf5 *.h5 *.he5 *.hdf)"
+
+        dialog = QFileDialog()
+        dialog.setFilter(formats)
+        dialog.setDefaultSuffix("*.hdf5")
+        dialog.selectFile(os.path.join(baseDir, fname))
+        dialog.setDirectory(baseDir)
+        if dialog.exec_():
+            fname = dialog.selectedFiles()
+        else:
+            return
+
+        # Process 5.1 Create HDF5 file object
+        hdf5FileObject = h5py.File(fname[0], 'w')
+
+        # Process 5.2 Create channels at their locations
+        for chan in self.channelRegistry:
+
+            chan_obj = self.channelRegistry[chan]
+            chan_name = chan
+
+            # Process 5.2.1 Write channel data
+            if self.channelRegistry[chan].write_to_file:
+
+                dset = hdf5FileObject.require_dataset(chan, shape=chan_obj.data.shape, dtype=chan_obj.data.dtype, data=chan_obj.data)
+
+                # Process 5.2.2 Write channel attributes
+                for attr_name in self.channelRegistry[chan].attributes:
+                    attr_value = self.channelRegistry[chan].attributes[attr_name]
+
+                    # Convert the datetime format to a string
+                    if type(attr_value) is datetime:
+                        attr_value = attr_value.isoformat()
+
+                    # There's currently a wierd bug when dealing with python3
+                    # strings.
+                    # This gets around that
+                    if type(attr_value) is str:
+                        attr_value = np.string_(attr_value)
+
+                    dset.attrs.create(attr_name, attr_value)
+
+        # Process 5.3 Write data to file
+        hdf5FileObject.flush()
+        hdf5FileObject.close()
 
 
 def main(argv=None):

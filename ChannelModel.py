@@ -73,7 +73,7 @@ class Channel(object):
         self.data = meas_array
         self.time = np.array([])
         self.parent = 'raw'
-        self.write_to_file = False
+        self.write_to_file = True
 
         self._recalculateTimeArray()
 
