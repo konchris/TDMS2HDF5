@@ -142,6 +142,7 @@ class Presenter(object):
         # Connections
         self.view.ySelectorView.clicked.connect(self.newYSelection)
         self.view.xSelectorView.clicked.connect(self.newXSelection)
+        self.view.saveChannelCheckBox.stateChanged.connect(self.toggleWriteToFile)
 
     def fileOpen(self):
         """Open a file."""
@@ -187,6 +188,8 @@ class Presenter(object):
             self.populateOffsetEditor()
             self.populateAttributeViewer()
             self.plotSelection()
+            channelObj = self.channelRegistry[self.ySelected]
+            self.view.saveChannelCheckBox.setChecked(channelObj.write_to_file)
 
     def newXSelection(self, xSelection):
         self.xSelected_old = self.xSelected
@@ -261,6 +264,10 @@ class Presenter(object):
                     label = axlbl
 
         return label
+
+    def toggleWriteToFile(self, chanKey):
+        self.channelRegistry[self.ySelected].write_to_file = \
+          self.view.saveChannelCheckBox.isChecked()
 
     def exprtToHDF5(self):
         fname = self.fileName.split('.')[0] + '.hdf5'
