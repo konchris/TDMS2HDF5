@@ -302,7 +302,7 @@ class ChannelRegistry(dict):
         self.addTransportChannels()
 
     def addV(self):
-        if 'raw/VSample' in self.keys():
+        if 'raw/VSample' in self.keys() and 'raw/V' not in self.keys():
             # print('We can calculate V')
             chanVSample = self['raw/VSample']
         else:
@@ -316,8 +316,9 @@ class ChannelRegistry(dict):
         self.addChannel(chanV)
 
     def adddV(self):
-        if 'raw/dVSample' in self.keys() and \
-          'LVSens' in self['raw/dVSample'].attributes.keys():
+        if ('raw/dVSample' in self.keys() and \
+          'LVSens' in self['raw/dVSample'].attributes.keys()) and \
+          ('raw/dV' not in self.keys()):
             # print('We can calculate dV')
             chandVSample = self['raw/dVSample']
         else:
@@ -332,7 +333,7 @@ class ChannelRegistry(dict):
         self.addChannel(chandV)
 
     def addI(self):
-        if 'raw/ISample' in self.keys():
+        if 'raw/ISample' in self.keys() and 'raw/I' not in self.keys():
             # print('We can calculate I')
             chanISample = self['raw/ISample']
         else:
@@ -346,8 +347,9 @@ class ChannelRegistry(dict):
         self.addChannel(chanI)
 
     def adddI(self):
-        if 'raw/dISample' in self.keys() and \
-          'LISens' in self['raw/dISample'].attributes.keys():
+        if ('raw/dISample' in self.keys() and \
+          'LISens' in self['raw/dISample'].attributes.keys()) and \
+          ('raw/dI' not in self.keys()):
             # print('We can calculate dI')
             chandISample = self['raw/dISample']
         else:
@@ -362,7 +364,7 @@ class ChannelRegistry(dict):
         self.addChannel(chandI)
 
     def addR(self):
-        if ('raw/I' and 'raw/V') in self.keys():
+        if ('raw/I' and 'raw/V') in self.keys() and 'raw/R' not in self.keys():
             # print('We can calculate R')
             chanI = self['raw/I']
             chanV = self['raw/V']
@@ -381,7 +383,8 @@ class ChannelRegistry(dict):
         self.addChannel(chanR)
 
     def addRSample(self):
-        if ('raw/ISample' and 'raw/VSample') in self.keys():
+        if ('raw/ISample' and 'raw/VSample') in self.keys() and \
+          (('raw/RSample' and 'raw/R') not in self.keys()):
             # print('We can calculate RSample')
             chanISample = self['raw/ISample']
             chanVSample = self['raw/VSample']
@@ -400,7 +403,8 @@ class ChannelRegistry(dict):
         self.addChannel(chanRSample)
 
     def adddRSample(self):
-        if ('raw/dISample' and 'raw/dVSample') in self.keys():
+        if ('raw/dISample' and 'raw/dVSample') in self.keys() and \
+          (('raw/dRSample' and 'raw/dR') not in self.keys()):
             # print('We can calculate dRSample')
             chandISample = self['raw/dISample']
             chandVSample = self['raw/dVSample']
@@ -419,7 +423,8 @@ class ChannelRegistry(dict):
         self.addChannel(chandRSample)
 
     def adddR(self):
-        if ('raw/dI' and 'raw/dV') in self.keys():
+        if ('raw/dI' and 'raw/dV') in self.keys() and \
+          ('raw/dR' not in self.keys()):
             # print('We can calculate dR')
             chandI = self['raw/dI']
             chandV = self['raw/dV']
