@@ -21,6 +21,7 @@ from datetime import datetime
 # Import thrid-party modules
 import h5py
 import numpy as np
+import pandas as pd
 
 # PyQt4
 from PyQt4.QtGui import (QApplication, QFileDialog, QKeySequence, QMessageBox)
@@ -130,7 +131,7 @@ class Presenter(object):
                                                 self.fileOpen,
                                                 QKeySequence.Open, "open",
                                                 "Open an existing TDMS file")
-        fileExportAction = self.view.createAction("&Export", self.exprtToHDF5,
+        fileExportAction = self.view.createAction("&Export", self.exprtToFile,
                                              "Ctrl+E", 'export',
                                              tip="Export the TDMS data to HDF5")
 
@@ -269,15 +270,17 @@ class Presenter(object):
         self.channelRegistry[self.ySelected].write_to_file = \
           self.view.saveChannelCheckBox.isChecked()
 
-    def exprtToHDF5(self):
-        fname = self.fileName.split('.')[0] + '.hdf5'
+    def exprtToFile(self):
+        fname = self.fileName.split('.')[0] + '.h5'
 
         baseDir = self.baseDir.replace('raw-data', 'data')
 
         if not os.path.exists(baseDir):
             os.makedirs(baseDir)
 
-        formats = "HDF5 files (*.hdf5 *.h5 *.he5 *.hdf)"
+        formats = "Pandas HDF files (*.h5);;" + \
+          "HDF5 files (*.hdf5 *.he5 *.hdf);;" + \
+          "CSV files (*.csv *.txt *.dat)"
 
         dialog = QFileDialog()
         dialog.setFilter(formats)
@@ -285,12 +288,98 @@ class Presenter(object):
         dialog.selectFile(os.path.join(baseDir, fname))
         dialog.setDirectory(baseDir)
         if dialog.exec_():
-            fname = dialog.selectedFiles()
+            fname = dialog.selectedFiles()[0]
         else:
             return
 
+        basename, ext = fname.split('.')
+
+        if ext in ['hdf5', 'he5', 'hdf']:
+            self.exprtToHDF5(fname)
+        elif ext in ['h5']:
+            self.exprtToPandasHDF5(fname)
+        elif ext in ['csv', 'txt', 'dat']:
+            self.exprtToCSV(fname)
+
+    def exprtToPandasHDF5(self, fname):
+
         # Process 5.1 Create HDF5 file object
-        hdf5FileObject = h5py.File(fname[0], 'w')
+        #hdfStore = pd.HDFStore(fname, 'w')
+
+        df_register = {}
+        #df_register2 = {}
+
+        # Process 5.2 Create channels at their locations
+        for chan in self.channelRegistry:
+
+            chan_obj = self.channelRegistry[chan]
+            chan_device = chan_obj.attributes['Device']
+
+            # Remove whitespace and minus signs from the channel name
+            chan_name = chan.replace(" ", "")
+
+            chan_name = chan_name.replace("/", "/{}/".format(chan_device))
+
+            chan_device = "/".join(chan_name.split("/")[:2])
+
+            chan_name = chan_name.split("/")[-1]
+
+            start_time = chan_obj.getStartTime()
+            per = len(chan_obj.data)
+            print(start_time, per)
+
+            print(chan_obj.getTimeTrack())
+
+            chan_obj.time = pd.to_datetime(chan_obj.time, unit='ms') + chan_obj.getStartTime()
+
+            print(chan_obj.getTimeTrack())
+
+            if chan_device not in df_register.keys():
+                df_register[chan_device] = pd.DataFrame()
+
+            # Process 5.2.1 Write channel data
+            if self.channelRegistry[chan].write_to_file:
+
+                s = pd.Series(data=chan_obj.data,
+                              index=chan_obj.getTimeTrack())
+
+                df_register[chan_device][chan_name] = s
+                #df_register2[chan_device].append(s, ignore_index=True)
+
+                #dset = hdf5FileObject.require_dataset(chan,
+                #                                      shape=chan_obj.data.shape,
+                #                                      dtype=chan_obj.data.dtype,
+                #                                      data=chan_obj.data)
+
+                # Process 5.2.2 Write channel attributes
+                #for attr_name in self.channelRegistry[chan].attributes:
+                #    attr_value = self.channelRegistry[chan].attributes[attr_name]
+
+                    # Convert the datetime format to a string
+                    #if type(attr_value) is datetime:
+                    #    attr_value = attr_value.isoformat()
+
+                    # There's currently a wierd bug when dealing with python3
+                    # strings.
+                    # This gets around that
+                    #if type(attr_value) is str:
+                    #    attr_value = np.string_(attr_value)
+
+                    #dset.attrs.create(attr_name, attr_value)
+
+        #for k, v in df_register.items():
+        #    hdfStore[k] = v
+
+        # Process 5.3 Write data to file
+        #hdfStore.close()
+
+    def exprtToCSV(self, fname):
+        pass
+
+    def exprtToHDF5(self, fname):
+
+        # Process 5.1 Create HDF5 file object
+        hdf5FileObject = h5py.File(fname, 'w')
 
         # Process 5.2 Create channels at their locations
         for chan in self.channelRegistry:
@@ -301,7 +390,10 @@ class Presenter(object):
             # Process 5.2.1 Write channel data
             if self.channelRegistry[chan].write_to_file:
 
-                dset = hdf5FileObject.require_dataset(chan, shape=chan_obj.data.shape, dtype=chan_obj.data.dtype, data=chan_obj.data)
+                dset = hdf5FileObject.require_dataset(chan,
+                                                      shape=chan_obj.data.shape,
+                                                      dtype=chan_obj.data.dtype,
+                                                      data=chan_obj.data)
 
                 # Process 5.2.2 Write channel attributes
                 for attr_name in self.channelRegistry[chan].attributes:
