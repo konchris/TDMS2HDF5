@@ -14,14 +14,17 @@ __email__ = "christopher.espy@uni-konstanz.de"
 __status__ = "Development"
 
 import unittest
+import os
 from datetime import datetime
 
 import numpy as np
 
 from model import Channel, ChannelRegistry
 
-TESTFILE01 = "/home/chris/Documents/PhD/root/raw-data/sio2al149/CryoMeasurement/2014-02-14T14-39-08-First-Cooldown.tdms"
-TESTFILE02 = "/home/chris/Espy/MeasData/HelioxTesting/2014-04-09T10-48-33-Cool-Down.tdms"
+DATADIR = '/home/chris/Documents/PhD/root/raw-data/'
+
+TESTFILE01 = os.path.join(DATADIR, "sio2al149/cryo_measurement/2014-02-14/2014-02-14T14-39-08-First-Cooldown.tdms")
+TESTFILE02 = os.path.join(DATADIR, "fonin_heliox/2014-09-22-Testing-Run/2014-09-23T09-05-59-Pump-to-1.6K.tdms")
 
 class TestChannel(unittest.TestCase):
     """Tests the channel object used by the model."""
