@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-""" The model components
+""" The  components
 
 """
 
@@ -13,6 +13,7 @@ __maintainer__ = "Christopher Espy"
 __email__ = "christopher.espy@uni-konstanz.de"
 __status__ = "Development"
 
+import os
 import sys
 from datetime import datetime
 
@@ -209,6 +210,24 @@ class Channel(object):
 
         """
         return self.time
+
+    def getElapsedTime(self):
+        """Return the elapsed time track of the measurement
+
+        Returns
+        -------
+        elapsedTime : numpy.ndarray
+           This is an array of the elapsed time from the start of the
+           measurement in seconds.
+
+        """
+        dt = self.attributes['TimeInterval'].astype('float64') / 1e3
+
+        length = self.attributes['Length']
+
+        elapsed_time = np.linspace(0, length * dt, length)
+
+        return elapsed_time
 
     def toggleWrite(self):
         """Toggle whether to write the channel to the HDF5 file
@@ -473,17 +492,16 @@ def main(argv=None):
     if argv is None:
         argv = sys.argv
 
-    TESTFILE01 = "/home/chris/Documents/PhD/root/raw-data/sio2al149/cryo_measurement/2014-02-14/2014-02-14T14-39-08-First-Cooldown.tdms"
-    TESTFILE02 = "/home/chris/Espy/MeasData/HelioxTesting/2014-04-09T10-48-33-Cool-Down.tdms"
+    DATADIR = '/home/chris/Documents/PhD/root/raw-data/'
+
+    TESTFILE01 = os.path.join(DATADIR, "sio2al149/cryo_measurement/2014-02-14/2014-02-14T14-39-08-First-Cooldown.tdms")
+    TESTFILE02 = os.path.join(DATADIR, "fonin_heliox/2014-09-22-Testing-Run/2014-09-23T09-05-59-Pump-to-1.6K.tdms")
 
     chanReg = ChannelRegistry()
     chanReg.loadFromFile(TESTFILE01)
 
     for k, v in chanReg.items():
-        print(k)
-        #print(v.getStartTime(), v.getTimeStep())
-        print(np.timedelta64(v.getTimeTrack()[-1] - v.getTimeTrack()[0], 'm'))
-
+        print(v.name, v.attributes['Device'], v.getTimeStep())
 
 if __name__ == "__main__":
     main()
