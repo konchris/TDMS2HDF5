@@ -55,6 +55,27 @@ class Channel(object):
 
     Methods
     -------
+    setParent(newParent : str)
+        Set the parent group of the channel
+    getParent()
+        Return the parent group of the channel (str)
+    setName(newName : str)
+        Set the name of the channel
+    getName()
+        Return the name of the channel
+    setStartTime(newStartTime : numpy.datetime64)
+        Set the starting time of the channel measurement
+    getStartTime()
+        Return the start time of the channel measurement (numpy.datetime64)
+    setTimeStep(newDelTime : numpy.timedelta64)
+        Set the time step of the channel measurement
+    getTimeStep()
+        Return the time step of the measurement (numpy.timdelta64)
+    getTimeTrack()
+        Return the time track of the channel measurement
+        (numpy.ndarray[dtype=numpy.datetime64)
+    toggleWrite()
+        Toggle's the channels write_to_file value
 
     See Also
     --------
@@ -177,7 +198,7 @@ class Channel(object):
 
         Parameters
         ----------
-        newDelTime : int,float
+        newDelTime : numpy.timedelta64
             The new time interval between measurement points
 
         """
