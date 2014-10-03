@@ -65,9 +65,9 @@ class Channel(object):
     def __init__(self, name, device='', meas_array=np.array([])):
         super(Channel, self).__init__()
         self.attributes = {"Device": device,
-                           "TimeInterval": 0,
+                           "TimeInterval": np.timedelta64(0),
                            "Length": len(meas_array),
-                           "StartTime": datetime.now()}
+                           "StartTime": np.datetime64(datetime.now())}
 
         self.name = name
         self.data = meas_array
@@ -79,10 +79,21 @@ class Channel(object):
 
     def _recalculateTimeArray(self):
         """Recalculate the time track based on start time and time step"""
-        dt = self.attributes['TimeInterval']
+        dt = self.getTimeStep()
+
         length = self.attributes['Length']
 
-        self.time = np.linspace(0, length*dt, length)
+        timeArray = np.arange(0, length) * dt
+
+        #print('time Array\t', timeArray)
+
+        start = self.getStartTime()
+
+        newTimeArray = start + timeArray
+
+        self.time = newTimeArray
+
+        #print('time\t', self.time)
 
     def setParent(self, newParent):
         """Set the parent group of the channel in the HDF5 file.
@@ -141,21 +152,21 @@ class Channel(object):
 
         Parameters
         ----------
-        newStartTime : datetime
+        newStartTime : numpy.datetime64
             The new datetime at which the measurement started.
 
         """
-        if isinstance(newStartTime, datetime):
+        if isinstance(newStartTime, np.datetime64):
             self.attributes['StartTime'] = newStartTime
         else:
-            raise TypeError('The start time has to be of the datetime type')
+            raise TypeError('The start time has to be of np.datetime64 type')
 
     def getStartTime(self):
-        """Returns the channel's measurement starting time in datetime format
+        """Returns the channel's measurement starting time in numpy.datetime64 format
 
         Returns
         -------
-        StartTime : datetime
+        StartTime : numpy.datetime64
             The datetime at which the measurement started.
 
         """
@@ -170,11 +181,11 @@ class Channel(object):
             The new time interval between measurement points
 
         """
-        if isinstance(newDelTime, (int, float)):
+        if isinstance(newDelTime, np.timedelta64):
             self.attributes['TimeInterval'] = newDelTime
             self._recalculateTimeArray()
         else:
-            message = 'The time interval can only be an integer or a float'
+            message = 'The time interval can only be a numpy.timedelta64'
             raise TypeError(message)
 
     def getTimeStep(self):
@@ -265,15 +276,19 @@ class ChannelRegistry(dict):
 
                     newChannel = Channel(channelName, device=group,
                                          meas_array=chan.data)
-                    newChannel.setStartTime(chan.property('wf_start_time'))
+
+                    startTime = np.datetime64(chan.property('wf_start_time'))
+                    newChannel.setStartTime(startTime)
 
                     # Sometimes the wf_increment is not saved in seconds, but in
                     # milliseconds
 
                     timeStep = chan.property("wf_increment")
 
-                    if timeStep > 1:
-                        timeStep = timeStep / 1000
+                    if timeStep < 1:
+                        timeStep = np.timedelta64(int(timeStep*1000), 'ms')
+                    else:
+                        timeStep = np.timedelta64(int(timeStep), 'ms')
 
                     newChannel.setTimeStep(timeStep)
 
@@ -287,16 +302,16 @@ class ChannelRegistry(dict):
                             # This is where to catch the missing data and allow
                             # the user to enter it.
                             except KeyError as err:
-                                #print('Key Error: {0} on channel {1}'.format(err, channelName))
+                                #print('1\tKey Error: {0} on channel {1}'.format(err, channelName))
                                 pass
 
                     self.addChannel(newChannel)
 
                 except KeyError as err:
-                    # print('Key Error: {0} on channel {1}'.format(err, channelName))
+                    #print('2\tKey Error: {0} on channel {1}'.format(err, channelName))
                     pass
                 except TypeError as err:
-                    # print('Type Error: {0} on channel {1}'.format(err, channelName))
+                    #print('3\tType Error: {0} on channel {1}'.format(err, channelName))
                     pass
 
         self.addTransportChannels()
@@ -458,15 +473,16 @@ def main(argv=None):
     if argv is None:
         argv = sys.argv
 
-    testfile01 = "/home/chris/Documents/PhD/root/raw-data/sio2al149/CryoMeasurement/2014-02-14T14-39-08-First-Cooldown.tdms"
-    testfile02 = "/home/chris/Espy/MeasData/HelioxTesting/2014-04-09T10-48-33-Cool-Down.tdms"
+    TESTFILE01 = "/home/chris/Documents/PhD/root/raw-data/sio2al149/cryo_measurement/2014-02-14/2014-02-14T14-39-08-First-Cooldown.tdms"
+    TESTFILE02 = "/home/chris/Espy/MeasData/HelioxTesting/2014-04-09T10-48-33-Cool-Down.tdms"
 
     chanReg = ChannelRegistry()
-    chanReg.loadFromFile(testfile01)
+    chanReg.loadFromFile(TESTFILE01)
 
     for k, v in chanReg.items():
         print(k)
-        print(v.name, v.attributes)
+        #print(v.getStartTime(), v.getTimeStep())
+        print(np.timedelta64(v.getTimeTrack()[-1] - v.getTimeTrack()[0], 'm'))
 
 
 if __name__ == "__main__":

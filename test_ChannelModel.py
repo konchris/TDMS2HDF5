@@ -50,7 +50,7 @@ class TestChannel(unittest.TestCase):
         self.assertNotEqual(self.channel.getName(), current_name, 'Name is unchanged')
 
     def test_set_get_starttime_now(self):
-        now = datetime.now()
+        now = np.datetime64(datetime.now())
         self.channel.setStartTime(now)
         self.assertEqual(self.channel.getStartTime(), now)
 
