@@ -229,12 +229,20 @@ class Presenter(object):
             yArray = self.channelRegistry[self.ySelected].data
 
             # Plot the data
-            try:
-                self.view.axes.plot(xArray, yArray, label=self.ySelected)
-            except ValueError as err:
-                dialog = QMessageBox()
-                dialog.setText("Value Error: {0}".format(err))
-                dialog.exec_()
+            if self.xSelected == 'Time':
+                try:
+                    self.view.axes.plot_date(xArray, yArray, label=self.ySelected)
+                except ValueError as err:
+                    dialog = QMessageBox()
+                    dialog.setText("Value Error: {0}".format(err))
+                    dialog.exec_()
+            else:
+                try:
+                    self.view.axes.plot(xArray, yArray, label=self.ySelected)
+                except ValueError as err:
+                    dialog = QMessageBox()
+                    dialog.setText("Value Error: {0}".format(err))
+                    dialog.exec_()
 
             # Show the legend
             self.view.axes.legend(loc=0)
@@ -429,7 +437,6 @@ def main(argv=None):
 
     presenter.setView(Main())
     presenter.setChanReg(ChannelRegistry())
-
     presenter.view.show()
 
     sys.exit(app.exec_())
