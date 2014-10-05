@@ -27,6 +27,8 @@ import pandas as pd
 from PyQt4.QtGui import (QApplication, QFileDialog, QKeySequence, QMessageBox)
 from PyQt4.QtCore import (QModelIndex)
 
+from matplotlib import dates
+
 # Import our own modules
 from view import (MyMainWindow, AXESLABELS)
 from ChannelModel import  (ChannelRegistry)
@@ -221,28 +223,36 @@ class Presenter(object):
             self.view.axes.set_ylabel(yLabel)
 
             # Generate the data arrays
+            yArray = self.channelRegistry[self.ySelected].data
+            ## if self.xSelected == 'Time':
+            ##     xArray = self.channelRegistry[self.ySelected].getTimeTrack().astype(datetime)
+            ##     xArray = dates.date2num(xArray)
+            ##     try:
+            ##         self.view.axes.plot_date(xArray, yArray, '-', label=self.ySelected)
+            ##     except ValueError as err:
+            ##         dialog = QMessageBox()
+            ##         dialog.setText("Value Error: {0}".format(err))
+            ##         dialog.exec_()
+            ## else:
+            ##     xArray = self.channelRegistry[self.xSelected].data
+            ##     try:
+            ##         self.view.axes.plot(xArray, yArray, label=self.ySelected)
+            ##     except ValueError as err:
+            ##         dialog = QMessageBox()
+            ##         dialog.setText("Value Error: {0}".format(err))
+            ##         dialog.exec_()
+
             if self.xSelected == 'Time':
-                # print('Time was indeed selected')
-                xArray = self.channelRegistry[self.ySelected].getTimeTrack()
+                xArray = self.channelRegistry[self.ySelected].getElapsedTime() / 3600
             else:
                 xArray = self.channelRegistry[self.xSelected].data
-            yArray = self.channelRegistry[self.ySelected].data
 
-            # Plot the data
-            if self.xSelected == 'Time':
-                try:
-                    self.view.axes.plot_date(xArray, yArray, label=self.ySelected)
-                except ValueError as err:
-                    dialog = QMessageBox()
-                    dialog.setText("Value Error: {0}".format(err))
-                    dialog.exec_()
-            else:
-                try:
-                    self.view.axes.plot(xArray, yArray, label=self.ySelected)
-                except ValueError as err:
-                    dialog = QMessageBox()
-                    dialog.setText("Value Error: {0}".format(err))
-                    dialog.exec_()
+            try:
+                self.view.axes.plot(xArray, yArray, label=self.ySelected)
+            except ValueError as err:
+                dialog = QMessageBox()
+                dialog.setText("Value Error: {0}".format(err))
+                dialog.exec_()
 
             # Show the legend
             self.view.axes.legend(loc=0)
@@ -312,10 +322,9 @@ class Presenter(object):
     def exprtToPandasHDF5(self, fname):
 
         # Process 5.1 Create HDF5 file object
-        #hdfStore = pd.HDFStore(fname, 'w')
+        hdfStore = pd.HDFStore(fname, 'w')
 
         df_register = {}
-        #df_register2 = {}
 
         # Process 5.2 Create channels at their locations
         for chan in self.channelRegistry:
@@ -333,14 +342,8 @@ class Presenter(object):
             chan_name = chan_name.split("/")[-1]
 
             start_time = chan_obj.getStartTime()
-            per = len(chan_obj.data)
-            print(start_time, per)
 
-            print(chan_obj.getTimeTrack())
-
-            chan_obj.time = pd.to_datetime(chan_obj.time, unit='ms') + chan_obj.getStartTime()
-
-            print(chan_obj.getTimeTrack())
+            chan_obj.time = pd.to_datetime(chan_obj.time, unit='ms')
 
             if chan_device not in df_register.keys():
                 df_register[chan_device] = pd.DataFrame()
@@ -375,11 +378,11 @@ class Presenter(object):
 
                     #dset.attrs.create(attr_name, attr_value)
 
-        #for k, v in df_register.items():
-        #    hdfStore[k] = v
+        for k, v in df_register.items():
+            hdfStore[k] = v
 
         # Process 5.3 Write data to file
-        #hdfStore.close()
+        hdfStore.close()
 
     def exprtToCSV(self, fname):
         pass
@@ -416,7 +419,7 @@ class Presenter(object):
                     # This gets around that
                     if type(attr_value) is str:
                         attr_value = np.string_(attr_value)
-
+                    print(attr_name, attr_value.astype('float64') / 1e3, type(attr_value))
                     dset.attrs.create(attr_name, attr_value)
 
         # Process 5.3 Write data to file
