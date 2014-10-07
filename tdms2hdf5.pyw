@@ -243,7 +243,7 @@ class Presenter(object):
             ##         dialog.exec_()
 
             if self.xSelected == 'Time':
-                xArray = self.channelRegistry[self.ySelected].getElapsedTime() / 3600
+                xArray = self.channelRegistry[self.ySelected].getTimeTrack() / 3600
             else:
                 xArray = self.channelRegistry[self.xSelected].data
 
@@ -341,9 +341,22 @@ class Presenter(object):
 
             chan_name = chan_name.split("/")[-1]
 
+            # Get the start time
             start_time = chan_obj.getStartTime()
 
-            chan_obj.time = pd.to_datetime(chan_obj.time, unit='ms')
+            # Get time
+            #chan_obj.time = pd.to_datetime(chan_obj.time, unit='s')
+
+            if chan_obj.time[-1] > 3600:
+                # Then it means we have hours worth of data
+                chan_obj.time = chan_obj.time / 3600
+                self.chan.unit = '[h]'
+            elif chan_obj.time[-1] > 60:
+                # Then it means we have minutes worth of data
+                chan_obj.time = chan_obj.time / 60
+                self.chan.unit = '[m]'
+            else:
+                self.chan.unit = '[s]'
 
             if chan_device not in df_register.keys():
                 df_register[chan_device] = pd.DataFrame()

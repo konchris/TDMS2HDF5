@@ -87,14 +87,15 @@ class Channel(object):
     def __init__(self, name, device='', meas_array=np.array([])):
         super(Channel, self).__init__()
         self.attributes = {"Device": device,
-                           "TimeInterval": np.timedelta64(0),
+                           "TimeInterval": 0,
                            "Length": len(meas_array),
-                           "StartTime": np.datetime64(datetime.now())}
+                           "StartTime": datetime.now()}
 
         self.name = name
         self.data = meas_array
         self.time = np.array([])
         self.parent = 'raw'
+        self.unit = 'n.a.'
         self.write_to_file = True
 
         self._recalculateTimeArray()
@@ -105,15 +106,20 @@ class Channel(object):
 
         length = self.attributes['Length']
 
-        timeArray = np.arange(0, length) * dt
+        timeArray = np.linspace(0, length*dt, length)
+
+        #if dt != 0:
+        #    print(dt, np.arange(length), timeArray)
+
+        self.time = timeArray
 
         #print('time Array\t', timeArray)
 
-        start = self.getStartTime()
+        #start = self.getStartTime()
 
-        newTimeArray = start + timeArray
+        #newTimeArray = start + timeArray
 
-        self.time = newTimeArray
+        #self.time = newTimeArray
 
         #print('time\t', self.time)
 
@@ -174,21 +180,21 @@ class Channel(object):
 
         Parameters
         ----------
-        newStartTime : numpy.datetime64
+        newStartTime : datetime
             The new datetime at which the measurement started.
 
         """
-        if isinstance(newStartTime, np.datetime64):
+        if isinstance(newStartTime, datetime):
             self.attributes['StartTime'] = newStartTime
         else:
-            raise TypeError('The start time has to be of np.datetime64 type')
+            raise TypeError('The start time has to be of datetime type')
 
     def getStartTime(self):
-        """Returns the channel's measurement starting time in numpy.datetime64 format
+        """Returns the channel's measurement starting time in datetime format
 
         Returns
         -------
-        StartTime : numpy.datetime64
+        StartTime : datetime
             The datetime at which the measurement started.
 
         """
@@ -203,7 +209,7 @@ class Channel(object):
             The new time interval between measurement points
 
         """
-        if isinstance(newDelTime, np.timedelta64):
+        if isinstance(newDelTime, (int, float)):
             self.attributes['TimeInterval'] = newDelTime
             self._recalculateTimeArray()
         else:
@@ -242,7 +248,7 @@ class Channel(object):
            measurement in seconds.
 
         """
-        dt = self.attributes['TimeInterval'].astype('float64') / 1e3
+        dt = self.attributes['TimeInterval']
 
         length = self.attributes['Length']
 
@@ -317,7 +323,7 @@ class ChannelRegistry(dict):
                     newChannel = Channel(channelName, device=group,
                                          meas_array=chan.data)
 
-                    startTime = np.datetime64(chan.property('wf_start_time'))
+                    startTime = chan.property('wf_start_time')
                     newChannel.setStartTime(startTime)
 
                     # Sometimes the wf_increment is not saved in seconds, but in
@@ -325,10 +331,8 @@ class ChannelRegistry(dict):
 
                     timeStep = chan.property("wf_increment")
 
-                    if timeStep < 1:
-                        timeStep = np.timedelta64(int(timeStep*1000), 'ms')
-                    else:
-                        timeStep = np.timedelta64(int(timeStep), 'ms')
+                    if timeStep > 1:
+                        timeStep = timeStep / 1000
 
                     newChannel.setTimeStep(timeStep)
 
@@ -519,10 +523,10 @@ def main(argv=None):
     TESTFILE02 = os.path.join(DATADIR, "fonin_heliox/2014-09-22-Testing-Run/2014-09-23T09-05-59-Pump-to-1.6K.tdms")
 
     chanReg = ChannelRegistry()
-    chanReg.loadFromFile(TESTFILE01)
+    chanReg.loadFromFile(TESTFILE02)
 
     for k, v in chanReg.items():
-        print(v.name, v.attributes['Device'], v.getTimeStep())
+        print(v.name, v.attributes['Device'], v.getTimeStep(), v.attributes['Length'])
 
 if __name__ == "__main__":
     main()
