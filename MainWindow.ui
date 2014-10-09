@@ -135,11 +135,29 @@
          </widget>
         </item>
         <item>
-         <widget class="QCheckBox" name="saveChannelCheckBox">
-          <property name="text">
-           <string>Save Channel</string>
-          </property>
-         </widget>
+         <layout class="QHBoxLayout" name="horizontalLayout">
+          <item>
+           <widget class="QCheckBox" name="saveChannelCheckBox">
+            <property name="text">
+             <string>Save Channel</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="allChannels">
+            <property name="text">
+             <string>All</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="noChannels">
+            <property name="text">
+             <string>None</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
        </layout>
       </item>
