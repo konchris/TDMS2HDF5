@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'MainWindow.ui'
 #
-# Created: Wed Sep 10 13:28:35 2014
+# Created: Thu Oct  9 08:51:00 2014
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -104,9 +104,18 @@ class Ui_MainWindow(object):
         self.attributesTableView.setSizePolicy(sizePolicy)
         self.attributesTableView.setObjectName(_fromUtf8("attributesTableView"))
         self.rightLayout.addWidget(self.attributesTableView)
+        self.horizontalLayout = QtGui.QHBoxLayout()
+        self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
         self.saveChannelCheckBox = QtGui.QCheckBox(self.centralwidget)
         self.saveChannelCheckBox.setObjectName(_fromUtf8("saveChannelCheckBox"))
-        self.rightLayout.addWidget(self.saveChannelCheckBox)
+        self.horizontalLayout.addWidget(self.saveChannelCheckBox)
+        self.allChannels = QtGui.QPushButton(self.centralwidget)
+        self.allChannels.setObjectName(_fromUtf8("allChannels"))
+        self.horizontalLayout.addWidget(self.allChannels)
+        self.noChannels = QtGui.QPushButton(self.centralwidget)
+        self.noChannels.setObjectName(_fromUtf8("noChannels"))
+        self.horizontalLayout.addWidget(self.noChannels)
+        self.rightLayout.addLayout(self.horizontalLayout)
         self.mainLayout.addLayout(self.rightLayout)
         self.gridLayout.addLayout(self.mainLayout, 0, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
@@ -155,6 +164,8 @@ class Ui_MainWindow(object):
         self.offsetSaveButton.setText(_translate("MainWindow", "Save", None))
         self.attributesLabel.setText(_translate("MainWindow", "Channel Attributes", None))
         self.saveChannelCheckBox.setText(_translate("MainWindow", "Save Channel", None))
+        self.allChannels.setText(_translate("MainWindow", "All", None))
+        self.noChannels.setText(_translate("MainWindow", "None", None))
         self.actionOpen_TDMS_File.setText(_translate("MainWindow", "Open &TDMS File", None))
         self.actionOpen_TDMS_File.setShortcut(_translate("MainWindow", "Ctrl+O", None))
         self.action_Export_to_HDF5.setText(_translate("MainWindow", "&Export to HDF5", None))

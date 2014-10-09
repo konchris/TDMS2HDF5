@@ -146,6 +146,8 @@ class Presenter(object):
         self.view.ySelectorView.clicked.connect(self.newYSelection)
         self.view.xSelectorView.clicked.connect(self.newXSelection)
         self.view.saveChannelCheckBox.stateChanged.connect(self.toggleWriteToFile)
+        self.view.allChannels.clicked.connect(self.saveAllChannels)
+        self.view.noChannels.clicked.connect(self.saveNoChannels)
 
     def fileOpen(self):
         """Open a file."""
@@ -284,9 +286,23 @@ class Presenter(object):
 
         return label
 
-    def toggleWriteToFile(self, chanKey):
+    def toggleWriteToFile(self):
         self.channelRegistry[self.ySelected].write_to_file = \
           self.view.saveChannelCheckBox.isChecked()
+
+    def saveAllChannels(self):
+
+        for k, v in self.channelRegistry.items():
+            v.write_to_file = True
+
+        self.view.saveChannelCheckBox.setChecked(True)
+
+    def saveNoChannels(self):
+
+        for k, v in self.channelRegistry.items():
+            v.write_to_file = False
+
+        self.view.saveChannelCheckBox.setChecked(False)
 
     def exprtToFile(self):
         fname = self.fileName.split('.')[0] + '.h5'
