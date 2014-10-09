@@ -366,7 +366,7 @@ class Presenter(object):
             if chan_obj.time[-1] > 3600:
                 # Then it means we have hours worth of data
                 chan_obj.time = chan_obj.time / 3600
-                self.chan.unit = '[h]'
+                chan_obj.unit = '[h]'
             elif chan_obj.time[-1] > 60:
                 # Then it means we have minutes worth of data
                 chan_obj.time = chan_obj.time / 60
