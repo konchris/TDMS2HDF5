@@ -27,17 +27,24 @@ class TreeNode(object):
     ----------
     name : str
         The name of the node
-    parent : str
+    parent : TreeNode, optional
         The possible name of the parent node
 
     Methods
     -------
     addChild(child : TreeNode):
+        Add a child to the node.
     name():
-    child()
-    childCount()
-    parent()
-    row()
+        Get the name of the node.
+    child(row : int):
+        Return the child node in the row-th position.
+    childCount():
+        Return the number of children the node has.
+    parent():
+        Return the node's parent.
+    row():
+        Return the node's row index in its parent node.
+
 
     """
 
@@ -50,21 +57,74 @@ class TreeNode(object):
             parent.addChild(self)
 
     def addChild(self, child):
+        """Add a child to the node.
+
+        Parameters
+        ----------
+        child : TreeNode
+            A TreeNode object to add as a child to the current node.
+
+        """
         self._children.append(child)
 
     def name(self):
+        """Get the name of the node.
+
+        Returns
+        -------
+        _name : str
+            The name of the current node.
+
+        """
         return self._name
 
     def child(self, row):
+        """Return the child node in the row-th position.
+
+        Parameters
+        ----------
+        row : int
+            The position of the child node you want to know.
+
+        Returns
+        -------
+        children[row] : TreeNode
+            The child node object at row position in the current node.
+
+        """
         return self._children[row]
 
     def childCount(self):
+        """Return the number of children the node has.
+
+        Returns
+        -------
+        len(_children) : int
+            The number of children the current node has.
+
+        """
         return len(self._children)
 
     def parent(self):
+        """Return the node's parent.
+
+        Returns
+        -------
+        _parent : TreeNode
+            The node object of the parent of the current node.
+
+        """
         return self._parent
 
     def row(self):
+        """Return the node's row index in its parent node.
+
+        Returns
+        ------
+        row : int
+            The index of the current node in its parent node.
+
+        """
         if self._parent is not None:
             return self._parent._children.index(self)
 
