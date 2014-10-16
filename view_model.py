@@ -18,7 +18,7 @@ import sys
 from PyQt4.QtCore import (QAbstractItemModel, QModelIndex, Qt)
 from PyQt4.QtGui import (QApplication, QTreeView, QStringListModel)
 
-from model import ChannelRegistry
+from ChannelModel import ChannelRegistry
 
 class TreeNode(object):
 
