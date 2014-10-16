@@ -370,9 +370,9 @@ class Presenter(object):
             elif chan_obj.time[-1] > 60:
                 # Then it means we have minutes worth of data
                 chan_obj.time = chan_obj.time / 60
-                self.chan.unit = '[m]'
+                chan_obj.unit = '[m]'
             else:
-                self.chan.unit = '[s]'
+                chan_obj.unit = '[s]'
 
             if chan_device not in df_register.keys():
                 df_register[chan_device] = pd.DataFrame()
