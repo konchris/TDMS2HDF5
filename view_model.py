@@ -21,6 +21,25 @@ from PyQt4.QtGui import (QApplication, QTreeView, QStringListModel)
 from ChannelModel import ChannelRegistry
 
 class TreeNode(object):
+    """A node in the groups/channels tree view model.
+
+    Parameters
+    ----------
+    name : str
+        The name of the node
+    parent : str
+        The possible name of the parent node
+
+    Methods
+    -------
+    addChild(child : TreeNode):
+    name():
+    child()
+    childCount()
+    parent()
+    row()
+
+    """
 
     def __init__(self, name, parent=None):
         self._parent = parent
