@@ -22,6 +22,7 @@ from datetime import datetime
 import h5py
 import numpy as np
 import pandas as pd
+import seaborn as sns
 
 # PyQt4
 from PyQt4.QtGui import (QApplication, QFileDialog, QKeySequence, QMessageBox)
@@ -250,7 +251,7 @@ class Presenter(object):
                 xArray = self.channelRegistry[self.xSelected].data
 
             try:
-                self.view.axes.plot(xArray, yArray, label=self.ySelected)
+                self.view.axes.plot(xArray, yArray, label=self.ySelected, color=sns.xkcd_rgb['pale red'])
             except ValueError as err:
                 dialog = QMessageBox()
                 dialog.setText("Value Error: {0}".format(err))

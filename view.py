@@ -23,6 +23,7 @@ from matplotlib.backends.backend_qt4agg import (FigureCanvasQTAgg as
                                                 FigureCanvas)
 from matplotlib.backends.backend_qt4agg import (NavigationToolbar2QT as
                                                 NavigationToolbar)
+import seaborn as sns
 
 from Ui_MainWindow import Ui_MainWindow as MainWindow
 from view_model import (TreeNode, TreeModel)
@@ -37,6 +38,8 @@ AXESLABELS = {r"Resistance [$\Omega$]" : ["dR", "dRSample", "R", "RSample",
               "Temperature [K]" : ["Temp_RuO", "Temperature", "1k - Pot", "He3",
                                    "Sorption"],
               "Capacitance [nF]" : ["Cap", "TCap"]}
+
+sns.set_style('whitegrid')
 
 class MyMainWindow(QMainWindow, MainWindow):
     """My main window class
