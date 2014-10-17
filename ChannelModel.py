@@ -440,7 +440,7 @@ class ChannelRegistry(dict):
 
         """
         # dV depends on dVSample and LVSens
-        if ('raw/dVSample' in self.keys() and 'LVSens' in self['raw/dVSample']
+        if ('raw/dVSample' in self.keys() and 'LVSens' in self['raw/dVSample'] \
             .attributes.keys()) and ('raw/dV' not in self.keys()):
             chandVSample = self['raw/dVSample']
         else:
@@ -485,7 +485,7 @@ class ChannelRegistry(dict):
 
         """
         # dI depends on dISample and LISens
-        if ('raw/dISample' in self.keys() and 'LISens' in self['raw/dISample']
+        if ('raw/dISample' in self.keys() and 'LISens' in self['raw/dISample'] \
             .attributes.keys()) and ('raw/dI' not in self.keys()):
             chandISample = self['raw/dISample']
         else:
@@ -633,6 +633,7 @@ class ChannelRegistry(dict):
 
 
 def main(argv=None):
+    """The main loop when running this module as a standalone script."""
 
     if argv is None:
         argv = sys.argv
