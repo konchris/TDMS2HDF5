@@ -180,8 +180,8 @@ class Presenter(object):
         self.view.ySelectorView.expandAll()
         self.view.ySelectorView.setHeaderHidden(True)
         self.view.ySelectorView.setMaximumWidth(self.view.ySelectorView.sizeHintForColumn(0) + 10)
-
-        self.view.xSelectorView.setMaximumHeight(self.view.xSelectorView.sizeHintForColumn(0) - 50)
+        
+        self.view.xSelectorView.setMaximumHeight(42)#self.view.xSelectorView.sizeHintForColumn(0) - 50)
 
     def newYSelection(self, ySelection):
         self.ySelected_old = self.ySelected

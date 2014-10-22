@@ -68,8 +68,8 @@ class MyMainWindow(QMainWindow, MainWindow):
         self.centralLayout.insertWidget(1, mpl_toolbar)
 
         # Adjust the offset spinbox range and significant digits
-        self.offsetSpinBox.setDecimals(10)
-        self.offsetSpinBox.setRange(-1000000,1000000)
+        #self.offsetSpinBox.setDecimals(10)
+        #self.offsetSpinBox.setRange(-1000000,1000000)
 
     def createAction(self, text, slot=None, shortcut=None, icon=None,
                      tip=None, checkable=False, signal="triggered()"):
