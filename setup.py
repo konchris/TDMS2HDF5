@@ -1,52 +1,89 @@
-# A simple setup script to create an executable using PyQt4. This also
-# demonstrates the method for creating a Windows executable that does not have
-# an associated console.
-#
-# PyQt4app.py is a very simple type of PyQt4 application
-#
-# Run the build process by running the command 'python setup.py build'
-#
-# If everything works well you should find a subdirectory in the build
-# subdirectory that contains the files needed to run the application
-
-#application_title = "TDMS 2 HDF5 Converter" 
-#what you want to application to be called
-#main_python_file = "tdms2hdf5.pyw"
-#the name of the python file you use to run the program
-
+from setuptools import setup, find_packages
+from setuptools.command.test import test as TestCommand
+import io
+import codecs
+import os
 import sys
 
-from cx_Freeze import setup, Executable
+import TDMS2HDF5
 
-#base = None
-#if sys.platform == "win32":
+here = os.path.abspath(os.path.dirname(__file__))
 
-includefiles = ["data_structures.py","gui_elements.py"]
-excludes = []
-packages = []
-includes = []
+def read(*filenames, **kwargs):
+    encoding = kwargs.get('encoding', 'utf-8')
+    sep = kwargs.get('sep', '\n')
+    buf = []
+    for filename in filenames:
+        with io.open(filename, encoding=encoding) as f:
+            buf.append(f.read())
+    return sep.join(buf)
 
-exe = Executable(
-    # what to build
-    script = "tdms2hdf5.pyw", # the name of your main python script goes here 
-    initScript = None,
-    base = "Win32GUI",
-    targetName = "TDMS_2_HDF5.exe", # this is the name of the executable file
-    copyDependentFiles = True,
-    compress = True,
-    appendScriptToExe = True,
-    appendScriptToLibrary = True,
-    icon = None # if you want to use an icon file, specify the file name here
-)
+long_description = read('README.md')
+
+class PyTest(TestCommand):
+    def finalize_options(self):
+        TestCommand.finalize_options(self)
+        self.test_args = []
+        self.test_suite = True
+
+    def run_tests(self):
+        import pytest
+        errcode = pytest.main(self.test_args)
+        sys.exit(errcode)
 
 setup(
-    # the actual setup & the definition of other misc. info
-    name = "TDMS 2 HDF5 Converter", # program name
-    version = "0.3",
-    description = "View and convert TDMS files to HDF5 format.",
-    author = "Christopher Espy",
-    author_email = "christopher.espy@uni-konstnaz.de",
-    options = {"build_exe": {"excludes":excludes,"packages":packages,
-                             "include_files":includefiles}},
-    executables = [exe]
+    name='TDMS2HDF5',
+    version=TDMS2HDF5.__version__,
+    url='http://github.com/konchris/TDMS2HDF5/',
+    license='GNU GPLv2',
+    author='Christopher Espy',
+    tests_require=['pytest'],
+    install_requires=['numpy>=1.9.0',
+                      'npTDMS>=0.6.2',
+                      'matplotlib>=1.4.0',
+                      'six>=1.5.2',
+                      'nose>=1.3.4',
+                      'python-dateutil>=2.2',
+                      'pyparsing>=2.0.2',
+                      'h5py>=2.3.1',
+                      'pandas>=0.14.1',
+                      'pytz>=2014.7',
+                      'Cython>=0.21.1',
+                      'numexpr>=2.4',
+                      'scipy>=0.14.0',
+                      'pep8>=1.5.7',
+                      'pylint>=1.3.1',
+                      'pytest>=2.6.3',
+                      'seaborn>=0.4.0',
+                      'tables>=3.1.1'
+                    ],
+    cmdclass={'test': PyTest},
+    entry_points={
+        'gui_scripts':[
+            'tdms2hdf5 = TDMS2HDF5.tdms2hdf5:main'
+            ]
+        },
+    author_email='github@konchris.de',
+    description="View National Instruments' TDMS files and export to HDF5",
+    long_description=long_description,
+    packages=['TDMS2HDF5'],
+    include_package_data=True,
+    platforms='any',
+    test_suite='test.test_tdms2hdf5',
+    classifiers = [
+        'Development Status :: 3 - Alpha',
+        'Environment :: Win32 (MS Windows)',
+        'Environment :: X11 Applications :: Qt'
+        'Intended Audience :: End Users/Desktop',
+        'Intended Audience :: Science/Research',
+        'License :: OSI Approved :: GNU General Public License v2 (GPLv2)',
+        'Natural Language :: English',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python :: 3.4',
+        'Topic :: Scientific/Engineering :: Physics',
+        'Topic :: Scientific/Engineering :: Visualization'
+        ],
+    extras_require={
+        'testing': ['pytest'],
+    }
 )

@@ -20,16 +20,10 @@ from PyQt4.QtGui import QApplication
 from PyQt4.QtTest import QTest
 from PyQt4.QtCore import Qt
 
-from view import MyMainWindow
+from TDMS2HDF5.view_model import TreeModel, TreeNode
 
 class TestMyMainWindow(unittest.TestCase):
-
-    def setUp(self):
-        self.app = QApplication(sys.argv)
-        self.form = MyMainWindow()
-
-    def test(self):
-        pass
+    pass
 
 if __name__ == "__main__":
     unittest.main()

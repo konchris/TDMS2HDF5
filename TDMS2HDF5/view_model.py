@@ -18,7 +18,7 @@ __status__ = "Development"
 from PyQt4.QtCore import (QAbstractItemModel, QModelIndex, Qt)
 from PyQt4.QtGui import (QApplication, QTreeView, QStringListModel)
 
-from ChannelModel import ChannelRegistry
+from .ChannelModel import ChannelRegistry
 
 class TreeNode(object):
     """A node in the groups/channels tree view model.

@@ -20,10 +20,16 @@ from PyQt4.QtGui import QApplication
 from PyQt4.QtTest import QTest
 from PyQt4.QtCore import Qt
 
-from tdms2hdf5 import Presenter
+from TDMS2HDF5.view import MyMainWindow
 
 class TestMyMainWindow(unittest.TestCase):
-    pass
+
+    def setUp(self):
+        self.app = QApplication(sys.argv)
+        self.form = MyMainWindow()
+
+    def test(self):
+        pass
 
 if __name__ == "__main__":
     unittest.main()

@@ -19,7 +19,7 @@ from datetime import datetime
 
 import numpy as np
 
-from model import Channel, ChannelRegistry
+from TDMS2HDF5.ChannelModel import Channel, ChannelRegistry
 
 DATADIR = '/home/chris/Documents/PhD/root/raw-data/'
 DATADIR = os.path.join('Z:', 'root', 'raw-data')

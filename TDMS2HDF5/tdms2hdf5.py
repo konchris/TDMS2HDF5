@@ -31,9 +31,9 @@ from PyQt4.QtCore import (QModelIndex)
 from matplotlib import dates
 
 # Import our own modules
-from view import (MyMainWindow, AXESLABELS)
-from ChannelModel import  (ChannelRegistry)
-from view_model import (TreeNode, TreeModel, MyListModel)
+from .view import (MyMainWindow, AXESLABELS)
+from .ChannelModel import  (ChannelRegistry)
+from .view_model import (TreeNode, TreeModel, MyListModel)
 
 BASEDIR = '/home/chris/Documents/PhD/root/raw-data/'
 
@@ -463,7 +463,7 @@ def main(argv=None):
         argv = sys.argv
 
     app = QApplication(argv)
-    app.setOrganizationName("tdms2hdf5")
+    app.setOrganizationName("TDMS2HDF5")
     app.setApplicationName("TDMS-2-HDF5 Converter")
 
     presenter = Presenter()
