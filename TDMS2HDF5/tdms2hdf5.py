@@ -463,7 +463,7 @@ def main(argv=None):
         argv = sys.argv
 
     app = QApplication(argv)
-    app.setOrganizationName("tdms2hdf5")
+    app.setOrganizationName("TDMS2HDF5")
     app.setApplicationName("TDMS-2-HDF5 Converter")
 
     presenter = Presenter()
