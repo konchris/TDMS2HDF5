@@ -22,6 +22,7 @@ import numpy as np
 from model import Channel, ChannelRegistry
 
 DATADIR = '/home/chris/Documents/PhD/root/raw-data/'
+DATADIR = os.path.join('Z:', 'root', 'raw-data')
 
 TESTFILE01 = os.path.join(DATADIR, "sio2al149/cryo_measurement/2014-02-14/2014-02-14T14-39-08-First-Cooldown.tdms")
 TESTFILE02 = os.path.join(DATADIR, "fonin_heliox/2014-09-22-Testing-Run/2014-09-23T09-05-59-Pump-to-1.6K.tdms")
@@ -50,7 +51,7 @@ class TestChannel(unittest.TestCase):
         self.assertNotEqual(self.channel.getName(), current_name, 'Name is unchanged')
 
     def test_set_get_starttime_now(self):
-        now = np.datetime64(datetime.now())
+        now = datetime.now()
         self.channel.setStartTime(now)
         self.assertEqual(self.channel.getStartTime(), now)
 
