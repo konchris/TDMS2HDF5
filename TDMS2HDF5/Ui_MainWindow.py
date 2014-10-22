@@ -174,4 +174,4 @@ class Ui_MainWindow(object):
         self.action_Quit.setShortcut(_translate("MainWindow", "Ctrl+Q", None))
         self.actionOpen_Recent.setText(_translate("MainWindow", "Open Recent", None))
 
-import resources_rc
+from .resources_rc import *
