@@ -20,7 +20,7 @@ from PyQt4.QtGui import QApplication
 from PyQt4.QtTest import QTest
 from PyQt4.QtCore import Qt
 
-from tdms2hdf5 import Presenter
+from TDMS2HDF5.tdms2hdf5 import Presenter
 
 class TestMyMainWindow(unittest.TestCase):
     pass
