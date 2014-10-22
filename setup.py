@@ -1,9 +1,9 @@
-from setuptools import setup, find_packages
+from setuptools import setup
 from setuptools.command.test import test as TestCommand
 import io
-import codecs
 import os
 import sys
+import py2exe
 
 import TDMS2HDF5
 
