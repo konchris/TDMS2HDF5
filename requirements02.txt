@@ -7,5 +7,5 @@ pyparsing==2.0.2
 h5py==2.3.1
 pandas==0.14.1
 pytz==2014.7
-Cython==0.21
+Cython==0.21.1
 numexpr==2.4
