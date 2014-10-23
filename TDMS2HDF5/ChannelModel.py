@@ -365,7 +365,7 @@ class ChannelRegistry(dict):
             # Sort the ADWin device properites to the proper channels if
             # necessary.
             for chan in deviceChannels:
-                channelName = chan.path.split('/')[-1].strip("'")
+                channelName = chan.path.replace("'","").lstrip("/")
                 # Some channels are empty. This becomes apparent when trying
                 # load the properties.
                 try:
@@ -653,7 +653,7 @@ def main(argv=None):
     for k, v in chanReg.items():
         # print(v.name, v.attributes['Device'], v.getTimeStep(),
         #       v.attributes['Length'])
-        print(k, v.name)
+        print(v.name)
 
 if __name__ == "__main__":
     main()
