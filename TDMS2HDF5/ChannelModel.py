@@ -56,18 +56,20 @@ class Channel(object):
        a channel in a HDF5 file. Here they are stored as key-value pairs.
        Device : string
            The recording device for the channel.
-       TimeInterval : int, float
+       TimeInterval : numpy.timedelta64
            The time interval between data points.
        Length : int
            The number of data points in the mesurement array.
-       StartTime : datetime.datetime
+       StartTime : numpy.datetime64
            The starting time (of recording) of the channel.
     name : string
        The channel's name.
     data : numpy.ndarray
        The measurement data array.
     time : numpy.ndarray
-       The time array of the measurement.
+       The absolute time array of the measurement.
+    elapsed_time : numpy.ndarray
+       The elapsed time array of the measurement.
     parent : string
        The name of the parent group of the channel in the HDF5 file.
     write_to_file : boolean
@@ -83,14 +85,14 @@ class Channel(object):
         Set the name of the channel
     getName()
         Return the name of the channel (str)
-    setStartTime(newStartTime : datetime.datetime)
+    setStartTime(newStartTime : numpy.datetime64)
         Set the starting time of the channel measurement
     getStartTime()
-        Return the start time of the channel measurement (datetime.datetime)
-    setTimeStep(newDelTime : int, float)
+        Return the start time of the channel measurement (numpy.datetime64)
+    setTimeStep(newDelTime : numpy.timedelta64)
         Set the time step of the channel measurement
     getTimeStep()
-        Return the time step of the measurement (int, float)
+        Return the time step of the measurement (numpy.timedelta64)
     getTimeTrack()
         Return the time track of the channel measurement (numpy.ndarray)
     getElapsedTime()
@@ -107,13 +109,14 @@ class Channel(object):
     def __init__(self, name, device='', meas_array=np.array([])):
         super(Channel, self).__init__()
         self.attributes = {"Device": device,
-                           "TimeInterval": 0,
+                           "TimeInterval": np.timedelta64(1, 'ms'),
                            "Length": len(meas_array),
-                           "StartTime": datetime.now()}
+                           "StartTime": np.datetime64(datetime.now())}
 
         self.name = name
         self.data = meas_array
         self.time = np.array([])
+        self.elapsed_time = np.array([])
         self.parent = 'raw'
         self.unit = 'n.a.'
         self.write_to_file = True
@@ -122,13 +125,31 @@ class Channel(object):
 
     def _recalculateTimeArray(self):
         """Recalculate the time track based on start time and time step"""
-        dt = self.getTimeStep()
+
+        dt = self.attributes['TimeInterval']
+        # print('The timedelta type is {0} and value is '.format(type(dt)), dt)
 
         length = self.attributes['Length']
+        # print(length)
 
-        timeArray = np.linspace(0, length*dt, length)
+        startTime = np.datetime64(self.attributes['StartTime'])
+        # print('The start time type is {0} and value is '
+        #       .format(type(startTime)),
+        #       startTime)
 
-        self.time = timeArray
+        stopTime = startTime + dt * length
+        # print(('The stop time type is {0} and value is '
+        #        .format(type(stopTime))), stopTime)
+
+        absolute_time_track = np.arange(startTime, stopTime, dt)
+        # print(absolute_time_track[0], absolute_time_track[-1])
+
+        elapsed_time_track = ((absolute_time_track - startTime)
+                              .astype('timedelta64[ms]'))
+        # print('elapsed time:', elapsed_time_track.dtype)
+
+        self.time = absolute_time_track
+        self.elapsed_time = elapsed_time_track
 
     def setParent(self, newParent):
         """Set the parent group of the channel in the HDF5 file.
@@ -150,7 +171,7 @@ class Channel(object):
 
         Returns
         -------
-        parent : str
+        str
             The name of the parent group of the channel in the HDF5 file.
 
         """
@@ -176,7 +197,7 @@ class Channel(object):
 
         Returns
         -------
-        name : str
+        str
             The name of the channel
 
         """
@@ -187,21 +208,24 @@ class Channel(object):
 
         Parameters
         ----------
-        newStartTime : datetime.datetime
+        newStartTime : numpy.datetime64
             The new datetime at which the measurement started.
 
         """
-        if isinstance(newStartTime, datetime):
+        if isinstance(newStartTime, np.datetime64):
             self.attributes['StartTime'] = newStartTime
+            self._recalculateTimeArray()
         else:
-            raise TypeError('The start time has to be of datetime type')
+            raise TypeError('The start time has to be of numpy.datetime64'
+                            'type')
 
     def getStartTime(self):
-        """Returns the channel's measurement starting time in datetime format
+        """Returns the channel's measurement starting time in numpy.datetime64
+            format
 
         Returns
         -------
-        StartTime : datetime.datetime
+        numpy.datetime64
             The datetime at which the measurement started.
 
         """
@@ -212,15 +236,16 @@ class Channel(object):
 
         Parameters
         ----------
-        newDelTime : int, float
+        int, float
             The new time interval between measurement points
 
         """
-        if isinstance(newDelTime, (int, float)):
+
+        if isinstance(newDelTime, np.timedelta64):
             self.attributes['TimeInterval'] = newDelTime
             self._recalculateTimeArray()
         else:
-            message = 'The time interval can only be an int or a float'
+            message = 'The time interval can only be a numpy.timedelta64'
             raise TypeError(message)
 
     def getTimeStep(self):
@@ -228,40 +253,34 @@ class Channel(object):
 
         Returns
         -------
-        TimeInterval : int, float
+        int, float
             The new time interval between measurement points
 
         """
         return self.attributes['TimeInterval']
 
-    def getTimeTrack(self):
-        """Return the time array of the measurement
+    def getElapsedTimeTrack(self):
+        """Return the elapsed time of the measurement in a numpy.ndarray
 
         Returns
         -------
-        timeTrack : numpy.ndarray
+        numpy.ndarray
             The time array of the measurement
 
         """
-        return self.time
+        return self.elapsed_time
 
-    def getElapsedTime(self):
-        """Return the elapsed time track of the measurement
+    def getTimeTrack(self):
+        """Return the absolute time track of the measurement
 
         Returns
         -------
-        elapsedTime : numpy.ndarray
+        numpy.ndarray
            This is an array of the elapsed time from the start of the
            measurement in seconds.
 
         """
-        dt = self.attributes['TimeInterval']
-
-        length = self.attributes['Length']
-
-        elapsed_time = np.linspace(0, length * dt, length)
-
-        return elapsed_time
+        return self.time
 
     def toggleWrite(self):
         """Toggle whether to write the channel to the HDF5 file
@@ -365,27 +384,26 @@ class ChannelRegistry(dict):
             # Sort the ADWin device properites to the proper channels if
             # necessary.
             for chan in deviceChannels:
-                channelName = chan.path.replace("'","").lstrip("/")
+                channelName = chan.path.replace("'", "").lstrip("/")
                 # Some channels are empty. This becomes apparent when trying
                 # load the properties.
                 try:
-
                     newChannel = Channel(channelName, device=device,
                                          meas_array=chan.data)
 
-                    startTime = chan.property('wf_start_time')
+                    startTime = np.datetime64(chan.property('wf_start_time'))
+
                     newChannel.setStartTime(startTime)
 
-                    # Sometimes the wf_increment is not saved in seconds, but
-                    # in milliseconds.
-                    # Convert is back into seconds
+                    # Sometimes the wf_increment is saved in seconds. Convert
+                    # to milliseconds for easier use with numpy timedeltas.
 
                     timeStep = chan.property("wf_increment")
 
-                    if timeStep > 1:
-                        timeStep = timeStep / 1000
+                    if timeStep < 1:
+                        timeStep = timeStep * 1000
 
-                    newChannel.setTimeStep(timeStep)
+                    newChannel.setTimeStep(np.timedelta64(int(timeStep), 'ms'))
 
                     if device == "ADWin":
                         for attributeName in ADWIN_DICT[channelName]:
@@ -398,7 +416,7 @@ class ChannelRegistry(dict):
                                     deviceProperties[attributeName]
                             except KeyError as err:
                                 # print('1\tKey Error: {0} on channel {1}'
-                                #       .format(err, channelName))
+                                #      .format(err, channelName))
                                 pass
 
                     self.addChannel(newChannel)
@@ -409,7 +427,7 @@ class ChannelRegistry(dict):
                     pass
                 except TypeError as err:
                     # print('3\tType Error: {0} on channel {1}'
-                    #       .format(err, channelName))
+                    #      .format(err, channelName))
                     pass
 
         self.addTransportChannels()
@@ -440,7 +458,7 @@ class ChannelRegistry(dict):
 
         """
         # dV depends on dVSample and LVSens
-        if ('raw/dVSample' in self.keys() and 'LVSens' in self['raw/dVSample'] \
+        if ('raw/dVSample' in self.keys() and 'LVSens' in self['raw/dVSample']
             .attributes.keys()) and ('raw/dV' not in self.keys()):
             chandVSample = self['raw/dVSample']
         else:
@@ -485,7 +503,7 @@ class ChannelRegistry(dict):
 
         """
         # dI depends on dISample and LISens
-        if ('raw/dISample' in self.keys() and 'LISens' in self['raw/dISample'] \
+        if ('raw/dISample' in self.keys() and 'LISens' in self['raw/dISample']
             .attributes.keys()) and ('raw/dI' not in self.keys()):
             chandISample = self['raw/dISample']
         else:
@@ -654,6 +672,8 @@ def main(argv=None):
         # print(v.name, v.attributes['Device'], v.getTimeStep(),
         #       v.attributes['Length'])
         print(v.name)
+        print(v.getTimeTrack())
+        print(v.getElapsedTimeTrack())
 
 if __name__ == "__main__":
     main()

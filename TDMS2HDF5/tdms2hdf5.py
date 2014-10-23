@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# pylint: disable=C0103
+# pylint: disable=C0103,C0111
 """ Testing groud for importing tdms files
 
 """
@@ -26,16 +26,16 @@ import seaborn as sns
 
 # PyQt4
 from PyQt4.QtGui import (QApplication, QFileDialog, QKeySequence, QMessageBox)
-from PyQt4.QtCore import (QModelIndex)
-
-from matplotlib import dates
 
 # Import our own modules
 from .view import (MyMainWindow, AXESLABELS)
-from .ChannelModel import  (ChannelRegistry)
+from .ChannelModel import (ChannelRegistry)
 from .view_model import (TreeNode, TreeModel, MyListModel)
 
 BASEDIR = '/home/chris/Documents/PhD/root/raw-data/'
+
+TIMEZONE = np.timedelta64(2, 'h')
+
 
 class Main(MyMainWindow):
     """ The main window of the program.
@@ -135,8 +135,9 @@ class Presenter(object):
                                                 QKeySequence.Open, "open",
                                                 "Open an existing TDMS file")
         fileExportAction = self.view.createAction("&Export", self.exprtToFile,
-                                             "Ctrl+E", 'export',
-                                             tip="Export the TDMS data to HDF5")
+                                                  "Ctrl+E", 'export',
+                                                  tip=("Export the TDMS data"
+                                                       " to HDF5"))
 
         self.fileMenu = self.view.menuBar().addMenu("&File")
         self.fileMenuActions = (fileOpenAction, fileExportAction,
@@ -146,7 +147,8 @@ class Presenter(object):
         # Connections
         self.view.ySelectorView.clicked.connect(self.newYSelection)
         self.view.xSelectorView.clicked.connect(self.newXSelection)
-        self.view.saveChannelCheckBox.stateChanged.connect(self.toggleWriteToFile)
+        self.view.saveChannelCheckBox.stateChanged.connect(self
+                                                           .toggleWriteToFile)
         self.view.allChannels.clicked.connect(self.saveAllChannels)
         self.view.noChannels.clicked.connect(self.saveNoChannels)
 
@@ -171,17 +173,20 @@ class Presenter(object):
         procNode = TreeNode(proc, rootNode0)
         for k, v in self.channelRegistry.items():
             if raw in k:
-                childNode = TreeNode(v.name, rawNode)
+                TreeNode(v.name, rawNode)
             elif proc in k:
-                childNode = TreeNode(v.name, procNode)
+                TreeNode(v.name, procNode)
 
         self.setYModel(TreeModel(rootNode0))
-        self.setXModel(MyListModel(['Time'] + list(self.channelRegistry.keys())))
+        self.setXModel(MyListModel(['Time', 'Abs. Time'] +
+                                   list(self.channelRegistry.keys())))
         self.view.ySelectorView.expandAll()
         self.view.ySelectorView.setHeaderHidden(True)
-        self.view.ySelectorView.setMaximumWidth(self.view.ySelectorView.sizeHintForColumn(0) + 10)
-        
-        self.view.xSelectorView.setMaximumHeight(42)#self.view.xSelectorView.sizeHintForColumn(0) - 50)
+        self.view.ySelectorView.setMaximumWidth(self.view.ySelectorView
+                                                .sizeHintForColumn(0) + 10)
+
+        self.view.xSelectorView.setMaximumHeight(42)
+        # self.view.xSelectorView.sizeHintForColumn(0) - 50)
 
     def newYSelection(self, ySelection):
         self.ySelected_old = self.ySelected
@@ -219,39 +224,56 @@ class Presenter(object):
             # Turn on the grid
             self.view.axes.grid(True)
 
+            # Generate the data arrays
+            yArray = self.channelRegistry[self.ySelected].data
+
+            if self.xSelected == 'Time':
+                xArray = (self.channelRegistry[self.ySelected]
+                          .getElapsedTimeTrack())
+                hour = 3600000
+                minute = 60000
+                second = 1000
+                millisecond = 1
+                if xArray[-1] > 3 * hour:
+                    unit = 'h'
+                    factor = hour
+                elif xArray[-1] > minute:
+                    unit = 'm'
+                    factor = minute
+                elif xArray[-1] > second:
+                    unit = 's'
+                    factor = second
+                else:
+                    unit = 'ms'
+                    factor = millisecond
+            elif self.xSelected == 'Abs. Time':
+                xArray = self.channelRegistry[self.ySelected].getTimeTrack()
+                unit = str(xArray[0].astype(datetime).date())
+            else:
+                xArray = self.channelRegistry[self.xSelected].data
+
             # Set the labels
             xLabel = self.generateAxisLabel(self.xSelected)
+            if self.xSelected in ['Time', 'Abs. Time']:
+                xLabel = xLabel.replace("unit", unit)
             yLabel = self.generateAxisLabel(self.ySelected)
             self.view.axes.set_xlabel(xLabel)
             self.view.axes.set_ylabel(yLabel)
 
-            # Generate the data arrays
-            yArray = self.channelRegistry[self.ySelected].data
-            ## if self.xSelected == 'Time':
-            ##     xArray = self.channelRegistry[self.ySelected].getTimeTrack().astype(datetime)
-            ##     xArray = dates.date2num(xArray)
-            ##     try:
-            ##         self.view.axes.plot_date(xArray, yArray, '-', label=self.ySelected)
-            ##     except ValueError as err:
-            ##         dialog = QMessageBox()
-            ##         dialog.setText("Value Error: {0}".format(err))
-            ##         dialog.exec_()
-            ## else:
-            ##     xArray = self.channelRegistry[self.xSelected].data
-            ##     try:
-            ##         self.view.axes.plot(xArray, yArray, label=self.ySelected)
-            ##     except ValueError as err:
-            ##         dialog = QMessageBox()
-            ##         dialog.setText("Value Error: {0}".format(err))
-            ##         dialog.exec_()
-
-            if self.xSelected == 'Time':
-                xArray = self.channelRegistry[self.ySelected].getTimeTrack() / 3600
-            else:
-                xArray = self.channelRegistry[self.xSelected].data
-
+            # Do the plotting
             try:
-                self.view.axes.plot(xArray, yArray, label=self.ySelected, color=sns.xkcd_rgb['pale red'])
+                if self.xSelected == 'Abs. Time':
+                    self.view.axes.plot((xArray + TIMEZONE).astype(datetime),
+                                        yArray, label=self.ySelected,
+                                        color=sns.xkcd_rgb['pale red'])
+                elif self.xSelected == 'Time':
+                    self.view.axes.plot(xArray.astype(int) / factor, yArray,
+                                        label=self.ySelected,
+                                        color=sns.xkcd_rgb['pale red'])
+                else:
+                    self.view.axes.plot(xArray, yArray, label=self.ySelected,
+                                        color=sns.xkcd_rgb['pale red'])
+
             except ValueError as err:
                 dialog = QMessageBox()
                 dialog.setText("Value Error: {0}".format(err))
@@ -265,7 +287,6 @@ class Presenter(object):
 
     def generateTimeTrack(self, yChannel):
         pass
-        
 
     def populateXSelector(self):
         pass
@@ -274,6 +295,13 @@ class Presenter(object):
 
         chan_name = chan_name.split('/')[-1]
 
+        if chan_name == 'Abs. Time':
+            label = 'Time starting on unit'
+            return label
+        elif chan_name == 'Time':
+            label = 'Time [unit]'
+            return label
+
         # Generate the axis labels based on the selected channels
         # Cycle through the labes in the AXESLABELS dictionary
         for axlbl in AXESLABELS.keys():
@@ -281,7 +309,7 @@ class Presenter(object):
             # Cycle through the channel names in each label's dictionary entry
             for cn in AXESLABELS[axlbl]:
 
-                # If a channel equals one of the selections, save the label 
+                # If a channel equals one of the selections, save the label
                 if chan_name == cn:
                     label = axlbl
 
@@ -327,7 +355,7 @@ class Presenter(object):
         else:
             return
 
-        basename, ext = fname.split('.')
+        ext = fname.split('.')[1]
 
         if ext in ['hdf5', 'he5', 'hdf']:
             self.exprtToHDF5(fname)
@@ -358,22 +386,7 @@ class Presenter(object):
 
             chan_name = chan_name.split("/")[-1]
 
-            # Get the start time
-            start_time = chan_obj.getStartTime()
-
             # Get time
-            #chan_obj.time = pd.to_datetime(chan_obj.time, unit='s')
-
-            if chan_obj.time[-1] > 3600:
-                # Then it means we have hours worth of data
-                chan_obj.time = chan_obj.time / 3600
-                chan_obj.unit = '[h]'
-            elif chan_obj.time[-1] > 60:
-                # Then it means we have minutes worth of data
-                chan_obj.time = chan_obj.time / 60
-                chan_obj.unit = '[m]'
-            else:
-                chan_obj.unit = '[s]'
 
             if chan_device not in df_register.keys():
                 df_register[chan_device] = pd.DataFrame()
@@ -385,28 +398,6 @@ class Presenter(object):
                               index=chan_obj.getTimeTrack())
 
                 df_register[chan_device][chan_name] = s
-                #df_register2[chan_device].append(s, ignore_index=True)
-
-                #dset = hdf5FileObject.require_dataset(chan,
-                #                                      shape=chan_obj.data.shape,
-                #                                      dtype=chan_obj.data.dtype,
-                #                                      data=chan_obj.data)
-
-                # Process 5.2.2 Write channel attributes
-                #for attr_name in self.channelRegistry[chan].attributes:
-                #    attr_value = self.channelRegistry[chan].attributes[attr_name]
-
-                    # Convert the datetime format to a string
-                    #if type(attr_value) is datetime:
-                    #    attr_value = attr_value.isoformat()
-
-                    # There's currently a wierd bug when dealing with python3
-                    # strings.
-                    # This gets around that
-                    #if type(attr_value) is str:
-                    #    attr_value = np.string_(attr_value)
-
-                    #dset.attrs.create(attr_name, attr_value)
 
         for k, v in df_register.items():
             hdfStore[k] = v
@@ -426,19 +417,21 @@ class Presenter(object):
         for chan in self.channelRegistry:
 
             chan_obj = self.channelRegistry[chan]
-            chan_name = chan
 
             # Process 5.2.1 Write channel data
             if self.channelRegistry[chan].write_to_file:
 
                 dset = hdf5FileObject.require_dataset(chan,
-                                                      shape=chan_obj.data.shape,
-                                                      dtype=chan_obj.data.dtype,
+                                                      shape=(chan_obj.data
+                                                             .shape),
+                                                      dtype=(chan_obj.data
+                                                             .dtype),
                                                       data=chan_obj.data)
 
                 # Process 5.2.2 Write channel attributes
                 for attr_name in self.channelRegistry[chan].attributes:
-                    attr_value = self.channelRegistry[chan].attributes[attr_name]
+                    attr_value = (self.channelRegistry[chan]
+                                  .attributes[attr_name])
 
                     # Convert the datetime format to a string
                     if type(attr_value) is datetime:
@@ -449,7 +442,8 @@ class Presenter(object):
                     # This gets around that
                     if type(attr_value) is str:
                         attr_value = np.string_(attr_value)
-                    print(attr_name, attr_value.astype('float64') / 1e3, type(attr_value))
+                    print(attr_name, attr_value.astype('float64') / 1e3,
+                          type(attr_value))
                     dset.attrs.create(attr_name, attr_value)
 
         # Process 5.3 Write data to file
@@ -476,4 +470,3 @@ def main(argv=None):
 
 if __name__ == "__main__":
     main()
-
