@@ -29,17 +29,17 @@ from .Ui_MainWindow import Ui_MainWindow as MainWindow
 from .view_model import (TreeNode, TreeModel)
 from .resources_rc import *
 
-AXESLABELS = {r"Resistance [$\Omega$]" : ["dR", "dRSample", "R", "RSample",
+AXESLABELS = {r"Resistance [$\Omega$]": ["dR", "dRSample", "R", "RSample",
                                           "Res_RuO"],
-              r"Current [$\mu$A]" : ["I", "dI", "ISample", "dISample"],
-              "Voltage [mV]" : ["V", "dV", "VSample", "dVSample", "VRuO"],
-              "Magnetfield [B]" : ["zMagnet", "xMagnet"],
-              "Time [h]" : ["Time"],
-              "Temperature [K]" : ["Temp_RuO", "Temperature", "1k - Pot", "He3",
-                                   "Sorption"],
-              "Capacitance [nF]" : ["Cap", "TCap"]}
+              r"Current [$\mu$A]": ["I", "dI", "ISample", "dISample"],
+              "Voltage [mV]": ["V", "dV", "VSample", "dVSample", "VRuO"],
+              "Magnetfield [B]": ["zMagnet", "xMagnet"],
+              "Temperature [K]": ["Temp_RuO", "Temperature", "1k - Pot",
+                                  "He3", "Sorption"],
+              "Capacitance [nF]": ["Cap", "TCap"]}
 
 sns.set_style('whitegrid')
+
 
 class MyMainWindow(QMainWindow, MainWindow):
     """My main window class
@@ -68,8 +68,8 @@ class MyMainWindow(QMainWindow, MainWindow):
         self.centralLayout.insertWidget(1, mpl_toolbar)
 
         # Adjust the offset spinbox range and significant digits
-        #self.offsetSpinBox.setDecimals(10)
-        #self.offsetSpinBox.setRange(-1000000,1000000)
+        # self.offsetSpinBox.setDecimals(10)
+        # self.offsetSpinBox.setRange(-1000000,1000000)
 
     def createAction(self, text, slot=None, shortcut=None, icon=None,
                      tip=None, checkable=False, signal="triggered()"):
