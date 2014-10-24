@@ -19,7 +19,8 @@ __status__ = "Development"
 
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
+import pytz
 
 import numpy as np
 
@@ -31,6 +32,8 @@ ADWIN_DICT = {"ISample": ["IAmp"], "VSample": ["VAmp"],
               "VRuO": ["r max", "r min"], "I": [], "V": [], "R": [], "dI": [],
               "dV": [], "dR": [], "Res_RuO": ["p0", "p1", "r0"],
               "Temp_RuO": []}
+
+LOCAL_TZ = pytz.timezone("Europe/Berlin")
 
 
 class Channel(object):
@@ -391,7 +394,9 @@ class ChannelRegistry(dict):
                     newChannel = Channel(channelName, device=device,
                                          meas_array=chan.data)
 
-                    startTime = np.datetime64(chan.property('wf_start_time'))
+
+                    startTime = np.datetime64(chan.property('wf_start_time')
+                                              .astimezone(LOCAL_TZ))
 
                     newChannel.setStartTime(startTime)
 
