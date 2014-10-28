@@ -55,7 +55,8 @@ setup(
                       'pylint>=1.3.1',
                       'pytest>=2.6.3',
                       'seaborn>=0.4.0',
-                      'tables>=3.1.1'
+                      'tables>=3.1.1',
+                      'Sphinx>=1.2.3'
                     ],
     cmdclass={'test': PyTest},
     entry_points={
