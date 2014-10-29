@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# pylint: disable=C0103,C0111
-""" Testing groud for importing tdms files
+# pylint: disable=C0103
+""" The main script.
 
 """
 
 __author__ = "Christopher Espy"
 __copyright__ = "Copyright (C) 2014, Christopher Espy"
 __credits__ = ["Christopher Espy"]
-__license__ = "GPL"
-__version__ = "0.4.2"
+__license__ = "GPLv2"
+__version__ = "0.5"
 __maintainer__ = "Christopher Espy"
 __email__ = "christopher.espy@uni-konstanz.de"
 __status__ = "Development"
@@ -49,6 +49,71 @@ class Main(MyMainWindow):
 class Presenter(object):
     """The presenter coordinates between the PyQt models and channel registry
 
+    Attributes
+    ----------
+    baseDir : str
+        The location where the raw data are stored.
+    fileName : str
+        The name of the current file being viewed.
+    view : MyMainWindow
+        The view of the program.
+    yModel : PyQt type model
+        The model for the behavior of the y selector.
+    xModel : PyQt type model
+        The model for the behavior of the x selector.
+    channelRegistry : Channel Registry type object
+        The main channel registry where channel objects are stored.
+    ySelected : str
+        The currently selected channel displayed on the y-axis in the plot.
+    ySelected_old : str
+        The previously selected y channel.
+    xSelected : str
+        The currently selected x channel.
+    xSelected_old : str
+        The previously selected x channel.
+    fileMenu : PyQt.QtGui.QFileMenu
+        The file menu of the main window.
+    fileMenuActions : tuple
+        The actions added to the file menu.
+
+    Methods
+    -------
+    setView(view : MyMainWindow)
+        Set the view to which the information is pushed.
+    setYModel(yModel : PyQt type model)
+        The model for the y selector tree view
+    setXModel(xModel : PyQt type model)
+        The model for the x selector list view.
+    setChanReg(chanReg : channel registry type object)
+        The presenter's channel registry.
+    fileOpen()
+        Open a data file to view.
+    populateSelectors()
+        Populate the x and y selectors with the names of the available
+        channels.
+    newYSelection(ySelection : str)
+        Redraw the plot with the newly selected channel's data
+    newXSelection(xSelection : str)
+        Redraw the plot with the newly selected channel's data
+    plotSelection()
+        Plot the selected data
+    generateAxisLabel(chan_name : str)
+        Return the axes label for the channel.
+    toggleWriteToFile()
+        Toggle the currently plotted y channel's write to file property.
+    saveAllChannels()
+        Select all channels to be exported.
+    saveNoChannels()
+        Deselect all channels from exporting.
+    exprtToFile()
+        Export the selected channels to a file.
+    exprtToPandasHDF5()
+        Export the channels to HDF5 type file using pandas.
+    exprtToCSV()
+        Export the channels to a csv file.
+    exprtToHDF5()
+        Export the channels to a HDF5 file using h5py.
+
     """
 
     def __init__(self):
@@ -68,6 +133,7 @@ class Presenter(object):
         self.xSelected_old = None
 
         self.fileMenu = None
+        self.fileMenuActions = None
 
     def setView(self, view):
         """Set the view to which the information is pushed.
@@ -153,7 +219,9 @@ class Presenter(object):
         self.view.noChannels.clicked.connect(self.saveNoChannels)
 
     def fileOpen(self):
-        """Open a file."""
+        """Open a data file to view file.
+
+        """
         formats = "TDMS files (*.tdms)"
         fname = QFileDialog.getOpenFileName(self.view, "Open a TDMS File",
                                             self.baseDir, formats)
@@ -166,6 +234,9 @@ class Presenter(object):
         self.populateSelectors()
 
     def populateSelectors(self):
+        """Populate the x and y selectors with the names of the channels.
+
+        """
         rootNode0 = TreeNode("")
         raw = 'raw'
         proc = 'proc'
@@ -189,6 +260,12 @@ class Presenter(object):
         # self.view.xSelectorView.sizeHintForColumn(0) - 50)
 
     def newYSelection(self, ySelection):
+        """Get the newly selected y channel's data
+
+        When a new y channel is selected, redraw the plot with the new
+        channel's data.
+
+        """
         self.ySelected_old = self.ySelected
         if not ySelection.data() in ['proc', 'raw']:
             parentName = ySelection.parent().data()
@@ -203,6 +280,12 @@ class Presenter(object):
             self.view.saveChannelCheckBox.setChecked(channelObj.write_to_file)
 
     def newXSelection(self, xSelection):
+        """Get the newly selected y channel's data
+
+        When a new y channel is selected, redraw the plot with the new
+        channel's data.
+
+        """
         self.xSelected_old = self.xSelected
         self.xSelected = xSelection.data()
         # print('The X-Channel {0} was selected.'.format(self.xSelected))
@@ -210,12 +293,22 @@ class Presenter(object):
         self.plotSelection()
 
     def populateOffsetEditor(self):
+        """(Coming soon!)Display the offset in the offset editor.
+
+        """
         pass
 
     def populateAttributeViewer(self):
+        """(Coming soon!)Display the channel's attributes in the attribute
+        viewer.
+
+        """
         pass
 
     def plotSelection(self):
+        """Plot the data channels indicated by xSelected and ySelected.
+
+        """
         if self.xSelected and self.ySelected:
 
             # Clear the plot
@@ -227,9 +320,12 @@ class Presenter(object):
             # Generate the data arrays
             yArray = self.channelRegistry[self.ySelected].data
 
+            # Rescale the x-axis so elapsed times are easier to read. The
+            # elapsed time data is saved in milliseconds.
             if self.xSelected == 'Time':
                 xArray = (self.channelRegistry[self.ySelected]
                           .getElapsedTimeTrack())
+                # Conversion factors for milliseconds
                 hour = 3600000
                 minute = 60000
                 second = 1000
@@ -285,13 +381,22 @@ class Presenter(object):
             # Draw everything
             self.view.canvas.draw()
 
-    def generateTimeTrack(self, yChannel):
-        pass
-
-    def populateXSelector(self):
-        pass
-
     def generateAxisLabel(self, chan_name):
+        """Return the axes label for the channel.
+
+        Based on the axes label and channel combinations in AXESLABELS
+        (imported from view), return the channel's axes label.
+
+        Parameters
+        ----------
+        chan_name : str
+            The channel name for which the axes label needs to be generated.
+
+        Returns
+        -------
+        label
+            chan_name's axes label.
+        """
 
         chan_name = chan_name.split('/')[-1]
 
@@ -316,24 +421,41 @@ class Presenter(object):
         return label
 
     def toggleWriteToFile(self):
-        self.channelRegistry[self.ySelected].write_to_file = \
-          self.view.saveChannelCheckBox.isChecked()
+        """Toggle the currently plotted y channel's write to file property.
+
+        This toggles whether the currently plotted channel will be included in
+        the export.
+
+        """
+        self.channelRegistry[self.ySelected].write_to_file = self.view.saveChannelCheckB
 
     def saveAllChannels(self):
+        """Select all channels to be exported.
 
-        for k, v in self.channelRegistry.items():
+        """
+
+        for v in self.channelRegistry.values():
             v.write_to_file = True
 
         self.view.saveChannelCheckBox.setChecked(True)
 
     def saveNoChannels(self):
+        """Deselect all channels from exporting.
 
-        for k, v in self.channelRegistry.items():
+        """
+
+        for v in self.channelRegistry.values():
             v.write_to_file = False
 
         self.view.saveChannelCheckBox.setChecked(False)
 
     def exprtToFile(self):
+        """Export the selected channels to a file.
+
+        Based on the file extension that is chosen here, a futher export parser
+        is called.
+
+        """
         fname = self.fileName.split('.')[0] + '.h5'
 
         baseDir = self.baseDir.replace('raw-data', 'data')
@@ -341,13 +463,13 @@ class Presenter(object):
         if not os.path.exists(baseDir):
             os.makedirs(baseDir)
 
-        formats = "Pandas HDF files (*.h5);;" + \
-          "HDF5 files (*.hdf5 *.he5 *.hdf);;" + \
-          "CSV files (*.csv *.txt *.dat)"
+        formats = ("Pandas HDF files (*.h5);;"
+                   "HDF5 files (*.hdf5 *.he5 *.hdf);;"
+                   "CSV files (*.csv *.txt *.dat)")
 
         dialog = QFileDialog()
         dialog.setFilter(formats)
-        dialog.setDefaultSuffix("*.hdf5")
+        dialog.setDefaultSuffix("*.h5")
         dialog.selectFile(os.path.join(baseDir, fname))
         dialog.setDirectory(baseDir)
         if dialog.exec_():
@@ -365,7 +487,13 @@ class Presenter(object):
             self.exprtToCSV(fname)
 
     def exprtToPandasHDF5(self, fname):
+        """Export the channels to HDF5 type file using pandas.
 
+        The channels to be exported are grouped by device and merged into a
+        pandas time series data frame where the index is one of the channels'
+        time series data.
+
+        """
         # Process 5.1 Create HDF5 file object
         hdfStore = pd.HDFStore(fname, 'w')
 
@@ -406,9 +534,15 @@ class Presenter(object):
         hdfStore.close()
 
     def exprtToCSV(self, fname):
+        """Export the channels to a csv file.
+
+        """
         pass
 
     def exprtToHDF5(self, fname):
+        """Export the channels to a HDF5 file using h5py.
+
+        """
 
         # Process 5.1 Create HDF5 file object
         hdf5FileObject = h5py.File(fname, 'w')
@@ -452,6 +586,7 @@ class Presenter(object):
 
 
 def main(argv=None):
+    """The main function."""
 
     if argv is None:
         argv = sys.argv
