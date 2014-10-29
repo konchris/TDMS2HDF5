@@ -18,6 +18,8 @@ import sys
 from PyQt4.QtCore import (SIGNAL)
 from PyQt4.QtGui import (QApplication, QSizePolicy, QMainWindow,
                          QAction, QIcon)
+import matplotlib as mpl
+from tzlocal import get_localzone
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt4agg import (FigureCanvasQTAgg as
                                                 FigureCanvas)
@@ -108,6 +110,8 @@ class MyMainWindow(QMainWindow, MainWindow):
 
     def __init__(self, parent=None):
         super(MyMainWindow, self).__init__(parent)
+
+        mpl.rcParams['timezone'] = get_localzone().zone
 
         self.setupUi(self)
 

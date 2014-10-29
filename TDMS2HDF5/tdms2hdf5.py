@@ -34,9 +34,6 @@ from .view_model import (TreeNode, TreeModel, MyListModel)
 
 BASEDIR = '/home/chris/Documents/PhD/root/raw-data/'
 
-TIMEZONE = np.timedelta64(2, 'h')
-
-
 class Main(MyMainWindow):
     """ The main window of the program.
 
@@ -359,7 +356,7 @@ class Presenter(object):
             # Do the plotting
             try:
                 if self.xSelected == 'Abs. Time':
-                    self.view.axes.plot((xArray + TIMEZONE).astype(datetime),
+                    self.view.axes.plot(xArray.astype(datetime),
                                         yArray, label=self.ySelected,
                                         color=sns.xkcd_rgb['pale red'])
                 elif self.xSelected == 'Time':
