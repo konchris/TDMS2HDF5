@@ -228,6 +228,10 @@ class Presenter(object):
 
         self.fileName = fname
 
+        windowTitle = self.view.windowTitle().split(':')[0]
+        baseName = os.path.basename(self.fileName)
+        self.view.setWindowTitle('{0}: {1}'.format(windowTitle, baseName))
+
         self.populateSelectors()
 
     def populateSelectors(self):
