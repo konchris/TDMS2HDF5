@@ -427,7 +427,8 @@ class Presenter(object):
         the export.
 
         """
-        self.channelRegistry[self.ySelected].write_to_file = self.view.saveChannelCheckB
+        self.channelRegistry[self.ySelected].write_to_file = \
+          self.view.saveChannelCheckBox.isChecked()
 
     def saveAllChannels(self):
         """Select all channels to be exported.
