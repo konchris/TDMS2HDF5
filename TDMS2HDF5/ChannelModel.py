@@ -412,7 +412,7 @@ class ChannelRegistry(dict):
                     newChannel.setTimeStep(np.timedelta64(int(timeStep), 'ms'))
 
                     if device == "ADWin":
-                        for attributeName in ADWIN_DICT[channelName]:
+                        for attributeName in ADWIN_DICT[channelName.lstrip('ADWin/')]:
                             # If LISens or LVSens is not present a key error is
                             # thrown here!
                             # This is where to catch the missing data and allow
