@@ -502,7 +502,7 @@ class Presenter(object):
         df_register = {}
 
         # Process 5.2 Create channels at their locations
-        for chan in self.channelRegistry:
+        for chan in sorted(self.channelRegistry.keys()):
 
             chan_obj = self.channelRegistry[chan]
             chan_device = chan_obj.attributes['Device']
@@ -550,7 +550,7 @@ class Presenter(object):
         hdf5FileObject = h5py.File(fname, 'w')
 
         # Process 5.2 Create channels at their locations
-        for chan in self.channelRegistry:
+        for chan in sorted(self.channelRegistry.keys()):
 
             chan_obj = self.channelRegistry[chan]
 
