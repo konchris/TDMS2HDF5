@@ -28,7 +28,7 @@ from nptdms.tdms import TdmsFile
 
 ADWIN_DICT = {"ISample": ["IAmp"], "VSample": ["VAmp"],
               "dISample": ["IAmp", "LISens"], "dVSample": ["VAmp", "LVSens"],
-              "xMagnet": [], "TCap": [], "zMagnet": [],
+              "xMagnet": [], "TCap": [], "zMagnet": [], "Cap": [],
               "VRuO": ["r max", "r min"], "I": [], "V": [], "R": [], "dI": [],
               "dV": [], "dR": [], "Res_RuO": ["p0", "p1", "r0"],
               "Temp_RuO": []}
@@ -390,7 +390,8 @@ class ChannelRegistry(dict):
                 channelName = chan.path.replace("'", "").lstrip("/")
                 # Some channels are empty. This becomes apparent when trying
                 # load the properties.
-                try:
+                # try:
+                if 'wf_start_time' in chan.properties:
                     newChannel = Channel(channelName, device=device,
                                          meas_array=chan.data)
 
@@ -416,24 +417,20 @@ class ChannelRegistry(dict):
                             # thrown here!
                             # This is where to catch the missing data and allow
                             # the user to enter it.
-                            try:
-                                newChannel.attributes[attributeName] = \
-                                    deviceProperties[attributeName]
-                            except KeyError as err:
+                            # try:
+                            newChannel.attributes[attributeName] = \
+                                deviceProperties[attributeName]
+                            # except KeyError as err:
                                 # print('1\tKey Error: {0} on channel {1}'
                                 #      .format(err, channelName))
-                                pass
+                                # pass
 
                     self.addChannel(newChannel)
 
-                except KeyError as err:
-                    # print('2\tKey Error: {0} on channel {1}'
-                    #       .format(err, channelName))
-                    pass
-                except TypeError as err:
+                # except TypeError as err:
                     # print('3\tType Error: {0} on channel {1}'
                     #      .format(err, channelName))
-                    pass
+                    # pass
 
         self.addTransportChannels()
 
