@@ -222,17 +222,20 @@ class Presenter(object):
         formats = "TDMS files (*.tdms)"
         fname = QFileDialog.getOpenFileName(self.view, "Open a TDMS File",
                                             self.baseDir, formats)
-        self.channelRegistry.loadFromFile(fname)
+        if fname:
+            self.channelRegistry.loadFromFile(fname)
 
-        self.baseDir = os.path.dirname(fname)
+            self.baseDir = os.path.dirname(fname)
 
-        self.fileName = fname
+            self.fileName = fname
 
-        windowTitle = self.view.windowTitle().split(':')[0]
-        baseName = os.path.basename(self.fileName)
-        self.view.setWindowTitle('{0}: {1}'.format(windowTitle, baseName))
+            windowTitle = self.view.windowTitle().split(':')[0]
+            baseName = os.path.basename(self.fileName)
+            self.view.setWindowTitle('{0}: {1}'.format(windowTitle, baseName))
 
-        self.populateSelectors()
+            self.populateSelectors()
+        else:
+            return
 
     def populateSelectors(self):
         """Populate the x and y selectors with the names of the channels.
