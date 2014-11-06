@@ -37,7 +37,7 @@ AXESLABELS = {r"Resistance [$\Omega$]": ["dR", "dRSample", "R", "RSample",
               "Magnetfield [B]": ["zMagnet", "xMagnet", "Magnetfield"],
               "Temperature [K]": ["Temp_RuO", "Temperature", "1k - Pot",
                                   "He3", "Sorption", "1k-Pot", "T1K", "THe3",
-                                  "TSorp", "TSample"],
+                                  "TSorp", "TSample_LK", "TSample_AD"],
               "Capacitance [nF]": ["Cap", "TCap"]}
 
 sns.set_style('whitegrid')

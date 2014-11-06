@@ -37,7 +37,8 @@ CHANNEL_DICT = {"T1K" : "1k - Pot",
                 "THe3" : "He3",
                 "TSorp" : "Sorption",
                 "ITC503" : "ITC 503",
-                "TSample" : "Temperature"
+                "TSample_LK" : "Temperature",
+                "TSample_AD" : "Temp_RuO"
                 }
 
 LOCAL_TZ = pytz.timezone("Europe/Berlin")
