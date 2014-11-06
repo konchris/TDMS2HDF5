@@ -33,7 +33,39 @@ ADWIN_DICT = {"ISample": ["IAmp"], "VSample": ["VAmp"],
               "dV": [], "dR": [], "Res_RuO": ["p0", "p1", "r0"],
               "Temp_RuO": []}
 
+CHANNEL_DICT = {"T1K" : "1k - Pot",
+                "THe3" : "He3",
+                "TSorp" : "Sorption",
+                "ITC503" : "ITC 503",
+                "TSample" : "Temperature"
+                }
+
 LOCAL_TZ = pytz.timezone("Europe/Berlin")
+
+def replace_name(name):
+    """Replace a non-pythonic name with a pythonic one.
+
+    The goal is to be able to utilize pandas' method of accessing parts of a
+    dataframe as though it were an attribute of the dataframe. Some of the
+    device and channel names in the TDMS files are not conducive to being used
+    as a python identifier like this.
+
+    Parameters
+    ----------
+    name : str
+        The string to be checks for replacement.
+
+    Returns
+    -------
+    str
+        A string where the invalid python identifiers are replaced with valid
+        strings.
+
+    """
+    for replString, origString in CHANNEL_DICT.items():
+        if origString in name:
+            name = name.replace(origString, replString)
+    return name
 
 
 class Channel(object):
@@ -111,12 +143,13 @@ class Channel(object):
 
     def __init__(self, name, device='', meas_array=np.array([])):
         super(Channel, self).__init__()
-        self.attributes = {"Device": device,
+
+        self.attributes = {"Device": replace_name(device),
                            "TimeInterval": np.timedelta64(1, 'ms'),
                            "Length": len(meas_array),
                            "StartTime": np.datetime64(datetime.now())}
 
-        self.name = name
+        self.setName(name)
         self.data = meas_array
         self.time = np.array([])
         self.elapsed_time = np.array([])
@@ -191,7 +224,7 @@ class Channel(object):
         """
 
         if isinstance(newName, str):
-            self.name = newName
+            self.name = replace_name(newName)
         else:
             raise TypeError('Channel name can only be a string')
 
@@ -394,7 +427,6 @@ class ChannelRegistry(dict):
                 if 'wf_start_time' in chan.properties:
                     newChannel = Channel(channelName, device=device,
                                          meas_array=chan.data)
-
 
                     startTime = np.datetime64(chan.property('wf_start_time')
                                               .astimezone(LOCAL_TZ))
