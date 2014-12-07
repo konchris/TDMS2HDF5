@@ -339,6 +339,10 @@ class ChannelRegistry(dict):
     ----------
     parents : list
         A list of the parent groups of all of the channels
+    file_start_time : numpy.datetime64
+        The start time recorded in the TDMS file's properties
+    file_end_time :  numpy.datetime64
+        The end time recorded in the TDMS file's properties
 
     Methods
     -------
@@ -373,6 +377,8 @@ class ChannelRegistry(dict):
         super(ChannelRegistry, self).__init__()
 
         self.parents = []
+        self.file_start_time = None
+        self.file_end_time = None
 
     def addChannel(self, newChan):
         """Add a new, unique channel to the registry
@@ -406,6 +412,15 @@ class ChannelRegistry(dict):
         else:
             print('The file {fn} does not exist!'.format(fn=filename))
             return
+
+        try:
+            self.file_start_time = np.datetime64(tdmsFileObject.object()
+                                                 .properties['StartTime'])
+            self.file_end_time = np.datetime64(tdmsFileObject.object()
+                                               .properties['EndTime'])
+
+        except KeyError:
+            pass
 
         # Generate channels one device at a time
         for device in tdmsFileObject.groups():
