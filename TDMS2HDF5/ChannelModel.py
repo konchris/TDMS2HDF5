@@ -458,7 +458,7 @@ class ChannelRegistry(dict):
                         timeStep = timeStep * 1000
 
                     if device == 'ADWin' and timeStep != 100:
-                        print('Old ADWin timeStep is {}'.format(timeStep))
+                        #print('Old ADWin timeStep is {}'.format(timeStep))
                         timeStep = 100
 
                     newChannel.setTimeStep(np.timedelta64(int(timeStep), 'ms'))
