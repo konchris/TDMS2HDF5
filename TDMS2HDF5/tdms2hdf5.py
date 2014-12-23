@@ -542,11 +542,14 @@ class Presenter(object):
 
         f = h5py.File(fname, 'a')
 
-        start_time = self.channelRegistry.file_start_time.astype('<i8')
-        end_time = self.channelRegistry.file_end_time.astype('<i8')
+        try:
+            start_time = self.channelRegistry.file_start_time.astype('<i8')
+            end_time = self.channelRegistry.file_end_time.astype('<i8')
 
-        f.attrs.create('StartTime', start_time)
-        f.attrs.create('EndTime', end_time)
+            f.attrs.create('StartTime', start_time)
+            f.attrs.create('EndTime', end_time)
+        except AttributeError:
+            pass
 
         f.flush()
 
