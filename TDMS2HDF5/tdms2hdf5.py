@@ -431,8 +431,11 @@ class Presenter(object):
         the export.
 
         """
-        self.channelRegistry[self.ySelected].write_to_file = \
-          self.view.saveChannelCheckBox.isChecked()
+        try:
+            self.channelRegistry[self.ySelected].write_to_file = \
+              self.view.saveChannelCheckBox.isChecked()
+        except KeyError:
+            pass
 
     def saveAllChannels(self):
         """Select all channels to be exported.
