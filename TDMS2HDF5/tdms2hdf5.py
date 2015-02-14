@@ -246,11 +246,23 @@ class Presenter(object):
         proc = 'proc'
         rawNode = TreeNode(raw, rootNode0)
         procNode = TreeNode(proc, rootNode0)
-        for k, v in self.channelRegistry.items():
+        rawDeviceNodes = {}
+        procDeviceNodes = {}
+        for k in sorted(self.channelRegistry.keys()):
             if raw in k:
-                TreeNode(v.name, rawNode)
+                (root, device, chan) = k.split('/')
+                if device not in rawDeviceNodes:
+                    rawDeviceNodes[device] = TreeNode(device, rawNode)
+                TreeNode(chan, rawDeviceNodes[device])
+                print(chan)
             elif proc in k:
-                TreeNode(v.name, procNode)
+                (root, procNum, device, chan) = k.split('/')
+                if procNum not in procDeviceNodes:
+                    procDeviceNodes[procNum] = {}
+                    procDeviceNodes[procNum]['node'] = TreeNode(procNum, procNode)
+                if device not in procDeviceNodes[procNum]:
+                    procDeviceNodes[procNum][device] = \
+                      TreeNode(deivce, procDeviceNodes[procNum]['node'])
 
         self.setYModel(TreeModel(rootNode0))
         self.setXModel(MyListModel(['Time', 'Abs. Time'] +
