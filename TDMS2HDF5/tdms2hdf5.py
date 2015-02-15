@@ -289,6 +289,7 @@ class Presenter(object):
             if grandParentName == '01':
                 grandParentName = 'proc/' + grandParentName
             self.ySelected = "{0}/{1}/{2}".format(grandParentName, parentName, channelName)
+            self.ySelected_root = "{0}/{1}".format(grandParentName, parentName)
             # print('The Y-Channel {0} was selected.'.format(self.ySelected))
 
             self.populateOffsetEditor()
@@ -296,6 +297,11 @@ class Presenter(object):
             self.plotSelection()
             channelObj = self.channelRegistry[self.ySelected]
             self.view.saveChannelCheckBox.setChecked(channelObj.write_to_file)
+
+        newXList = [k.split('/')[-1] for k in self.channelRegistry.keys() if self.ySelected_root in k]
+
+        self.setXModel(MyListModel(newXList))
+
 
     def newXSelection(self, xSelection):
         """Get the newly selected y channel's data
@@ -305,7 +311,7 @@ class Presenter(object):
 
         """
         self.xSelected_old = self.xSelected
-        self.xSelected = xSelection.data()
+        self.xSelected = "{0}/{1}".format(self.ySelected_root, xSelection.data())
         # print('The X-Channel {0} was selected.'.format(self.xSelected))
 
         self.plotSelection()
