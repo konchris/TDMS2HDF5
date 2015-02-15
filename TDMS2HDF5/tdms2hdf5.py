@@ -254,7 +254,6 @@ class Presenter(object):
                 if device not in rawDeviceNodes:
                     rawDeviceNodes[device] = TreeNode(device, rawNode)
                 TreeNode(chan, rawDeviceNodes[device])
-                print(chan)
             elif proc in k:
                 (root, procNum, device, chan) = k.split('/')
                 if procNum not in procDeviceNodes:
@@ -283,10 +282,13 @@ class Presenter(object):
 
         """
         self.ySelected_old = self.ySelected
-        if not ySelection.data() in ['proc', 'raw']:
+        if not ySelection.data() in ['proc', 'raw', '01']:
             parentName = ySelection.parent().data()
+            grandParentName = ySelection.parent().parent().data()
             channelName = ySelection.data()
-            self.ySelected = "{0}/{1}".format(parentName, channelName)
+            if grandParentName == '01':
+                grandParentName = 'proc/' + grandParentName
+            self.ySelected = "{0}/{1}/{2}".format(grandParentName, parentName, channelName)
             # print('The Y-Channel {0} was selected.'.format(self.ySelected))
 
             self.populateOffsetEditor()
