@@ -186,7 +186,7 @@ class Channel(object):
         # print('elapsed time:', elapsed_time_track.dtype)
 
         self.time = absolute_time_track
-        #self.elapsed_time = elapsed_time_track
+        self.elapsed_time = elapsed_time_track
 
     def setParent(self, newParent):
         """Set the parent group of the channel in the HDF5 file.

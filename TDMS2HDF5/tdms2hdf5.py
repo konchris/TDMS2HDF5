@@ -234,6 +234,7 @@ class Presenter(object):
             self.view.setWindowTitle('{0}: {1}'.format(windowTitle, baseName))
 
             self.populateSelectors()
+            self.plotSelection()
         else:
             return
 
@@ -345,9 +346,10 @@ class Presenter(object):
 
             # Rescale the x-axis so elapsed times are easier to read. The
             # elapsed time data is saved in milliseconds.
-            if self.xSelected == 'Time':
-                xArray = (self.channelRegistry[self.ySelected]
-                          .getElapsedTimeTrack())
+            if 'Time_m' in self.xSelected:
+                #xArray = (self.channelRegistry[self.ySelected]
+                #          .getElapsedTimeTrack())
+                xArray = self.channelRegistry[self.xSelected].data
                 # Conversion factors for milliseconds
                 hour = 3600000
                 minute = 60000
@@ -365,15 +367,12 @@ class Presenter(object):
                 else:
                     unit = 'ms'
                     factor = millisecond
-            elif self.xSelected == 'Abs. Time':
-                xArray = self.channelRegistry[self.ySelected].getTimeTrack()
-                unit = str(xArray[0].astype(datetime).date())
             else:
                 xArray = self.channelRegistry[self.xSelected].data
 
             # Set the labels
             xLabel = self.generateAxisLabel(self.xSelected)
-            if self.xSelected in ['Time', 'Abs. Time']:
+            if 'Time_m' in self.xSelected:
                 xLabel = xLabel.replace("unit", unit)
             yLabel = self.generateAxisLabel(self.ySelected)
             self.view.axes.set_xlabel(xLabel)
@@ -381,11 +380,7 @@ class Presenter(object):
 
             # Do the plotting
             try:
-                if self.xSelected == 'Abs. Time':
-                    self.view.axes.plot(xArray.astype(datetime),
-                                        yArray, label=self.ySelected,
-                                        color=sns.xkcd_rgb['pale red'])
-                elif self.xSelected == 'Time':
+                if 'Time_m' in self.xSelected:
                     self.view.axes.plot(xArray.astype(int) / factor, yArray,
                                         label=self.ySelected,
                                         color=sns.xkcd_rgb['pale red'])
