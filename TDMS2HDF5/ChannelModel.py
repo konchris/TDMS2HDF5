@@ -154,7 +154,7 @@ class Channel(object):
         self.data = meas_array
         self.time = np.array([])
         self.elapsed_time = np.array([])
-        self.parent = 'raw'
+        self.parent = None
         self.unit = 'n.a.'
         self.write_to_file = True
 
@@ -186,7 +186,7 @@ class Channel(object):
         # print('elapsed time:', elapsed_time_track.dtype)
 
         self.time = absolute_time_track
-        self.elapsed_time = elapsed_time_track
+        #self.elapsed_time = elapsed_time_track
 
     def setParent(self, newParent):
         """Set the parent group of the channel in the HDF5 file.
@@ -370,6 +370,8 @@ class ChannelRegistry(dict):
         Add the processed channel 'dR' derived from 'dV' and 'dI'
     addTransportChannels():
         Add all of the transport channels
+    addTimeTracks():
+        Add the time tracks for each device.
 
     """
 
@@ -395,6 +397,14 @@ class ChannelRegistry(dict):
             self[channelKey] = newChan
         else:
             raise TypeError('Only an object of the Channel type can be added')
+
+        device = newChan.getName().split('/')[0]
+        parent = newChan.getParent()
+
+        time_name = '{r}/{d}/{t}'.format(r=parent, d=device, t='Time_m')
+
+        if time_name not in self.keys():
+            self.addTimeTracks(device, newChan.getElapsedTimeTrack())
 
     def loadFromFile(self, filename):
         """Load the data from a file
@@ -443,6 +453,7 @@ class ChannelRegistry(dict):
                 if 'wf_start_time' in chan.properties:
                     newChannel = Channel(channelName, device=device,
                                          meas_array=chan.data)
+                    newChannel.setParent('raw')
 
                     startTime = np.datetime64(chan.property('wf_start_time')
                                               .astimezone(LOCAL_TZ))
@@ -702,6 +713,25 @@ class ChannelRegistry(dict):
         self.add_dRSample()
         self.add_R()
         self.add_dR()
+
+    def addTimeTracks(self, device, time_track):
+        """Add the time track for a device
+
+        """
+        if not isinstance(device, str):
+            raise TypeError('The device parameter must be a string.')
+
+        if not isinstance(time_track, np.ndarray):
+            raise TypeError('The time_track parameter must be a numpy array')
+
+        newChan = Channel('{}/Time_m'.format(device), device, time_track)
+        newChan.setParent('raw')
+
+        channelKey = "{parent}/{cName}".format(parent=newChan.getParent(),
+                                                   cName=newChan.getName())
+
+        self.addChannel(newChan)
+        
 
 
 def main(argv=None):

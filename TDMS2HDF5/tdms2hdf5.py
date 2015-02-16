@@ -264,8 +264,7 @@ class Presenter(object):
                       TreeNode(deivce, procDeviceNodes[procNum]['node'])
 
         self.setYModel(TreeModel(rootNode0))
-        self.setXModel(MyListModel(['Time', 'Abs. Time'] +
-                                   list(self.channelRegistry.keys())))
+        #self.setXModel(MyListModel(list(self.channelRegistry.keys())))
         self.view.ySelectorView.expandAll()
         self.view.ySelectorView.setHeaderHidden(True)
         self.view.ySelectorView.setMaximumWidth(self.view.ySelectorView
@@ -300,7 +299,7 @@ class Presenter(object):
 
         newXList = [k.split('/')[-1] for k in self.channelRegistry.keys() if self.ySelected_root in k]
 
-        self.setXModel(MyListModel(newXList))
+        self.setXModel(MyListModel(sorted(newXList)))
 
 
     def newXSelection(self, xSelection):
@@ -427,7 +426,7 @@ class Presenter(object):
         if chan_name == 'Abs. Time':
             label = 'Time starting on unit'
             return label
-        elif chan_name == 'Time':
+        elif chan_name == 'Time_m':
             label = 'Time [unit]'
             return label
 
