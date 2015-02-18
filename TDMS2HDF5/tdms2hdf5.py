@@ -34,6 +34,9 @@ from .view_model import (TreeNode, TreeModel, MyListModel)
 
 BASEDIR = '/home/chris/Documents/PhD/root/raw-data/'
 
+MEAS_TYPES = {'BSweep': 'bsweep_files.csv',
+              'BRamp': 'bramp_files.csv'}
+
 class Main(MyMainWindow):
     """ The main window of the program.
 
@@ -480,6 +483,8 @@ class Presenter(object):
         """
         fname = self.fileName.split('.')[0] + '.h5'
 
+        meas_type = os.path.basename(fname).split('_')[1]
+
         baseDir = self.baseDir.replace('raw-data', 'data')
 
         if not os.path.exists(baseDir):
@@ -507,6 +512,8 @@ class Presenter(object):
             self.exprtToPandasHDF5(fname)
         elif ext in ['csv', 'txt', 'dat']:
             self.exprtToCSV(fname)
+
+        self.addFileToGoodList(fname, meas_type)
 
     def exprtToPandasHDF5(self, fname):
         """Export the channels to HDF5 type file using pandas.
@@ -622,6 +629,26 @@ class Presenter(object):
         # Process 5.3 Write data to file
         hdf5FileObject.flush()
         hdf5FileObject.close()
+
+    def addFileToGoodList(self, fname, meas_type):
+        """
+
+        """
+        base_dir = os.path.dirname(fname)
+        original_file = os.path.basename(fname)
+
+        base_name = MEAS_TYPES[meas_type]
+
+        full_path = os.path.join(base_dir, base_name)
+
+        df_files = pd.DataFrame.from_csv(full_path)
+
+        new_df = pd.DataFrame()
+
+        if base_name not in df_files['0']:
+            new_df['0'] = df_files['0'].append(pd.Series(original_file, index=[len(df_files['0'])]))
+
+            new_df.to_csv(full_path)
 
 
 def main(argv=None):
