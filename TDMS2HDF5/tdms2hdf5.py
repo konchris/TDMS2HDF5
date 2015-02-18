@@ -204,11 +204,21 @@ class Presenter(object):
                                                   "Ctrl+E", 'export',
                                                   tip=("Export the TDMS data"
                                                        " to HDF5"))
+        channelAddAction = self.view.createAction("Add Elapsed Time [&m]",
+                                                  self.channelRegistry.addAllTimeTracks,
+                                                  "Ctrl+M", tip='Add all time tracks.')
 
+        # Add the 'File' menu to the menu bar
         self.fileMenu = self.view.menuBar().addMenu("&File")
         self.fileMenuActions = (fileOpenAction, fileExportAction,
                                 fileQuitAction)
         self.view.addActions(self.fileMenu, self.fileMenuActions)
+
+        # Add the 'Channels'
+        self.channelMenu = self.view.menuBar().addMenu("&Channel")
+        self.channelAddMenu = self.channelMenu.addMenu("&Add Channel")
+        self.view.addActions(self.channelAddMenu, self.channelAddAction)
+        
 
         # Connections
         self.view.ySelectorView.clicked.connect(self.newYSelection)
@@ -547,6 +557,9 @@ class Presenter(object):
 
             if chan_device not in df_register.keys():
                 df_register[chan_device] = pd.DataFrame()
+
+            if 'Time_m' in chan:
+                self.channelRegistry[chan].write_to_file = False
 
             # Process 5.2.1 Write channel data
             if self.channelRegistry[chan].write_to_file:
