@@ -541,6 +541,9 @@ class Presenter(object):
             if chan_device not in df_register.keys():
                 df_register[chan_device] = pd.DataFrame()
 
+            if 'Time_m' in chan:
+                self.channelRegistry[chan].write_to_file = False
+
             # Process 5.2.1 Write channel data
             if self.channelRegistry[chan].write_to_file:
 
