@@ -325,6 +325,12 @@ class Channel(object):
         """
         self.write_to_file = not self.write_to_file
 
+    def getDevice(self):
+        """Return the name of the device that recorded the channel.
+
+        """
+        return self.attributes['Device']
+
 
 class ChannelRegistry(dict):
     """Container for holding all of the channels
@@ -713,6 +719,17 @@ class ChannelRegistry(dict):
         self.add_dRSample()
         self.add_R()
         self.add_dR()
+
+    def addAllTimeTracks(self):
+        """Add time tracks for all devices.
+
+        """
+        devices = []
+        for key in self.keys():
+            device = self[key].getDevice()
+            if device not in devices:
+                devices.append(device)
+                print(device)
 
     def addTimeTracks(self, device, time_track):
         """Add the time track for a device
