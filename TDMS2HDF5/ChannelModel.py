@@ -381,6 +381,7 @@ class ChannelRegistry(dict):
         self.parents = []
         self.file_start_time = None
         self.file_end_time = None
+        self.devices = []
 
     def addChannel(self, newChan):
         """Add a new, unique channel to the registry
@@ -399,12 +400,16 @@ class ChannelRegistry(dict):
             raise TypeError('Only an object of the Channel type can be added')
 
         device = newChan.getName().split('/')[0]
+
+        if device not in self.devices:
+            self.devices.append(device)
+
         parent = newChan.getParent()
 
-        time_name = '{r}/{d}/{t}'.format(r=parent, d=device, t='Time_m')
+        #time_name = '{r}/{d}/{t}'.format(r=parent, d=device, t='Time_m')
 
-        if time_name not in self.keys():
-            self.addTimeTracks(device, newChan.getElapsedTimeTrack())
+        #if time_name not in self.keys():
+        #    self.addTimeTracks(device, newChan.getElapsedTimeTrack())
 
     def loadFromFile(self, filename):
         """Load the data from a file
@@ -495,7 +500,7 @@ class ChannelRegistry(dict):
                     #      .format(err, channelName))
                     # pass
 
-        self.addTransportChannels()
+        #self.addTransportChannels()
 
     def add_V(self):
         """Add the processed channel 'V' derived from 'VSample'.
