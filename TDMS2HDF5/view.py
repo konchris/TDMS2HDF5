@@ -40,6 +40,7 @@ AXESLABELS = {r"Resistance [$\Omega$]": ["dR", "dRSample", "R", "RSample",
                                   "TSorp", "TSample_LK", "TSample_AD"],
               "Capacitance [nF]": ["Cap", "TCap"]}
 
+sns.set_context("talk", font_scale=1.25, rc={'lines.linewidth':3})
 sns.set_style('whitegrid')
 
 
