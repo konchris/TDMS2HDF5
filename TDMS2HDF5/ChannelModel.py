@@ -165,25 +165,28 @@ class Channel(object):
 
         dt = self.attributes['TimeInterval']
         # print('The timedelta type is {0} and value is '.format(type(dt)), dt)
+        # print("And it's dtype is: ", dt.dtype)
+        # print('To seconds:', dt.item().to_seconds())
 
         length = self.attributes['Length']
-        # print(length)
+        # print('length:', length)
 
         startTime = np.datetime64(self.attributes['StartTime'])
         # print('The start time type is {0} and value is '
-        #       .format(type(startTime)),
-        #       startTime)
+        #        .format(type(startTime)),
+        #        startTime)
 
         stopTime = startTime + dt * length
         # print(('The stop time type is {0} and value is '
-        #        .format(type(stopTime))), stopTime)
+        #         .format(type(stopTime))), stopTime)
 
         absolute_time_track = np.arange(startTime, stopTime, dt)
         # print(absolute_time_track[0], absolute_time_track[-1])
 
-        elapsed_time_track = ((absolute_time_track - startTime)
-                              .astype('timedelta64[ms]'))
-        # print('elapsed time:', elapsed_time_track.dtype)
+        elapsed_time_track = (absolute_time_track - startTime) / np.timedelta64(1, 'm')
+        #                      .astype('timedelta64[ms]'))
+        # print('elapsed time type: {0}\n\tand dtype: {1}'.format(type(elapsed_time_track), elapsed_time_track.dtype))
+        # print('\tfirst: {0}, last:'.format(elapsed_time_track[0]), elapsed_time_track[-5:])
 
         self.time = absolute_time_track
         self.elapsed_time = elapsed_time_track
@@ -412,10 +415,10 @@ class ChannelRegistry(dict):
 
         parent = newChan.getParent()
 
-        #time_name = '{r}/{d}/{t}'.format(r=parent, d=device, t='Time_m')
+        # time_name = '{r}/{d}/{t}'.format(r=parent, d=device, t='Time_m')
 
-        #if time_name not in self.keys():
-        #    self.addTimeTracks(device, newChan.getElapsedTimeTrack())
+        # if time_name not in self.keys():
+        #     self.addTimeTracks(device, newChan.getElapsedTimeTrack())
 
     def loadFromFile(self, filename):
         """Load the data from a file
