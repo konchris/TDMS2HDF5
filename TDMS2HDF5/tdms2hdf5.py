@@ -204,9 +204,9 @@ class Presenter(object):
                                                   "Ctrl+E", 'export',
                                                   tip=("Export the TDMS data"
                                                        " to HDF5"))
-        channelAddAction = self.view.createAction("Add Elapsed Time [&m]",
-                                                  self.channelRegistry.addAllTimeTracks,
-                                                  "Ctrl+M", tip='Add all time tracks.')
+        #channelAddAction = self.view.createAction("Add Elapsed Time [&m]",
+        #                                          self.channelRegistry.addAllTimeTracks,
+        #                                          "Ctrl+M", tip='Add all time tracks.')
 
         # Add the 'File' menu to the menu bar
         self.fileMenu = self.view.menuBar().addMenu("&File")
@@ -215,9 +215,9 @@ class Presenter(object):
         self.view.addActions(self.fileMenu, self.fileMenuActions)
 
         # Add the 'Channels'
-        self.channelMenu = self.view.menuBar().addMenu("&Channel")
-        self.channelAddMenu = self.channelMenu.addMenu("&Add Channel")
-        self.view.addActions(self.channelAddMenu, self.channelAddAction)
+        #self.channelMenu = self.view.menuBar().addMenu("&Channel")
+        #self.channelAddMenu = self.channelMenu.addMenu("&Add Channel")
+        #self.view.addActions(self.channelAddMenu, self.channelAddAction)
         
 
         # Connections
