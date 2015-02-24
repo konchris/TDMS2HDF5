@@ -364,10 +364,10 @@ class Presenter(object):
                 #          .getElapsedTimeTrack())
                 xArray = self.channelRegistry[self.xSelected].data
                 # Conversion factors for milliseconds
-                hour = 3600000
-                minute = 60000
-                second = 1000
-                millisecond = 1
+                hour = 60
+                minute = 1
+                second = 1. / 60.
+                millisecond = 1. / 60000
                 if xArray[-1] > 3 * hour:
                     unit = 'h'
                     factor = hour
@@ -553,13 +553,8 @@ class Presenter(object):
 
             chan_name = chan_name.split("/")[-1]
 
-            # Get time
-
             if chan_device not in df_register.keys():
                 df_register[chan_device] = pd.DataFrame()
-
-            if 'Time_m' in chan:
-                self.channelRegistry[chan].write_to_file = False
 
             # Process 5.2.1 Write channel data
             if self.channelRegistry[chan].write_to_file:
@@ -650,7 +645,10 @@ class Presenter(object):
         base_dir = os.path.dirname(fname)
         original_file = os.path.basename(fname)
 
-        base_name = MEAS_TYPES[meas_type]
+        try:
+            base_name = MEAS_TYPES[meas_type]
+        except KeyError:
+            return
 
         full_path = os.path.join(base_dir, base_name)
 

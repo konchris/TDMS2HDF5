@@ -408,17 +408,17 @@ class ChannelRegistry(dict):
         else:
             raise TypeError('Only an object of the Channel type can be added')
 
+        parent = newChan.getParent()
+
         device = newChan.getName().split('/')[0]
 
         if device not in self.devices:
             self.devices.append(device)
 
-        parent = newChan.getParent()
+        time_name = '{r}/{d}/{t}'.format(r=parent, d=device, t='Time_m')
 
-        # time_name = '{r}/{d}/{t}'.format(r=parent, d=device, t='Time_m')
-
-        # if time_name not in self.keys():
-        #     self.addTimeTracks(device, newChan.getElapsedTimeTrack())
+        if time_name not in self.keys():
+            self.addTimeTracks(device, newChan.getElapsedTimeTrack())
 
     def loadFromFile(self, filename):
         """Load the data from a file
@@ -741,6 +741,13 @@ class ChannelRegistry(dict):
 
     def addTimeTracks(self, device, time_track):
         """Add the time track for a device
+
+        Parameters
+        ----------
+        device : str
+            The name of the device for which the time track will be added.
+        time_track : numpy.ndarray
+            The time data
 
         """
         if not isinstance(device, str):
