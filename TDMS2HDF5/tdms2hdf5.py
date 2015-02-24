@@ -254,27 +254,30 @@ class Presenter(object):
         """Populate the x and y selectors with the names of the channels.
 
         """
+        # Setup the root node of the tree
         rootNode0 = TreeNode("")
-        raw = 'raw'
-        proc = 'proc'
-        rawNode = TreeNode(raw, rootNode0)
-        procNode = TreeNode(proc, rootNode0)
-        rawDeviceNodes = {}
+
+        # Setup the proc node
+        #proc = 'proc'
+
+        #procNode = TreeNode(proc, rootNode0)
+
         procDeviceNodes = {}
-        for k in sorted(self.channelRegistry.keys()):
-            if raw in k:
-                (root, device, chan) = k.split('/')
-                if device not in rawDeviceNodes:
-                    rawDeviceNodes[device] = TreeNode(device, rawNode)
-                TreeNode(chan, rawDeviceNodes[device])
-            elif proc in k:
-                (root, procNum, device, chan) = k.split('/')
-                if procNum not in procDeviceNodes:
-                    procDeviceNodes[procNum] = {}
-                    procDeviceNodes[procNum]['node'] = TreeNode(procNum, procNode)
-                if device not in procDeviceNodes[procNum]:
-                    procDeviceNodes[procNum][device] = \
-                      TreeNode(deivce, procDeviceNodes[procNum]['node'])
+
+        for chanTDMSPath in sorted(self.channelRegistry.keys()):
+
+            (root, device, chan) = chanTDMSPath.split('/')
+
+            if root not in procDeviceNodes:
+
+                procDeviceNodes[root] = {'node': TreeNode(root, rootNode0)}
+
+            if device not in procDeviceNodes[root]:
+
+                procDeviceNodes[root][device] = \
+                  {'node': TreeNode(device, procDeviceNodes[root]['node'])}
+
+            procDeviceNodes[root][device][chan] = TreeNode(chan, procDeviceNodes[root][device]['node'])
 
         self.setYModel(TreeModel(rootNode0))
         #self.setXModel(MyListModel(list(self.channelRegistry.keys())))
@@ -355,51 +358,22 @@ class Presenter(object):
 
             # Generate the data arrays
             yArray = self.channelRegistry[self.ySelected].data
+            # print('y array is:', yArray)
 
-            # Rescale the x-axis so elapsed times are easier to read. The
-            # elapsed time data is saved in milliseconds.
-            if 'Time_m' in self.xSelected:
-                #xArray = (self.channelRegistry[self.ySelected]
-                #          .getElapsedTimeTrack())
-                xArray = self.channelRegistry[self.xSelected].data
-                # Conversion factors for milliseconds
-                hour = 60
-                minute = 1
-                second = 1. / 60.
-                millisecond = 1. / 60000
-                if xArray[-1] > 3 * hour:
-                    unit = 'h'
-                    factor = hour
-                elif xArray[-1] > minute:
-                    unit = 'm'
-                    factor = minute
-                elif xArray[-1] > second:
-                    unit = 's'
-                    factor = second
-                else:
-                    unit = 'ms'
-                    factor = millisecond
-            else:
-                xArray = self.channelRegistry[self.xSelected].data
+            xArray = self.channelRegistry[self.xSelected].data
+            # print('x array is:', xArray)
 
             # Set the labels
             xLabel = self.generateAxisLabel(self.xSelected)
-            if 'Time_m' in self.xSelected:
-                xLabel = xLabel.replace("unit", unit)
             yLabel = self.generateAxisLabel(self.ySelected)
+
             self.view.axes.set_xlabel(xLabel)
             self.view.axes.set_ylabel(yLabel)
 
             # Do the plotting
             try:
-                if 'Time_m' in self.xSelected:
-                    self.view.axes.plot(xArray.astype(int) / factor, yArray,
-                                        label=self.ySelected,
+                self.view.axes.plot(xArray, yArray, label=self.ySelected,
                                         color=sns.xkcd_rgb['pale red'])
-                else:
-                    self.view.axes.plot(xArray, yArray, label=self.ySelected,
-                                        color=sns.xkcd_rgb['pale red'])
-
             except ValueError as err:
                 dialog = QMessageBox()
                 dialog.setText("Value Error: {0}".format(err))
@@ -429,13 +403,6 @@ class Presenter(object):
         """
 
         chan_name = chan_name.split('/')[-1]
-
-        if chan_name == 'Abs. Time':
-            label = 'Time starting on unit'
-            return label
-        elif chan_name == 'Time_m':
-            label = 'Time [unit]'
-            return label
 
         # Generate the axis labels based on the selected channels
         # Cycle through the labes in the AXESLABELS dictionary
@@ -546,9 +513,7 @@ class Presenter(object):
             # Remove whitespace and minus signs from the channel name
             chan_name = chan.replace(" ", "")
 
-            chan_name = chan_name.replace("/", "/{}/".format(chan_device))
-
-            chan_device = "/".join(chan_name.split("/")[:2])
+            chan_device = "/".join(chan_name.split("/")[:-1])
 
             chan_name = chan_name.split("/")[-1]
 
@@ -655,7 +620,7 @@ class Presenter(object):
 
         new_df = pd.DataFrame()
 
-        if base_name not in df_files['0']:
+        if not np.any(df_files['0'].str.contains(original_file)):
             new_df['0'] = df_files['0'].append(pd.Series(original_file, index=[len(df_files['0'])]))
 
             new_df.to_csv(full_path)
