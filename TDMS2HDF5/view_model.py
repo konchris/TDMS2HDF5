@@ -20,6 +20,7 @@ from PyQt4.QtGui import (QApplication, QTreeView, QStringListModel)
 
 from .ChannelModel import ChannelRegistry
 
+
 class TreeNode(object):
     """A node in the groups/channels tree view model.
 
@@ -322,6 +323,7 @@ class TreeModel(QAbstractItemModel):
         else:
             return QModelIndex()
 
+
 class MyListModel(QStringListModel):
     """Subclassed QStringListModel for a simple list."""
 
@@ -389,4 +391,3 @@ def main(argv=None):
 
 if __name__ == "__main__":
     main()
-

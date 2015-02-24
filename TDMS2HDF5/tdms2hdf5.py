@@ -43,6 +43,7 @@ class Main(MyMainWindow):
     """
 
     def __init__(self, parent=None):
+
         super(Main, self).__init__(parent)
 
 
@@ -205,8 +206,8 @@ class Presenter(object):
                                                   tip=("Export the TDMS data"
                                                        " to HDF5"))
         channelAddBAction = self.view.createAction("Add B to ADWin [&B]",
-                                                  self.addB,
-                                                  "Ctrl+B", tip='Add B')
+                                                   self.addB,
+                                                   "Ctrl+B", tip='Add B')
 
         # Add the 'File' menu to the menu bar
         self.fileMenu = self.view.menuBar().addMenu("&File")
@@ -217,7 +218,6 @@ class Presenter(object):
         # Add the 'Channels'
         self.channelAddMenu = self.view.menuBar().addMenu("&Add Channel")
         self.view.addActions(self.channelAddMenu, (channelAddBAction,))
-        
 
         # Connections
         self.view.ySelectorView.clicked.connect(self.newYSelection)
@@ -257,11 +257,6 @@ class Presenter(object):
         # Setup the root node of the tree
         rootNode0 = TreeNode("")
 
-        # Setup the proc node
-        #proc = 'proc'
-
-        #procNode = TreeNode(proc, rootNode0)
-
         procDeviceNodes = {}
 
         for chanTDMSPath in sorted(self.channelRegistry.keys()):
@@ -277,10 +272,15 @@ class Presenter(object):
                 procDeviceNodes[root][device] = \
                   {'node': TreeNode(device, procDeviceNodes[root]['node'])}
 
-            procDeviceNodes[root][device][chan] = TreeNode(chan, procDeviceNodes[root][device]['node'])
+            procDeviceNodes[root][device][chan] = \
+              TreeNode(chan, procDeviceNodes[root][device]['node'])
 
         self.setYModel(TreeModel(rootNode0))
-        #self.setXModel(MyListModel(list(self.channelRegistry.keys())))
+        self.setXModel(None)
+
+        self.ySelected = None
+        self.xSelected = None
+
         self.view.ySelectorView.expandAll()
         self.view.ySelectorView.setHeaderHidden(True)
         self.view.ySelectorView.setMaximumWidth(self.view.ySelectorView
@@ -303,7 +303,8 @@ class Presenter(object):
             channelName = ySelection.data()
             if grandParentName == '01':
                 grandParentName = 'proc/' + grandParentName
-            self.ySelected = "{0}/{1}/{2}".format(grandParentName, parentName, channelName)
+            self.ySelected = "{0}/{1}/{2}".format(grandParentName, parentName,
+                                                  channelName)
             self.ySelected_root = "{0}/{1}".format(grandParentName, parentName)
             # print('The Y-Channel {0} was selected.'.format(self.ySelected))
 
@@ -313,10 +314,10 @@ class Presenter(object):
             channelObj = self.channelRegistry[self.ySelected]
             self.view.saveChannelCheckBox.setChecked(channelObj.write_to_file)
 
-        newXList = [k.split('/')[-1] for k in self.channelRegistry.keys() if self.ySelected_root in k]
+        newXList = [k.split('/')[-1] for k in self.channelRegistry.keys()
+                    if self.ySelected_root in k]
 
         self.setXModel(MyListModel(sorted(newXList)))
-
 
     def newXSelection(self, xSelection):
         """Get the newly selected y channel's data
@@ -326,7 +327,8 @@ class Presenter(object):
 
         """
         self.xSelected_old = self.xSelected
-        self.xSelected = "{0}/{1}".format(self.ySelected_root, xSelection.data())
+        self.xSelected = "{0}/{1}".format(self.ySelected_root,
+                                          xSelection.data())
         # print('The X-Channel {0} was selected.'.format(self.xSelected))
 
         self.plotSelection()
@@ -373,7 +375,7 @@ class Presenter(object):
             # Do the plotting
             try:
                 self.view.axes.plot(xArray, yArray, label=self.ySelected,
-                                        color=sns.xkcd_rgb['pale red'])
+                                    color=sns.xkcd_rgb['pale red'])
             except ValueError as err:
                 dialog = QMessageBox()
                 dialog.setText("Value Error: {0}".format(err))
@@ -621,7 +623,9 @@ class Presenter(object):
         new_df = pd.DataFrame()
 
         if not np.any(df_files['0'].str.contains(original_file)):
-            new_df['0'] = df_files['0'].append(pd.Series(original_file, index=[len(df_files['0'])]))
+            new_df['0'] = df_files['0'].append(pd.Series(original_file,
+                                                         index=
+                                                         [len(df_files['0'])]))
 
             new_df.to_csv(full_path)
 
@@ -631,8 +635,6 @@ class Presenter(object):
         self.channelRegistry.addInterpolatedB()
 
         self.populateSelectors()
-
-        
 
 
 def main(argv=None):
