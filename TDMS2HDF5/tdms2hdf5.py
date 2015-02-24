@@ -515,23 +515,25 @@ class Presenter(object):
             # Remove whitespace and minus signs from the channel name
             chan_name = chan.replace(" ", "")
 
-            chan_device = "/".join(chan_name.split("/")[:-1])
+            device_df_key = "/".join(chan_name.split("/")[:-1])
+
+            if device_df_key not in df_register.keys():
+                df_register[device_df_key] = pd.DataFrame(index=chan_obj
+                                                          .getTimeTrack())
 
             chan_name = chan_name.split("/")[-1]
 
-            if chan_device not in df_register.keys():
-                df_register[chan_device] = pd.DataFrame()
-
             # Process 5.2.1 Write channel data
-            if self.channelRegistry[chan].write_to_file:
+            if chan_obj.write_to_file:
 
-                s = pd.Series(data=chan_obj.data,
-                              index=chan_obj.getTimeTrack())
+                # print('Adding channel {0} to data fram {1}'
+                #       .format(chan_name, device_df_key))
 
-                df_register[chan_device][chan_name] = s
+                df_register[device_df_key][chan_name] = chan_obj.data
 
         for k, v in df_register.items():
-            hdfStore[k] = v
+            # print('put({}, df)'.format(k))
+            hdfStore.put(k, v, format='table')
 
         # Process 5.3 Write data to file
         hdfStore.close()
@@ -624,8 +626,7 @@ class Presenter(object):
 
         if not np.any(df_files['0'].str.contains(original_file)):
             new_df['0'] = df_files['0'].append(pd.Series(original_file,
-                                                         index=
-                                                         [len(df_files['0'])]))
+                                            index=[len(df_files['0'])]))
 
             new_df.to_csv(full_path)
 
