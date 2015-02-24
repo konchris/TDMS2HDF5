@@ -38,7 +38,9 @@ AXESLABELS = {r"Resistance [$\Omega$]": ["dR", "dRSample", "R", "RSample",
               "Temperature [K]": ["Temp_RuO", "Temperature", "1k - Pot",
                                   "He3", "Sorption", "1k-Pot", "T1K", "THe3",
                                   "TSorp", "TSample_LK", "TSample_AD"],
-              "Capacitance [nF]": ["Cap", "TCap"]}
+              "Capacitance [nF]": ["Cap", "TCap"],
+              "Time [m]": ["Time_m"],
+              }
 
 sns.set_context("talk", font_scale=1.25, rc={'lines.linewidth':3})
 sns.set_style('whitegrid')

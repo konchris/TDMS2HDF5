@@ -356,51 +356,22 @@ class Presenter(object):
 
             # Generate the data arrays
             yArray = self.channelRegistry[self.ySelected].data
+            # print('y array is:', yArray)
 
-            # Rescale the x-axis so elapsed times are easier to read. The
-            # elapsed time data is saved in milliseconds.
-            if 'Time_m' in self.xSelected:
-                #xArray = (self.channelRegistry[self.ySelected]
-                #          .getElapsedTimeTrack())
-                xArray = self.channelRegistry[self.xSelected].data
-                # Conversion factors for milliseconds
-                hour = 60
-                minute = 1
-                second = 1. / 60.
-                millisecond = 1. / 60000
-                if xArray[-1] > 3 * hour:
-                    unit = 'h'
-                    factor = hour
-                elif xArray[-1] > minute:
-                    unit = 'm'
-                    factor = minute
-                elif xArray[-1] > second:
-                    unit = 's'
-                    factor = second
-                else:
-                    unit = 'ms'
-                    factor = millisecond
-            else:
-                xArray = self.channelRegistry[self.xSelected].data
+            xArray = self.channelRegistry[self.xSelected].data
+            # print('x array is:', xArray)
 
             # Set the labels
             xLabel = self.generateAxisLabel(self.xSelected)
-            if 'Time_m' in self.xSelected:
-                xLabel = xLabel.replace("unit", unit)
             yLabel = self.generateAxisLabel(self.ySelected)
+
             self.view.axes.set_xlabel(xLabel)
             self.view.axes.set_ylabel(yLabel)
 
             # Do the plotting
             try:
-                if 'Time_m' in self.xSelected:
-                    self.view.axes.plot(xArray.astype(int) / factor, yArray,
-                                        label=self.ySelected,
+                self.view.axes.plot(xArray, yArray, label=self.ySelected,
                                         color=sns.xkcd_rgb['pale red'])
-                else:
-                    self.view.axes.plot(xArray, yArray, label=self.ySelected,
-                                        color=sns.xkcd_rgb['pale red'])
-
             except ValueError as err:
                 dialog = QMessageBox()
                 dialog.setText("Value Error: {0}".format(err))
@@ -430,13 +401,6 @@ class Presenter(object):
         """
 
         chan_name = chan_name.split('/')[-1]
-
-        if chan_name == 'Abs. Time':
-            label = 'Time starting on unit'
-            return label
-        elif chan_name == 'Time_m':
-            label = 'Time [unit]'
-            return label
 
         # Generate the axis labels based on the selected channels
         # Cycle through the labes in the AXESLABELS dictionary
