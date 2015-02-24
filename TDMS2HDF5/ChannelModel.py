@@ -393,6 +393,7 @@ class ChannelRegistry(dict):
         self.file_start_time = None
         self.file_end_time = None
         self.devices = []
+        self.parents = []
 
     def addChannel(self, newChan):
         """Add a new, unique channel to the registry
@@ -412,6 +413,9 @@ class ChannelRegistry(dict):
             raise TypeError('Only an object of the Channel type can be added')
 
         parent = newChan.getParent()
+
+        if parent not in self.parents:
+            self.parents.append(parent)
 
         device = newChan.getName().split('/')[0]
 
@@ -740,7 +744,7 @@ class ChannelRegistry(dict):
             device = self[key].getDevice()
             if device not in devices:
                 devices.append(device)
-                print(device)
+                #print(device)
 
     def addTimeTracks(self, device, time_track):
         """Add the time track for a device
@@ -753,6 +757,7 @@ class ChannelRegistry(dict):
             The time data
 
         """
+
         if not isinstance(device, str):
             raise TypeError('The device parameter must be a string.')
 
@@ -774,12 +779,23 @@ class ChannelRegistry(dict):
         loaded.
 
         """
-        for dev in ['IPS', 'ADWin']:
-            if not dev in self.devices:
-                print('{d} data is not present. Cannot add B.'.format(d=dev))
+        for key in ['proc01/IPS/Magnetfield', 'proc01/ADWin/Time_m']:
+            if not key in self.keys():
+                print('{k} data is not present. Cannot add B.'.format(k=key))
                 return
 
-        #b_ts = interpolate_bfield(self[''])
+        magnetfield_array = self['proc01/IPS/Magnetfield'].data
+        time_array = self['proc01/ADWin/Time_m'].data
+        ips_time = self['proc01/IPS/Time_m'].data
+        b_ts = interpolate_bfield(magnetfield_array, ips_time, time_array)
+
+        newChan = Channel('ADWin/B', 'ADWin', b_ts)
+        newChan.setParent('proc01')
+
+        channelKey = "{parent}/{cName}".format(parent=newChan.getParent(),
+                                                   cName=newChan.getName())
+
+        self.addChannel(newChan)
 
 
 def main(argv=None):

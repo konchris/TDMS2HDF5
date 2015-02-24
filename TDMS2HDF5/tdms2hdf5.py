@@ -630,6 +630,10 @@ class Presenter(object):
 
         self.channelRegistry.addInterpolatedB()
 
+        self.populateSelectors()
+
+        
+
 
 def main(argv=None):
     """The main function."""
