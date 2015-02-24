@@ -204,9 +204,9 @@ class Presenter(object):
                                                   "Ctrl+E", 'export',
                                                   tip=("Export the TDMS data"
                                                        " to HDF5"))
-        #channelAddAction = self.view.createAction("Add Elapsed Time [&m]",
-        #                                          self.channelRegistry.addAllTimeTracks,
-        #                                          "Ctrl+M", tip='Add all time tracks.')
+        channelAddBAction = self.view.createAction("Add B to ADWin [&B]",
+                                                  self.addB,
+                                                  "Ctrl+B", tip='Add B')
 
         # Add the 'File' menu to the menu bar
         self.fileMenu = self.view.menuBar().addMenu("&File")
@@ -215,9 +215,8 @@ class Presenter(object):
         self.view.addActions(self.fileMenu, self.fileMenuActions)
 
         # Add the 'Channels'
-        #self.channelMenu = self.view.menuBar().addMenu("&Channel")
-        #self.channelAddMenu = self.channelMenu.addMenu("&Add Channel")
-        #self.view.addActions(self.channelAddMenu, self.channelAddAction)
+        self.channelAddMenu = self.view.menuBar().addMenu("&Add Channel")
+        self.view.addActions(self.channelAddMenu, (channelAddBAction,))
         
 
         # Connections
@@ -660,6 +659,11 @@ class Presenter(object):
             new_df['0'] = df_files['0'].append(pd.Series(original_file, index=[len(df_files['0'])]))
 
             new_df.to_csv(full_path)
+
+    def addB(self):
+        """Add BField Data to ADWin."""
+
+        self.channelRegistry.addInterpolatedB()
 
 
 def main(argv=None):

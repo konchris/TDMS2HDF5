@@ -26,6 +26,8 @@ import numpy as np
 
 from nptdms.tdms import TdmsFile
 
+from .Calculations import interpolate_bfield
+
 ADWIN_DICT = {"ISample": ["IAmp"], "VSample": ["VAmp"],
               "dISample": ["IAmp", "LISens"], "dVSample": ["VAmp", "LVSens"],
               "xMagnet": [], "TCap": [], "zMagnet": [], "Cap": [],
@@ -401,6 +403,7 @@ class ChannelRegistry(dict):
             The channel object to add to the channel registry
 
         """
+
         if isinstance(newChan, Channel):
             channelKey = "{parent}/{cName}".format(parent=newChan.getParent(),
                                                    cName=newChan.getName())
@@ -763,7 +766,20 @@ class ChannelRegistry(dict):
                                                    cName=newChan.getName())
 
         self.addChannel(newChan)
-        
+
+    def addInterpolatedB(self):
+        """Add the interpolated BField data to ADWin device.
+
+        This assumes that the data from the IPS and ADWin devices are already
+        loaded.
+
+        """
+        for dev in ['IPS', 'ADWin']:
+            if not dev in self.devices:
+                print('{d} data is not present. Cannot add B.'.format(d=dev))
+                return
+
+        #b_ts = interpolate_bfield(self[''])
 
 
 def main(argv=None):
