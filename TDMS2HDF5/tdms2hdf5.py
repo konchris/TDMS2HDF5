@@ -298,7 +298,7 @@ class Presenter(object):
 
         """
         self.ySelected_old = self.ySelected
-        if not ySelection.data() in ['proc', 'raw', '01']:
+        if not ySelection.data() in ['proc01'] + self.channelRegistry.devices:
             parentName = ySelection.parent().data()
             grandParentName = ySelection.parent().parent().data()
             channelName = ySelection.data()
