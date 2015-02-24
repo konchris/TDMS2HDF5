@@ -467,7 +467,7 @@ class ChannelRegistry(dict):
                 if 'wf_start_time' in chan.properties:
                     newChannel = Channel(channelName, device=device,
                                          meas_array=chan.data)
-                    newChannel.setParent('raw')
+                    newChannel.setParent('proc01')
 
                     startTime = np.datetime64(chan.property('wf_start_time')
                                               .astimezone(LOCAL_TZ))
@@ -757,7 +757,7 @@ class ChannelRegistry(dict):
             raise TypeError('The time_track parameter must be a numpy array')
 
         newChan = Channel('{}/Time_m'.format(device), device, time_track)
-        newChan.setParent('raw')
+        newChan.setParent('proc01')
 
         channelKey = "{parent}/{cName}".format(parent=newChan.getParent(),
                                                    cName=newChan.getName())

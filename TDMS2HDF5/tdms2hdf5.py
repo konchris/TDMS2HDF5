@@ -255,27 +255,30 @@ class Presenter(object):
         """Populate the x and y selectors with the names of the channels.
 
         """
+        # Setup the root node of the tree
         rootNode0 = TreeNode("")
-        raw = 'raw'
-        proc = 'proc'
-        rawNode = TreeNode(raw, rootNode0)
-        procNode = TreeNode(proc, rootNode0)
-        rawDeviceNodes = {}
+
+        # Setup the proc node
+        #proc = 'proc'
+
+        #procNode = TreeNode(proc, rootNode0)
+
         procDeviceNodes = {}
-        for k in sorted(self.channelRegistry.keys()):
-            if raw in k:
-                (root, device, chan) = k.split('/')
-                if device not in rawDeviceNodes:
-                    rawDeviceNodes[device] = TreeNode(device, rawNode)
-                TreeNode(chan, rawDeviceNodes[device])
-            elif proc in k:
-                (root, procNum, device, chan) = k.split('/')
-                if procNum not in procDeviceNodes:
-                    procDeviceNodes[procNum] = {}
-                    procDeviceNodes[procNum]['node'] = TreeNode(procNum, procNode)
-                if device not in procDeviceNodes[procNum]:
-                    procDeviceNodes[procNum][device] = \
-                      TreeNode(deivce, procDeviceNodes[procNum]['node'])
+
+        for chanTDMSPath in sorted(self.channelRegistry.keys()):
+
+            (root, device, chan) = chanTDMSPath.split('/')
+
+            if root not in procDeviceNodes:
+
+                procDeviceNodes[root] = {'node': TreeNode(root, rootNode0)}
+
+            if device not in procDeviceNodes[root]:
+
+                procDeviceNodes[root][device] = \
+                  {'node': TreeNode(device, procDeviceNodes[root]['node'])}
+
+            procDeviceNodes[root][device][chan] = TreeNode(chan, procDeviceNodes[root][device]['node'])
 
         self.setYModel(TreeModel(rootNode0))
         #self.setXModel(MyListModel(list(self.channelRegistry.keys())))
@@ -511,9 +514,7 @@ class Presenter(object):
             # Remove whitespace and minus signs from the channel name
             chan_name = chan.replace(" ", "")
 
-            chan_name = chan_name.replace("/", "/{}/".format(chan_device))
-
-            chan_device = "/".join(chan_name.split("/")[:2])
+            chan_device = "/".join(chan_name.split("/")[:-1])
 
             chan_name = chan_name.split("/")[-1]
 
@@ -620,7 +621,7 @@ class Presenter(object):
 
         new_df = pd.DataFrame()
 
-        if base_name not in df_files['0']:
+        if not np.any(df_files['0'].str.contains(original_file)):
             new_df['0'] = df_files['0'].append(pd.Series(original_file, index=[len(df_files['0'])]))
 
             new_df.to_csv(full_path)
