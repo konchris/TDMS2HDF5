@@ -34,7 +34,7 @@ AXESLABELS = {r"Resistance [$\Omega$]": ["dR", "dRSample", "R", "RSample",
                                          "Res_RuO"],
               r"Current [$\mu$A]": ["I", "dI", "ISample", "dISample"],
               "Voltage [mV]": ["V", "dV", "VSample", "dVSample", "VRuO"],
-              "Magnetfield [B]": ["zMagnet", "xMagnet", "Magnetfield"],
+              "Magnetfield [B]": ["zMagnet", "xMagnet", "Magnetfield", "B"],
               "Temperature [K]": ["Temp_RuO", "Temperature", "1k - Pot",
                                   "He3", "Sorption", "1k-Pot", "T1K", "THe3",
                                   "TSorp", "TSample_LK", "TSample_AD"],
@@ -42,7 +42,7 @@ AXESLABELS = {r"Resistance [$\Omega$]": ["dR", "dRSample", "R", "RSample",
               "Time [m]": ["Time_m"],
               }
 
-sns.set_context("talk", font_scale=1.25, rc={'lines.linewidth':3})
+sns.set_context("talk", font_scale=1.25, rc={'lines.linewidth': 3})
 sns.set_style('whitegrid')
 
 

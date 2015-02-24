@@ -26,6 +26,8 @@ import numpy as np
 
 from nptdms.tdms import TdmsFile
 
+from .Calculations import interpolate_bfield
+
 ADWIN_DICT = {"ISample": ["IAmp"], "VSample": ["VAmp"],
               "dISample": ["IAmp", "LISens"], "dVSample": ["VAmp", "LVSens"],
               "xMagnet": [], "TCap": [], "zMagnet": [], "Cap": [],
@@ -33,15 +35,16 @@ ADWIN_DICT = {"ISample": ["IAmp"], "VSample": ["VAmp"],
               "dV": [], "dR": [], "Res_RuO": ["p0", "p1", "r0"],
               "Temp_RuO": []}
 
-CHANNEL_DICT = {"T1K" : "1k - Pot",
-                "THe3" : "He3",
-                "TSorp" : "Sorption",
-                "ITC503" : "ITC 503",
-                "TSample_LK" : "Temperature",
-                "TSample_AD" : "Temp_RuO"
+CHANNEL_DICT = {"T1K": "1k - Pot",
+                "THe3": "He3",
+                "TSorp": "Sorption",
+                "ITC503": "ITC 503",
+                "TSample_LK": "Temperature",
+                "TSample_AD": "Temp_RuO"
                 }
 
 LOCAL_TZ = pytz.timezone("Europe/Berlin")
+
 
 def replace_name(name):
     """Replace a non-pythonic name with a pythonic one.
@@ -164,29 +167,17 @@ class Channel(object):
         """Recalculate the time track based on start time and time step"""
 
         dt = self.attributes['TimeInterval']
-        # print('The timedelta type is {0} and value is '.format(type(dt)), dt)
-        # print("And it's dtype is: ", dt.dtype)
-        # print('To seconds:', dt.item().to_seconds())
 
         length = self.attributes['Length']
-        # print('length:', length)
 
         startTime = np.datetime64(self.attributes['StartTime'])
-        # print('The start time type is {0} and value is '
-        #        .format(type(startTime)),
-        #        startTime)
 
         stopTime = startTime + dt * length
-        # print(('The stop time type is {0} and value is '
-        #         .format(type(stopTime))), stopTime)
 
         absolute_time_track = np.arange(startTime, stopTime, dt)
-        # print(absolute_time_track[0], absolute_time_track[-1])
 
-        elapsed_time_track = (absolute_time_track - startTime) / np.timedelta64(1, 'm')
-        #                      .astype('timedelta64[ms]'))
-        # print('elapsed time type: {0}\n\tand dtype: {1}'.format(type(elapsed_time_track), elapsed_time_track.dtype))
-        # print('\tfirst: {0}, last:'.format(elapsed_time_track[0]), elapsed_time_track[-5:])
+        elapsed_time_track = (absolute_time_track - startTime) / \
+          np.timedelta64(1, 'm')
 
         self.time = absolute_time_track
         self.elapsed_time = elapsed_time_track
@@ -391,6 +382,7 @@ class ChannelRegistry(dict):
         self.file_start_time = None
         self.file_end_time = None
         self.devices = []
+        self.parents = []
 
     def addChannel(self, newChan):
         """Add a new, unique channel to the registry
@@ -401,6 +393,7 @@ class ChannelRegistry(dict):
             The channel object to add to the channel registry
 
         """
+
         if isinstance(newChan, Channel):
             channelKey = "{parent}/{cName}".format(parent=newChan.getParent(),
                                                    cName=newChan.getName())
@@ -409,6 +402,9 @@ class ChannelRegistry(dict):
             raise TypeError('Only an object of the Channel type can be added')
 
         parent = newChan.getParent()
+
+        if parent not in self.parents:
+            self.parents.append(parent)
 
         device = newChan.getName().split('/')[0]
 
@@ -483,13 +479,14 @@ class ChannelRegistry(dict):
                         timeStep = timeStep * 1000
 
                     if device == 'ADWin' and timeStep != 100:
-                        #print('Old ADWin timeStep is {}'.format(timeStep))
+                        # print('Old ADWin timeStep is {}'.format(timeStep))
                         timeStep = 100
 
                     newChannel.setTimeStep(np.timedelta64(int(timeStep), 'ms'))
 
                     if device == "ADWin":
-                        for attributeName in ADWIN_DICT[channelName.lstrip('ADWin/')]:
+                        for attributeName in ADWIN_DICT[channelName
+                                                        .lstrip('ADWin/')]:
                             # If LISens or LVSens is not present a key error is
                             # thrown here!
                             # This is where to catch the missing data and allow
@@ -498,9 +495,9 @@ class ChannelRegistry(dict):
                             newChannel.attributes[attributeName] = \
                                 deviceProperties[attributeName]
                             # except KeyError as err:
-                                # print('1\tKey Error: {0} on channel {1}'
-                                #      .format(err, channelName))
-                                # pass
+                            #     print('1\tKey Error: {0} on channel {1}'
+                            #          .format(err, channelName))
+                            #     pass
 
                     self.addChannel(newChannel)
 
@@ -509,7 +506,7 @@ class ChannelRegistry(dict):
                     #      .format(err, channelName))
                     # pass
 
-        #self.addTransportChannels()
+        # self.addTransportChannels()
 
     def add_V(self):
         """Add the processed channel 'V' derived from 'VSample'.
@@ -728,17 +725,6 @@ class ChannelRegistry(dict):
         self.add_R()
         self.add_dR()
 
-    def addAllTimeTracks(self):
-        """Add time tracks for all devices.
-
-        """
-        devices = []
-        for key in self.keys():
-            device = self[key].getDevice()
-            if device not in devices:
-                devices.append(device)
-                print(device)
-
     def addTimeTracks(self, device, time_track):
         """Add the time track for a device
 
@@ -750,6 +736,7 @@ class ChannelRegistry(dict):
             The time data
 
         """
+
         if not isinstance(device, str):
             raise TypeError('The device parameter must be a string.')
 
@@ -763,7 +750,31 @@ class ChannelRegistry(dict):
                                                    cName=newChan.getName())
 
         self.addChannel(newChan)
-        
+
+    def addInterpolatedB(self):
+        """Add the interpolated BField data to ADWin device.
+
+        This assumes that the data from the IPS and ADWin devices are already
+        loaded.
+
+        """
+        for key in ['proc01/IPS/Magnetfield', 'proc01/ADWin/Time_m']:
+            if key not in self.keys():
+                print('{k} data is not present. Cannot add B.'.format(k=key))
+                return
+
+        magnetfield_array = self['proc01/IPS/Magnetfield'].data
+        time_array = self['proc01/ADWin/Time_m'].data
+        ips_time = self['proc01/IPS/Time_m'].data
+        b_ts = interpolate_bfield(magnetfield_array, ips_time, time_array)
+
+        newChan = Channel('ADWin/B', 'ADWin', b_ts)
+        newChan.setParent('proc01')
+
+        channelKey = "{parent}/{cName}".format(parent=newChan.getParent(),
+                                                   cName=newChan.getName())
+
+        self.addChannel(newChan)
 
 
 def main(argv=None):
