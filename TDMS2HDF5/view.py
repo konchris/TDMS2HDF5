@@ -37,7 +37,7 @@ AXESLABELS = {r"Resistance [$\Omega$]": ["dR", "dRSample", "R", "RSample",
               "Magnetfield [B]": ["zMagnet", "xMagnet", "Magnetfield", "B"],
               "Temperature [K]": ["Temp_RuO", "Temperature", "1k - Pot",
                                   "He3", "Sorption", "1k-Pot", "T1K", "THe3",
-                                  "TSorp", "TSample_LK", "TSample_AD"],
+                                  "TSorp", "TSample_LK", "TSample_AD", "Tm"],
               "Capacitance [nF]": ["Cap", "TCap"],
               "Time [m]": ["Time_m"],
               }

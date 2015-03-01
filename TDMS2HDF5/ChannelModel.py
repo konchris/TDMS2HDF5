@@ -23,6 +23,7 @@ from datetime import datetime, timedelta
 import pytz
 
 import numpy as np
+from scipy import stats
 
 from nptdms.tdms import TdmsFile
 
@@ -769,6 +770,22 @@ class ChannelRegistry(dict):
         b_ts = interpolate_bfield(magnetfield_array, ips_time, time_array)
 
         newChan = Channel('ADWin/B', 'ADWin', b_ts)
+        newChan.setParent('proc01')
+
+        channelKey = "{parent}/{cName}".format(parent=newChan.getParent(),
+                                                   cName=newChan.getName())
+
+        self.addChannel(newChan)
+
+    def addTemperatureMode(self):
+        """Add the mode of the temperature during the measurement to ADWin device.
+
+        """
+
+        t_mode = stats.mode(self['proc01/ADWin/TSample_AD'].data)[0][0]
+        t_adjust = self['proc01/ADWin/TSample_AD'].data - t_mode
+
+        newChan = Channel('ADWin/Tm', 'ADWin', t_adjust)
         newChan.setParent('proc01')
 
         channelKey = "{parent}/{cName}".format(parent=newChan.getParent(),
