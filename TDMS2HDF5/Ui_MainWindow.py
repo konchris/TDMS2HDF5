@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'MainWindow_noRightSide.ui'
+# Form implementation generated from reading ui file 'MainWindow.ui'
 #
-# Created: Wed Oct 22 20:41:58 2014
-#      by: PyQt4 UI code generator 4.10.4
+# Created: Sun Mar  1 12:17:45 2015
+#      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -65,9 +65,29 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.xSelectorView.sizePolicy().hasHeightForWidth())
         self.xSelectorView.setSizePolicy(sizePolicy)
-        self.xSelectorView.setMaximumSize(QtCore.QSize(16777215, 42))
         self.xSelectorView.setObjectName(_fromUtf8("xSelectorView"))
         self.xSelectorLayout.addWidget(self.xSelectorView)
+        self.centralLayout.addLayout(self.xSelectorLayout)
+        self.mainLayout.addLayout(self.centralLayout)
+        self.rightLayout = QtGui.QVBoxLayout()
+        self.rightLayout.setObjectName(_fromUtf8("rightLayout"))
+        self.fileAttributesLayout = QtGui.QVBoxLayout()
+        self.fileAttributesLayout.setObjectName(_fromUtf8("fileAttributesLayout"))
+        self.fileUseableChckbx = QtGui.QCheckBox(self.centralwidget)
+        self.fileUseableChckbx.setObjectName(_fromUtf8("fileUseableChckbx"))
+        self.fileAttributesLayout.addWidget(self.fileUseableChckbx)
+        self.fileDBLayout = QtGui.QHBoxLayout()
+        self.fileDBLayout.setObjectName(_fromUtf8("fileDBLayout"))
+        self.pushButton = QtGui.QPushButton(self.centralwidget)
+        self.pushButton.setObjectName(_fromUtf8("pushButton"))
+        self.fileDBLayout.addWidget(self.pushButton)
+        self.pushButton_2 = QtGui.QPushButton(self.centralwidget)
+        self.pushButton_2.setObjectName(_fromUtf8("pushButton_2"))
+        self.fileDBLayout.addWidget(self.pushButton_2)
+        self.fileAttributesLayout.addLayout(self.fileDBLayout)
+        self.rightLayout.addLayout(self.fileAttributesLayout)
+        spacerItem = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
+        self.rightLayout.addItem(spacerItem)
         self.horizontalLayout = QtGui.QHBoxLayout()
         self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
         self.saveChannelCheckBox = QtGui.QCheckBox(self.centralwidget)
@@ -79,9 +99,8 @@ class Ui_MainWindow(object):
         self.noChannels = QtGui.QPushButton(self.centralwidget)
         self.noChannels.setObjectName(_fromUtf8("noChannels"))
         self.horizontalLayout.addWidget(self.noChannels)
-        self.xSelectorLayout.addLayout(self.horizontalLayout)
-        self.centralLayout.addLayout(self.xSelectorLayout)
-        self.mainLayout.addLayout(self.centralLayout)
+        self.rightLayout.addLayout(self.horizontalLayout)
+        self.mainLayout.addLayout(self.rightLayout)
         self.gridLayout.addLayout(self.mainLayout, 0, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(MainWindow)
@@ -121,6 +140,9 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(_translate("MainWindow", "TDMS to HDF5 Viewer and Converter", None))
         self.ySelectorLabel.setText(_translate("MainWindow", "Y-Axis Channel", None))
         self.xSelectorLabel.setText(_translate("MainWindow", "X-Axis Channel", None))
+        self.fileUseableChckbx.setText(_translate("MainWindow", "File is usable", None))
+        self.pushButton.setText(_translate("MainWindow", "Write to DB", None))
+        self.pushButton_2.setText(_translate("MainWindow", "Read from DB", None))
         self.saveChannelCheckBox.setText(_translate("MainWindow", "Save Channel", None))
         self.allChannels.setText(_translate("MainWindow", "All", None))
         self.noChannels.setText(_translate("MainWindow", "None", None))

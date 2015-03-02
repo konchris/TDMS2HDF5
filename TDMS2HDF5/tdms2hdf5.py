@@ -35,7 +35,9 @@ from .view_model import (TreeNode, TreeModel, MyListModel)
 BASEDIR = '/home/chris/Documents/PhD/root/raw-data/'
 
 MEAS_TYPES = {'BSweep': 'bsweep_files.csv',
-              'BRamp': 'bramp_files.csv'}
+              'BRamp': 'bramp_files.csv',
+              'Condense': 'tsweep_files.csv',
+              'Hold-Base': 'tsweep_files.csv'}
 
 class Main(MyMainWindow):
     """ The main window of the program.
@@ -208,6 +210,9 @@ class Presenter(object):
         channelAddBAction = self.view.createAction("Add B to ADWin [&B]",
                                                    self.addB,
                                                    "Ctrl+B", tip='Add B')
+        channelAddTmodeAction = self.view.createAction(r"Add $T_{mode}$ to ADWin [&T]",
+                                                   self.addTm,
+                                                   "Ctrl+T", tip=r'Add $T_{mode}$')
 
         # Add the 'File' menu to the menu bar
         self.fileMenu = self.view.menuBar().addMenu("&File")
@@ -217,7 +222,8 @@ class Presenter(object):
 
         # Add the 'Channels'
         self.channelAddMenu = self.view.menuBar().addMenu("&Add Channel")
-        self.view.addActions(self.channelAddMenu, (channelAddBAction,))
+        self.view.addActions(self.channelAddMenu, (channelAddBAction,
+                                                   channelAddTmodeAction))
 
         # Connections
         self.view.ySelectorView.clicked.connect(self.newYSelection)
@@ -614,11 +620,11 @@ class Presenter(object):
 
         """
         base_dir = os.path.dirname(fname)
-        original_file = os.path.basename(fname)
+        original_file = os.path.basename(fname).split('.')[0]
 
         try:
-            base_name = MEAS_TYPES[meas_type]
-        except KeyError:
+            base_name = MEAS_TYPES[[k for k in MEAS_TYPES.keys() if k in meas_type][0]]
+        except (KeyError, IndexError):
             return
 
         full_path = os.path.join(base_dir, base_name)
@@ -627,9 +633,9 @@ class Presenter(object):
 
         new_df = pd.DataFrame()
 
-        if not np.any(df_files['0'].str.contains(original_file)):
-            new_df['0'] = df_files['0'].append(pd.Series(original_file,
-                                            index=[len(df_files['0'])]))
+        if not np.any(df_files['file name'].str.contains(original_file)):
+            new_df['file name'] = df_files['file name'].append(pd.Series(original_file,
+                                            index=[len(df_files['file name'])]))
 
             new_df.to_csv(full_path)
 
@@ -637,6 +643,13 @@ class Presenter(object):
         """Add BField Data to ADWin."""
 
         self.channelRegistry.addInterpolatedB()
+
+        self.populateSelectors()
+
+    def addTm(self):
+        """Add Tmode Data to ADWin."""
+
+        self.channelRegistry.addTemperatureMode()
 
         self.populateSelectors()
 
