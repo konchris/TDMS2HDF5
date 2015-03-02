@@ -284,7 +284,7 @@ class Presenter(object):
         self.view.ySelectorView.expandAll()
         self.view.ySelectorView.setHeaderHidden(True)
         self.view.ySelectorView.setMaximumWidth(self.view.ySelectorView
-                                                .sizeHintForColumn(0) + 10)
+                                                .sizeHintForColumn(0) * 2)
 
         self.view.xSelectorView.setMaximumHeight(42)
         # self.view.xSelectorView.sizeHintForColumn(0) - 50)
@@ -486,10 +486,13 @@ class Presenter(object):
 
         if ext in ['hdf5', 'he5', 'hdf']:
             self.exprtToHDF5(fname)
+            # self.channelRegistry.exprtToHDF5(fname)
         elif ext in ['h5']:
             self.exprtToPandasHDF5(fname)
+            # self.channelRegistry.exprtToPandasHDF5(fname)
         elif ext in ['csv', 'txt', 'dat']:
             self.exprtToCSV(fname)
+            # self.channelRegistry.exprtToCSV(fname)
 
         self.addFileToGoodList(fname, meas_type)
 
