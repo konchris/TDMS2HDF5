@@ -37,7 +37,8 @@ BASEDIR = '/home/chris/Documents/PhD/root/raw-data/'
 MEAS_TYPES = {'BSweep': 'bsweep_files.csv',
               'BRamp': 'bramp_files.csv',
               'Condense': 'tsweep_files.csv',
-              'Hold-Base': 'tsweep_files.csv'}
+              'Hold-Base': 'tsweep_files.csv',
+              'IVSweep': 'ivsweep_files.csv'}
 
 class Main(MyMainWindow):
     """ The main window of the program.
