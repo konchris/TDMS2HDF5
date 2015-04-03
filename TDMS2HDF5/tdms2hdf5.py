@@ -40,6 +40,7 @@ MEAS_TYPES = {'BSweep': 'bsweep_files.csv',
               'Hold-Base': 'tsweep_files.csv',
               'IVSweep': 'ivsweep_files.csv'}
 
+
 class Main(MyMainWindow):
     """ The main window of the program.
 
@@ -211,9 +212,11 @@ class Presenter(object):
         channelAddBAction = self.view.createAction("Add B to ADWin [&B]",
                                                    self.addB,
                                                    "Ctrl+B", tip='Add B')
-        channelAddTmodeAction = self.view.createAction(r"Add $T_{mode}$ to ADWin [&T]",
-                                                   self.addTm,
-                                                   "Ctrl+T", tip=r'Add $T_{mode}$')
+        channelAddTmodeAction = self.view.createAction(r"Add $T_{mode}$ to "
+                                                       "ADWin [&T]",
+                                                       self.addTm,
+                                                       "Ctrl+T",
+                                                       tip=r'Add $T_{mode}$')
 
         # Add the 'File' menu to the menu bar
         self.fileMenu = self.view.menuBar().addMenu("&File")
@@ -624,19 +627,23 @@ class Presenter(object):
         original_file = os.path.basename(fname).split('.')[0]
 
         try:
-            base_name = MEAS_TYPES[[k for k in MEAS_TYPES.keys() if k in meas_type][0]]
+            base_name = MEAS_TYPES[[k for k in MEAS_TYPES.keys() if k in
+                                    meas_type][0]]
         except (KeyError, IndexError):
             return
 
         full_path = os.path.join(base_dir, base_name)
 
-        df_files = pd.DataFrame.from_csv(full_path)
+        if os.path.exists(full_path):
+            df_files = pd.DataFrame.from_csv(full_path)
+        else:
+            df_files = pd.DataFrame({'file name': []})
 
         new_df = pd.DataFrame()
 
         if not np.any(df_files['file name'].str.contains(original_file)):
-            new_df['file name'] = df_files['file name'].append(pd.Series(original_file,
-                                            index=[len(df_files['file name'])]))
+            new_df['file name'] = df_files['file name'].append(
+                pd.Series(original_file, index=[len(df_files['file name'])]))
 
             new_df.to_csv(full_path)
 
