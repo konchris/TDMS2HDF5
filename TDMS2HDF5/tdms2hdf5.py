@@ -386,6 +386,8 @@ class Presenter(object):
             try:
                 self.view.axes.plot(xArray, yArray, label=self.ySelected,
                                     color=sns.xkcd_rgb['pale red'])
+                self.view.axes.get_yaxis().get_major_formatter()\
+                  .set_useOffset(False)
             except ValueError as err:
                 dialog = QMessageBox()
                 dialog.setText("Value Error: {0}".format(err))
