@@ -19,7 +19,7 @@ __status__ = "Development"
 
 import os
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime
 import pytz
 
 import numpy as np
@@ -177,8 +177,8 @@ class Channel(object):
 
         absolute_time_track = np.arange(startTime, stopTime, dt)
 
-        elapsed_time_track = (absolute_time_track - startTime) / \
-          np.timedelta64(1, 'm')
+        elapsed_time_track = ((absolute_time_track - startTime) /
+                              np.timedelta64(1, 'm'))
 
         self.time = absolute_time_track
         self.elapsed_time = elapsed_time_track
@@ -486,26 +486,26 @@ class ChannelRegistry(dict):
                     newChannel.setTimeStep(np.timedelta64(int(timeStep), 'ms'))
 
                     if device == "ADWin":
-                        for attributeName in ADWIN_DICT[channelName
-                                                        .lstrip('ADWin/')]:
-                            # If LISens or LVSens is not present a key error is
-                            # thrown here!
-                            # This is where to catch the missing data and allow
-                            # the user to enter it.
-                            # try:
-                            newChannel.attributes[attributeName] = \
-                                deviceProperties[attributeName]
-                            # except KeyError as err:
-                            #     print('1\tKey Error: {0} on channel {1}'
-                            #          .format(err, channelName))
-                            #     pass
+                        try:
+                            for attributeName in ADWIN_DICT[channelName
+                                                            .lstrip('ADWin/')]:
+                                # If LISens or LVSens is not present a key
+                                # error is thrown here!  This is where to catch
+                                # the missing data and allow the user to enter
+                                # it.
+                                newChannel.attributes[attributeName] = \
+                                    deviceProperties[attributeName]
+                        except KeyError:
+                            # print('1\tKey Error: {0} on channel {1}'
+                            #       .format(err, channelName))
+                            pass
 
                     self.addChannel(newChannel)
 
                 # except TypeError as err:
-                    # print('3\tType Error: {0} on channel {1}'
-                    #      .format(err, channelName))
-                    # pass
+                #     print('3\tType Error: {0} on channel {1}'
+                #          .format(err, channelName))
+                #    pass
 
         # self.addTransportChannels()
 
@@ -535,8 +535,8 @@ class ChannelRegistry(dict):
 
         """
         # dV depends on dVSample and LVSens
-        if ('raw/dVSample' in self.keys() and 'LVSens' in self['raw/dVSample']
-            .attributes.keys()) and ('raw/dV' not in self.keys()):
+        if (('raw/dVSample' in self.keys() and 'LVSens' in self['raw/dVSample']
+             .attributes.keys()) and ('raw/dV' not in self.keys())):
             chandVSample = self['raw/dVSample']
         else:
             return
@@ -580,8 +580,8 @@ class ChannelRegistry(dict):
 
         """
         # dI depends on dISample and LISens
-        if ('raw/dISample' in self.keys() and 'LISens' in self['raw/dISample']
-            .attributes.keys()) and ('raw/dI' not in self.keys()):
+        if (('raw/dISample' in self.keys() and 'LISens' in self['raw/dISample']
+             .attributes.keys()) and ('raw/dI' not in self.keys())):
             chandISample = self['raw/dISample']
         else:
             return
@@ -633,8 +633,8 @@ class ChannelRegistry(dict):
         """
         # RSample depends on ISample and VSample. Try to get the values from
         # the raw data. Fall back to the processed data
-        if ('raw/ISample' and 'raw/VSample') in self.keys() and \
-            (('raw/RSample'and 'raw/R') not in self.keys()):
+        if (('raw/ISample' and 'raw/VSample') in self.keys() and
+            (('raw/RSample'and 'raw/R') not in self.keys())):
             chanISample = self['raw/ISample']
             chanVSample = self['raw/VSample']
         elif ('proc/ISample' and 'proc/VSample') in self.keys():
@@ -662,8 +662,8 @@ class ChannelRegistry(dict):
         """
         # dRSample depends on dISample and dVSample. Try to use the raw data.
         # Fall back on the processed data.
-        if ('raw/dISample' and 'raw/dVSample') in self.keys() and \
-          (('raw/dRSample' and 'raw/dR') not in self.keys()):
+        if (('raw/dISample' and 'raw/dVSample') in self.keys() and
+            (('raw/dRSample' and 'raw/dR') not in self.keys())):
             chandISample = self['raw/dISample']
             chandVSample = self['raw/dVSample']
         elif ('proc/dISample' and 'proc/dVSample') in self.keys():
@@ -691,8 +691,8 @@ class ChannelRegistry(dict):
         """
         # dR depends on dI and dV. Try to get the raw data. Fall back on the
         # processed data.
-        if ('raw/dI' and 'raw/dV') in self.keys() and \
-          ('raw/dR' not in self.keys()):
+        if (('raw/dI' and 'raw/dV') in self.keys() and
+            ('raw/dR' not in self.keys())):
             chandI = self['raw/dI']
             chandV = self['raw/dV']
         elif ('proc/dI' and 'proc/dV') in self.keys():
@@ -747,8 +747,8 @@ class ChannelRegistry(dict):
         newChan = Channel('{}/Time_m'.format(device), device, time_track)
         newChan.setParent('proc01')
 
-        channelKey = "{parent}/{cName}".format(parent=newChan.getParent(),
-                                                   cName=newChan.getName())
+        # channelKey = "{parent}/{cName}".format(parent=newChan.getParent(),
+        #                                            cName=newChan.getName())
 
         self.addChannel(newChan)
 
@@ -772,8 +772,8 @@ class ChannelRegistry(dict):
         newChan = Channel('ADWin/B', 'ADWin', b_ts)
         newChan.setParent('proc01')
 
-        channelKey = "{parent}/{cName}".format(parent=newChan.getParent(),
-                                                   cName=newChan.getName())
+        # channelKey = "{parent}/{cName}".format(parent=newChan.getParent(),
+        #                                            cName=newChan.getName())
 
         self.addChannel(newChan)
 
@@ -788,8 +788,8 @@ class ChannelRegistry(dict):
         newChan = Channel('ADWin/Tm', 'ADWin', t_adjust)
         newChan.setParent('proc01')
 
-        channelKey = "{parent}/{cName}".format(parent=newChan.getParent(),
-                                                   cName=newChan.getName())
+        # channelKey = "{parent}/{cName}".format(parent=newChan.getParent(),
+        #                                            cName=newChan.getName())
 
         self.addChannel(newChan)
 
