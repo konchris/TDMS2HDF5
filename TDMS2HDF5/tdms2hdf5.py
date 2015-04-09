@@ -34,12 +34,20 @@ from .view_model import (TreeNode, TreeModel, MyListModel)
 
 BASEDIR = '/home/chris/Documents/PhD/root/raw-data/'
 
+MEAS_TYPES = {'BSweep': 'bsweep_files.csv',
+              'BRamp': 'bramp_files.csv',
+              'Condense': 'tsweep_files.csv',
+              'Hold-Base': 'tsweep_files.csv',
+              'IVSweep': 'ivsweep_files.csv'}
+
+
 class Main(MyMainWindow):
     """ The main window of the program.
 
     """
 
     def __init__(self, parent=None):
+
         super(Main, self).__init__(parent)
 
 
@@ -201,11 +209,25 @@ class Presenter(object):
                                                   "Ctrl+E", 'export',
                                                   tip=("Export the TDMS data"
                                                        " to HDF5"))
+        channelAddBAction = self.view.createAction("Add B to ADWin [&B]",
+                                                   self.addB,
+                                                   "Ctrl+B", tip='Add B')
+        channelAddTmodeAction = self.view.createAction(r"Add $T_{mode}$ to "
+                                                       "ADWin [&T]",
+                                                       self.addTm,
+                                                       "Ctrl+T",
+                                                       tip=r'Add $T_{mode}$')
 
+        # Add the 'File' menu to the menu bar
         self.fileMenu = self.view.menuBar().addMenu("&File")
         self.fileMenuActions = (fileOpenAction, fileExportAction,
                                 fileQuitAction)
         self.view.addActions(self.fileMenu, self.fileMenuActions)
+
+        # Add the 'Channels'
+        self.channelAddMenu = self.view.menuBar().addMenu("&Add Channel")
+        self.view.addActions(self.channelAddMenu, (channelAddBAction,
+                                                   channelAddTmodeAction))
 
         # Connections
         self.view.ySelectorView.clicked.connect(self.newYSelection)
@@ -222,40 +244,57 @@ class Presenter(object):
         formats = "TDMS files (*.tdms)"
         fname = QFileDialog.getOpenFileName(self.view, "Open a TDMS File",
                                             self.baseDir, formats)
-        self.channelRegistry.loadFromFile(fname)
+        if fname:
+            self.channelRegistry.loadFromFile(fname)
 
-        self.baseDir = os.path.dirname(fname)
+            self.baseDir = os.path.dirname(fname)
 
-        self.fileName = fname
+            self.fileName = fname
 
-        windowTitle = self.view.windowTitle().split(':')[0]
-        baseName = os.path.basename(self.fileName)
-        self.view.setWindowTitle('{0}: {1}'.format(windowTitle, baseName))
+            windowTitle = self.view.windowTitle().split(':')[0]
+            baseName = os.path.basename(self.fileName)
+            self.view.setWindowTitle('{0}: {1}'.format(windowTitle, baseName))
 
-        self.populateSelectors()
+            self.populateSelectors()
+            self.plotSelection()
+        else:
+            return
 
     def populateSelectors(self):
         """Populate the x and y selectors with the names of the channels.
 
         """
+        # Setup the root node of the tree
         rootNode0 = TreeNode("")
-        raw = 'raw'
-        proc = 'proc'
-        rawNode = TreeNode(raw, rootNode0)
-        procNode = TreeNode(proc, rootNode0)
-        for k, v in self.channelRegistry.items():
-            if raw in k:
-                TreeNode(v.name, rawNode)
-            elif proc in k:
-                TreeNode(v.name, procNode)
+
+        procDeviceNodes = {}
+
+        for chanTDMSPath in sorted(self.channelRegistry.keys()):
+
+            (root, device, chan) = chanTDMSPath.split('/')
+
+            if root not in procDeviceNodes:
+
+                procDeviceNodes[root] = {'node': TreeNode(root, rootNode0)}
+
+            if device not in procDeviceNodes[root]:
+
+                procDeviceNodes[root][device] = \
+                  {'node': TreeNode(device, procDeviceNodes[root]['node'])}
+
+            procDeviceNodes[root][device][chan] = \
+              TreeNode(chan, procDeviceNodes[root][device]['node'])
 
         self.setYModel(TreeModel(rootNode0))
-        self.setXModel(MyListModel(['Time', 'Abs. Time'] +
-                                   list(self.channelRegistry.keys())))
+        self.setXModel(None)
+
+        self.ySelected = None
+        self.xSelected = None
+
         self.view.ySelectorView.expandAll()
         self.view.ySelectorView.setHeaderHidden(True)
         self.view.ySelectorView.setMaximumWidth(self.view.ySelectorView
-                                                .sizeHintForColumn(0) + 10)
+                                                .sizeHintForColumn(0) * 2)
 
         self.view.xSelectorView.setMaximumHeight(42)
         # self.view.xSelectorView.sizeHintForColumn(0) - 50)
@@ -268,10 +307,15 @@ class Presenter(object):
 
         """
         self.ySelected_old = self.ySelected
-        if not ySelection.data() in ['proc', 'raw']:
+        if not ySelection.data() in ['proc01'] + self.channelRegistry.devices:
             parentName = ySelection.parent().data()
+            grandParentName = ySelection.parent().parent().data()
             channelName = ySelection.data()
-            self.ySelected = "{0}/{1}".format(parentName, channelName)
+            if grandParentName == '01':
+                grandParentName = 'proc/' + grandParentName
+            self.ySelected = "{0}/{1}/{2}".format(grandParentName, parentName,
+                                                  channelName)
+            self.ySelected_root = "{0}/{1}".format(grandParentName, parentName)
             # print('The Y-Channel {0} was selected.'.format(self.ySelected))
 
             self.populateOffsetEditor()
@@ -279,6 +323,11 @@ class Presenter(object):
             self.plotSelection()
             channelObj = self.channelRegistry[self.ySelected]
             self.view.saveChannelCheckBox.setChecked(channelObj.write_to_file)
+
+        newXList = [k.split('/')[-1] for k in self.channelRegistry.keys()
+                    if self.ySelected_root in k]
+
+        self.setXModel(MyListModel(sorted(newXList)))
 
     def newXSelection(self, xSelection):
         """Get the newly selected y channel's data
@@ -288,7 +337,8 @@ class Presenter(object):
 
         """
         self.xSelected_old = self.xSelected
-        self.xSelected = xSelection.data()
+        self.xSelected = "{0}/{1}".format(self.ySelected_root,
+                                          xSelection.data())
         # print('The X-Channel {0} was selected.'.format(self.xSelected))
 
         self.plotSelection()
@@ -320,57 +370,24 @@ class Presenter(object):
 
             # Generate the data arrays
             yArray = self.channelRegistry[self.ySelected].data
+            # print('y array is:', yArray)
 
-            # Rescale the x-axis so elapsed times are easier to read. The
-            # elapsed time data is saved in milliseconds.
-            if self.xSelected == 'Time':
-                xArray = (self.channelRegistry[self.ySelected]
-                          .getElapsedTimeTrack())
-                # Conversion factors for milliseconds
-                hour = 3600000
-                minute = 60000
-                second = 1000
-                millisecond = 1
-                if xArray[-1] > 3 * hour:
-                    unit = 'h'
-                    factor = hour
-                elif xArray[-1] > minute:
-                    unit = 'm'
-                    factor = minute
-                elif xArray[-1] > second:
-                    unit = 's'
-                    factor = second
-                else:
-                    unit = 'ms'
-                    factor = millisecond
-            elif self.xSelected == 'Abs. Time':
-                xArray = self.channelRegistry[self.ySelected].getTimeTrack()
-                unit = str(xArray[0].astype(datetime).date())
-            else:
-                xArray = self.channelRegistry[self.xSelected].data
+            xArray = self.channelRegistry[self.xSelected].data
+            # print('x array is:', xArray)
 
             # Set the labels
             xLabel = self.generateAxisLabel(self.xSelected)
-            if self.xSelected in ['Time', 'Abs. Time']:
-                xLabel = xLabel.replace("unit", unit)
             yLabel = self.generateAxisLabel(self.ySelected)
+
             self.view.axes.set_xlabel(xLabel)
             self.view.axes.set_ylabel(yLabel)
 
             # Do the plotting
             try:
-                if self.xSelected == 'Abs. Time':
-                    self.view.axes.plot(xArray.astype(datetime),
-                                        yArray, label=self.ySelected,
-                                        color=sns.xkcd_rgb['pale red'])
-                elif self.xSelected == 'Time':
-                    self.view.axes.plot(xArray.astype(int) / factor, yArray,
-                                        label=self.ySelected,
-                                        color=sns.xkcd_rgb['pale red'])
-                else:
-                    self.view.axes.plot(xArray, yArray, label=self.ySelected,
-                                        color=sns.xkcd_rgb['pale red'])
-
+                self.view.axes.plot(xArray, yArray, label=self.ySelected,
+                                    color=sns.xkcd_rgb['pale red'])
+                self.view.axes.get_yaxis().get_major_formatter()\
+                  .set_useOffset(False)
             except ValueError as err:
                 dialog = QMessageBox()
                 dialog.setText("Value Error: {0}".format(err))
@@ -401,13 +418,6 @@ class Presenter(object):
 
         chan_name = chan_name.split('/')[-1]
 
-        if chan_name == 'Abs. Time':
-            label = 'Time starting on unit'
-            return label
-        elif chan_name == 'Time':
-            label = 'Time [unit]'
-            return label
-
         # Generate the axis labels based on the selected channels
         # Cycle through the labes in the AXESLABELS dictionary
         for axlbl in AXESLABELS.keys():
@@ -428,8 +438,11 @@ class Presenter(object):
         the export.
 
         """
-        self.channelRegistry[self.ySelected].write_to_file = \
-          self.view.saveChannelCheckBox.isChecked()
+        try:
+            self.channelRegistry[self.ySelected].write_to_file = \
+              self.view.saveChannelCheckBox.isChecked()
+        except KeyError:
+            pass
 
     def saveAllChannels(self):
         """Select all channels to be exported.
@@ -460,6 +473,8 @@ class Presenter(object):
         """
         fname = self.fileName.split('.')[0] + '.h5'
 
+        meas_type = os.path.basename(fname).split('_')[1]
+
         baseDir = self.baseDir.replace('raw-data', 'data')
 
         if not os.path.exists(baseDir):
@@ -483,10 +498,15 @@ class Presenter(object):
 
         if ext in ['hdf5', 'he5', 'hdf']:
             self.exprtToHDF5(fname)
+            # self.channelRegistry.exprtToHDF5(fname)
         elif ext in ['h5']:
             self.exprtToPandasHDF5(fname)
+            # self.channelRegistry.exprtToPandasHDF5(fname)
         elif ext in ['csv', 'txt', 'dat']:
             self.exprtToCSV(fname)
+            # self.channelRegistry.exprtToCSV(fname)
+
+        self.addFileToGoodList(fname, meas_type)
 
     def exprtToPandasHDF5(self, fname):
         """Export the channels to HDF5 type file using pandas.
@@ -510,30 +530,45 @@ class Presenter(object):
             # Remove whitespace and minus signs from the channel name
             chan_name = chan.replace(" ", "")
 
-            chan_name = chan_name.replace("/", "/{}/".format(chan_device))
+            device_df_key = "/".join(chan_name.split("/")[:-1])
 
-            chan_device = "/".join(chan_name.split("/")[:2])
+            if device_df_key not in df_register.keys():
+                df_register[device_df_key] = pd.DataFrame(index=chan_obj
+                                                          .getTimeTrack())
 
             chan_name = chan_name.split("/")[-1]
 
-            # Get time
-
-            if chan_device not in df_register.keys():
-                df_register[chan_device] = pd.DataFrame()
-
             # Process 5.2.1 Write channel data
-            if self.channelRegistry[chan].write_to_file:
+            if chan_obj.write_to_file:
 
-                s = pd.Series(data=chan_obj.data,
-                              index=chan_obj.getTimeTrack())
+                # print('Adding channel {0} to data fram {1}'
+                #       .format(chan_name, device_df_key))
 
-                df_register[chan_device][chan_name] = s
+                df_register[device_df_key][chan_name] = chan_obj.data
 
         for k, v in df_register.items():
-            hdfStore[k] = v
+            # print('put({}, df)'.format(k))
+            hdfStore.put(k, v, format='table')
 
         # Process 5.3 Write data to file
         hdfStore.close()
+
+        # Write start and end times to file
+
+        f = h5py.File(fname, 'a')
+
+        try:
+            start_time = self.channelRegistry.file_start_time.astype('<i8')
+            end_time = self.channelRegistry.file_end_time.astype('<i8')
+
+            f.attrs.create('StartTime', start_time)
+            f.attrs.create('EndTime', end_time)
+        except AttributeError:
+            pass
+
+        f.flush()
+
+        f.close()
 
     def exprtToCSV(self, fname):
         """Export the channels to a csv file.
@@ -585,6 +620,48 @@ class Presenter(object):
         # Process 5.3 Write data to file
         hdf5FileObject.flush()
         hdf5FileObject.close()
+
+    def addFileToGoodList(self, fname, meas_type):
+        """
+
+        """
+        base_dir = os.path.dirname(fname)
+        original_file = os.path.basename(fname).split('.')[0]
+
+        try:
+            base_name = MEAS_TYPES[[k for k in MEAS_TYPES.keys() if k in
+                                    meas_type][0]]
+        except (KeyError, IndexError):
+            return
+
+        full_path = os.path.join(base_dir, base_name)
+
+        if os.path.exists(full_path):
+            df_files = pd.DataFrame.from_csv(full_path)
+        else:
+            df_files = pd.DataFrame({'file name': []})
+
+        new_df = pd.DataFrame()
+
+        if not np.any(df_files['file name'].str.contains(original_file)):
+            new_df['file name'] = df_files['file name'].append(
+                pd.Series(original_file, index=[len(df_files['file name'])]))
+
+            new_df.to_csv(full_path)
+
+    def addB(self):
+        """Add BField Data to ADWin."""
+
+        self.channelRegistry.addInterpolatedB()
+
+        self.populateSelectors()
+
+    def addTm(self):
+        """Add Tmode Data to ADWin."""
+
+        self.channelRegistry.addTemperatureMode()
+
+        self.populateSelectors()
 
 
 def main(argv=None):

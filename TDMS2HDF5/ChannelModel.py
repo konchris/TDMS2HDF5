@@ -23,8 +23,11 @@ from datetime import datetime, timedelta
 import pytz
 
 import numpy as np
+from scipy import stats
 
 from nptdms.tdms import TdmsFile
+
+from .Calculations import interpolate_bfield
 
 ADWIN_DICT = {"ISample": ["IAmp"], "VSample": ["VAmp"],
               "dISample": ["IAmp", "LISens"], "dVSample": ["VAmp", "LVSens"],
@@ -33,7 +36,41 @@ ADWIN_DICT = {"ISample": ["IAmp"], "VSample": ["VAmp"],
               "dV": [], "dR": [], "Res_RuO": ["p0", "p1", "r0"],
               "Temp_RuO": []}
 
+CHANNEL_DICT = {"T1K": "1k - Pot",
+                "THe3": "He3",
+                "TSorp": "Sorption",
+                "ITC503": "ITC 503",
+                "TSample_LK": "Temperature",
+                "TSample_AD": "Temp_RuO"
+                }
+
 LOCAL_TZ = pytz.timezone("Europe/Berlin")
+
+
+def replace_name(name):
+    """Replace a non-pythonic name with a pythonic one.
+
+    The goal is to be able to utilize pandas' method of accessing parts of a
+    dataframe as though it were an attribute of the dataframe. Some of the
+    device and channel names in the TDMS files are not conducive to being used
+    as a python identifier like this.
+
+    Parameters
+    ----------
+    name : str
+        The string to be checks for replacement.
+
+    Returns
+    -------
+    str
+        A string where the invalid python identifiers are replaced with valid
+        strings.
+
+    """
+    for replString, origString in CHANNEL_DICT.items():
+        if origString in name:
+            name = name.replace(origString, replString)
+    return name
 
 
 class Channel(object):
@@ -111,16 +148,17 @@ class Channel(object):
 
     def __init__(self, name, device='', meas_array=np.array([])):
         super(Channel, self).__init__()
-        self.attributes = {"Device": device,
+
+        self.attributes = {"Device": replace_name(device),
                            "TimeInterval": np.timedelta64(1, 'ms'),
                            "Length": len(meas_array),
                            "StartTime": np.datetime64(datetime.now())}
 
-        self.name = name
+        self.setName(name)
         self.data = meas_array
         self.time = np.array([])
         self.elapsed_time = np.array([])
-        self.parent = 'raw'
+        self.parent = None
         self.unit = 'n.a.'
         self.write_to_file = True
 
@@ -130,26 +168,17 @@ class Channel(object):
         """Recalculate the time track based on start time and time step"""
 
         dt = self.attributes['TimeInterval']
-        # print('The timedelta type is {0} and value is '.format(type(dt)), dt)
 
         length = self.attributes['Length']
-        # print(length)
 
         startTime = np.datetime64(self.attributes['StartTime'])
-        # print('The start time type is {0} and value is '
-        #       .format(type(startTime)),
-        #       startTime)
 
         stopTime = startTime + dt * length
-        # print(('The stop time type is {0} and value is '
-        #        .format(type(stopTime))), stopTime)
 
         absolute_time_track = np.arange(startTime, stopTime, dt)
-        # print(absolute_time_track[0], absolute_time_track[-1])
 
-        elapsed_time_track = ((absolute_time_track - startTime)
-                              .astype('timedelta64[ms]'))
-        # print('elapsed time:', elapsed_time_track.dtype)
+        elapsed_time_track = (absolute_time_track - startTime) / \
+          np.timedelta64(1, 'm')
 
         self.time = absolute_time_track
         self.elapsed_time = elapsed_time_track
@@ -191,7 +220,7 @@ class Channel(object):
         """
 
         if isinstance(newName, str):
-            self.name = newName
+            self.name = replace_name(newName)
         else:
             raise TypeError('Channel name can only be a string')
 
@@ -291,6 +320,12 @@ class Channel(object):
         """
         self.write_to_file = not self.write_to_file
 
+    def getDevice(self):
+        """Return the name of the device that recorded the channel.
+
+        """
+        return self.attributes['Device']
+
 
 class ChannelRegistry(dict):
     """Container for holding all of the channels
@@ -305,6 +340,10 @@ class ChannelRegistry(dict):
     ----------
     parents : list
         A list of the parent groups of all of the channels
+    file_start_time : numpy.datetime64
+        The start time recorded in the TDMS file's properties
+    file_end_time :  numpy.datetime64
+        The end time recorded in the TDMS file's properties
 
     Methods
     -------
@@ -332,12 +371,18 @@ class ChannelRegistry(dict):
         Add the processed channel 'dR' derived from 'dV' and 'dI'
     addTransportChannels():
         Add all of the transport channels
+    addTimeTracks():
+        Add the time tracks for each device.
 
     """
 
     def __init__(self):
         super(ChannelRegistry, self).__init__()
 
+        self.parents = []
+        self.file_start_time = None
+        self.file_end_time = None
+        self.devices = []
         self.parents = []
 
     def addChannel(self, newChan):
@@ -349,12 +394,28 @@ class ChannelRegistry(dict):
             The channel object to add to the channel registry
 
         """
+
         if isinstance(newChan, Channel):
             channelKey = "{parent}/{cName}".format(parent=newChan.getParent(),
                                                    cName=newChan.getName())
             self[channelKey] = newChan
         else:
             raise TypeError('Only an object of the Channel type can be added')
+
+        parent = newChan.getParent()
+
+        if parent not in self.parents:
+            self.parents.append(parent)
+
+        device = newChan.getName().split('/')[0]
+
+        if device not in self.devices:
+            self.devices.append(device)
+
+        time_name = '{r}/{d}/{t}'.format(r=parent, d=device, t='Time_m')
+
+        if time_name not in self.keys():
+            self.addTimeTracks(device, newChan.getElapsedTimeTrack())
 
     def loadFromFile(self, filename):
         """Load the data from a file
@@ -372,6 +433,15 @@ class ChannelRegistry(dict):
         else:
             print('The file {fn} does not exist!'.format(fn=filename))
             return
+
+        try:
+            self.file_start_time = np.datetime64(tdmsFileObject.object()
+                                                 .properties['StartTime'])
+            self.file_end_time = np.datetime64(tdmsFileObject.object()
+                                               .properties['EndTime'])
+
+        except KeyError:
+            pass
 
         # Generate channels one device at a time
         for device in tdmsFileObject.groups():
@@ -394,7 +464,7 @@ class ChannelRegistry(dict):
                 if 'wf_start_time' in chan.properties:
                     newChannel = Channel(channelName, device=device,
                                          meas_array=chan.data)
-
+                    newChannel.setParent('proc01')
 
                     startTime = np.datetime64(chan.property('wf_start_time')
                                               .astimezone(LOCAL_TZ))
@@ -409,10 +479,15 @@ class ChannelRegistry(dict):
                     if timeStep < 1:
                         timeStep = timeStep * 1000
 
+                    if device == 'ADWin' and timeStep != 100:
+                        # print('Old ADWin timeStep is {}'.format(timeStep))
+                        timeStep = 100
+
                     newChannel.setTimeStep(np.timedelta64(int(timeStep), 'ms'))
 
                     if device == "ADWin":
-                        for attributeName in ADWIN_DICT[channelName.lstrip('ADWin/')]:
+                        for attributeName in ADWIN_DICT[channelName
+                                                        .lstrip('ADWin/')]:
                             # If LISens or LVSens is not present a key error is
                             # thrown here!
                             # This is where to catch the missing data and allow
@@ -421,9 +496,9 @@ class ChannelRegistry(dict):
                             newChannel.attributes[attributeName] = \
                                 deviceProperties[attributeName]
                             # except KeyError as err:
-                                # print('1\tKey Error: {0} on channel {1}'
-                                #      .format(err, channelName))
-                                # pass
+                            #     print('1\tKey Error: {0} on channel {1}'
+                            #          .format(err, channelName))
+                            #     pass
 
                     self.addChannel(newChannel)
 
@@ -432,7 +507,7 @@ class ChannelRegistry(dict):
                     #      .format(err, channelName))
                     # pass
 
-        self.addTransportChannels()
+        # self.addTransportChannels()
 
     def add_V(self):
         """Add the processed channel 'V' derived from 'VSample'.
@@ -650,6 +725,73 @@ class ChannelRegistry(dict):
         self.add_dRSample()
         self.add_R()
         self.add_dR()
+
+    def addTimeTracks(self, device, time_track):
+        """Add the time track for a device
+
+        Parameters
+        ----------
+        device : str
+            The name of the device for which the time track will be added.
+        time_track : numpy.ndarray
+            The time data
+
+        """
+
+        if not isinstance(device, str):
+            raise TypeError('The device parameter must be a string.')
+
+        if not isinstance(time_track, np.ndarray):
+            raise TypeError('The time_track parameter must be a numpy array')
+
+        newChan = Channel('{}/Time_m'.format(device), device, time_track)
+        newChan.setParent('proc01')
+
+        channelKey = "{parent}/{cName}".format(parent=newChan.getParent(),
+                                                   cName=newChan.getName())
+
+        self.addChannel(newChan)
+
+    def addInterpolatedB(self):
+        """Add the interpolated BField data to ADWin device.
+
+        This assumes that the data from the IPS and ADWin devices are already
+        loaded.
+
+        """
+        for key in ['proc01/IPS/Magnetfield', 'proc01/ADWin/Time_m']:
+            if key not in self.keys():
+                print('{k} data is not present. Cannot add B.'.format(k=key))
+                return
+
+        magnetfield_array = self['proc01/IPS/Magnetfield'].data
+        time_array = self['proc01/ADWin/Time_m'].data
+        ips_time = self['proc01/IPS/Time_m'].data
+        b_ts = interpolate_bfield(magnetfield_array, ips_time, time_array)
+
+        newChan = Channel('ADWin/B', 'ADWin', b_ts)
+        newChan.setParent('proc01')
+
+        channelKey = "{parent}/{cName}".format(parent=newChan.getParent(),
+                                                   cName=newChan.getName())
+
+        self.addChannel(newChan)
+
+    def addTemperatureMode(self):
+        """Add the mode of the temperature during the measurement to ADWin device.
+
+        """
+
+        t_mode = stats.mode(self['proc01/ADWin/TSample_AD'].data)[0][0]
+        t_adjust = self['proc01/ADWin/TSample_AD'].data - t_mode
+
+        newChan = Channel('ADWin/Tm', 'ADWin', t_adjust)
+        newChan.setParent('proc01')
+
+        channelKey = "{parent}/{cName}".format(parent=newChan.getParent(),
+                                                   cName=newChan.getName())
+
+        self.addChannel(newChan)
 
 
 def main(argv=None):

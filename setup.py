@@ -65,10 +65,10 @@ setup(
                       'seaborn>=0.4.0',
                       'tables>=3.1.1',
                       'Sphinx>=1.2.3'
-                    ],
+                      ],
     cmdclass={'test': PyTest},
     entry_points={
-        'gui_scripts':[
+        'gui_scripts': [
             'tdms2hdf5 = TDMS2HDF5.tdms2hdf5:main'
             ]
         },
@@ -81,7 +81,7 @@ setup(
     include_package_data=True,
     platforms='any',
     test_suite='test.test_tdms2hdf5',
-    classifiers = [
+    classifiers=[
         'Development Status :: 3 - Alpha',
         'Environment :: Win32 (MS Windows)',
         'Environment :: X11 Applications :: Qt'
