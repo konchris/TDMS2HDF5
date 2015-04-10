@@ -28,9 +28,9 @@ import seaborn as sns
 from PyQt4.QtGui import (QApplication, QFileDialog, QKeySequence, QMessageBox)
 
 # Import our own modules
-from .view import (MyMainWindow, AXESLABELS)
-from .ChannelModel import (ChannelRegistry)
-from .view_model import (TreeNode, TreeModel, MyListModel)
+from TDMS2HDF5.view import (MyMainWindow, AXESLABELS)
+from TDMS2HDF5.ChannelModel import (ChannelRegistry)
+from TDMS2HDF5.view_model import (TreeNode, TreeModel, MyListModel)
 
 BASEDIR = '/home/chris/Documents/PhD/root/raw-data/'
 

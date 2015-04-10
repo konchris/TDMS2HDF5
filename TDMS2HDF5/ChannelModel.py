@@ -27,7 +27,7 @@ from scipy import stats
 
 from nptdms.tdms import TdmsFile
 
-from .Calculations import interpolate_bfield
+from TDMS2HDF5.Calculations import interpolate_bfield
 
 ADWIN_DICT = {"ISample": ["IAmp"], "VSample": ["VAmp"],
               "dISample": ["IAmp", "LISens"], "dVSample": ["VAmp", "LVSens"],

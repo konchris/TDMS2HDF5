@@ -27,8 +27,8 @@ from matplotlib.backends.backend_qt4agg import (NavigationToolbar2QT as
                                                 NavigationToolbar)
 import seaborn as sns
 
-from .Ui_MainWindow import Ui_MainWindow as MainWindow
-from .view_model import (TreeNode, TreeModel)
+from TDMS2HDF5.Ui_MainWindow import Ui_MainWindow as MainWindow
+from TDMS2HDF5.view_model import (TreeNode, TreeModel)
 
 AXESLABELS = {r"Resistance [$\Omega$]": ["dR", "dRSample", "R", "RSample",
                                          "Res_RuO"],
