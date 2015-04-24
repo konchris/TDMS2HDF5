@@ -38,6 +38,8 @@ MEAS_TYPES = {'BSweep': 'bsweep_files.csv',
               'BRamp': 'bramp_files.csv',
               'Condense': 'tsweep_files.csv',
               'Hold-Base': 'tsweep_files.csv',
+              'TSweep': 'tsweep_files.csv',
+              'TRamp': 'tsweep_files.csv',
               'IVSweep': 'ivsweep_files.csv'}
 
 
