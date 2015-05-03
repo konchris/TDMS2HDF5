@@ -27,7 +27,7 @@ from scipy import stats
 
 from nptdms.tdms import TdmsFile
 
-from TDMS2HDF5.Calculations import interpolate_bfield
+from TDMS2HDF5.Calculations import new_interpolate_bfield
 
 ADWIN_DICT = {"ISample": ["IAmp"], "VSample": ["VAmp"],
               "dISample": ["IAmp", "LISens"], "dVSample": ["VAmp", "LVSens"],
@@ -434,14 +434,14 @@ class ChannelRegistry(dict):
             print('The file {fn} does not exist!'.format(fn=filename))
             return
 
-        try:
-            self.file_start_time = np.datetime64(tdmsFileObject.object()
-                                                 .properties['StartTime'])
-            self.file_end_time = np.datetime64(tdmsFileObject.object()
-                                               .properties['EndTime'])
+        # try:
+        self.file_start_time = np.datetime64(tdmsFileObject.object()
+                                             .properties['StartTime'])
+        self.file_end_time = np.datetime64(tdmsFileObject.object()
+                                           .properties['EndTime'])
 
-        except KeyError:
-            pass
+        # except KeyError:
+        #     pass
 
         # Generate channels one device at a time
         for device in tdmsFileObject.groups():
@@ -466,10 +466,10 @@ class ChannelRegistry(dict):
                                          meas_array=chan.data)
                     newChannel.setParent('proc01')
 
-                    startTime = np.datetime64(chan.property('wf_start_time')
-                                              .astimezone(LOCAL_TZ))
+                    # startTime = np.datetime64(chan.property('wf_start_time')
+                    #                           .astimezone(LOCAL_TZ))
 
-                    newChannel.setStartTime(startTime)
+                    newChannel.setStartTime(self.file_start_time)
 
                     # Sometimes the wf_increment is saved in seconds. Convert
                     # to milliseconds for easier use with numpy timedeltas.
@@ -634,7 +634,7 @@ class ChannelRegistry(dict):
         # RSample depends on ISample and VSample. Try to get the values from
         # the raw data. Fall back to the processed data
         if (('raw/ISample' and 'raw/VSample') in self.keys() and
-            (('raw/RSample'and 'raw/R') not in self.keys())):
+           (('raw/RSample'and 'raw/R') not in self.keys())):
             chanISample = self['raw/ISample']
             chanVSample = self['raw/VSample']
         elif ('proc/ISample' and 'proc/VSample') in self.keys():
@@ -663,7 +663,7 @@ class ChannelRegistry(dict):
         # dRSample depends on dISample and dVSample. Try to use the raw data.
         # Fall back on the processed data.
         if (('raw/dISample' and 'raw/dVSample') in self.keys() and
-            (('raw/dRSample' and 'raw/dR') not in self.keys())):
+           (('raw/dRSample' and 'raw/dR') not in self.keys())):
             chandISample = self['raw/dISample']
             chandVSample = self['raw/dVSample']
         elif ('proc/dISample' and 'proc/dVSample') in self.keys():
@@ -692,7 +692,7 @@ class ChannelRegistry(dict):
         # dR depends on dI and dV. Try to get the raw data. Fall back on the
         # processed data.
         if (('raw/dI' and 'raw/dV') in self.keys() and
-            ('raw/dR' not in self.keys())):
+           ('raw/dR' not in self.keys())):
             chandI = self['raw/dI']
             chandV = self['raw/dV']
         elif ('proc/dI' and 'proc/dV') in self.keys():
@@ -746,6 +746,7 @@ class ChannelRegistry(dict):
 
         newChan = Channel('{}/Time_m'.format(device), device, time_track)
         newChan.setParent('proc01')
+        newChan.setStartTime(self.file_start_time)
 
         # channelKey = "{parent}/{cName}".format(parent=newChan.getParent(),
         #                                            cName=newChan.getName())
@@ -765,12 +766,13 @@ class ChannelRegistry(dict):
                 return
 
         magnetfield_array = self['proc01/IPS/Magnetfield'].data
-        time_array = self['proc01/ADWin/Time_m'].data
+        adwin_time = self['proc01/ADWin/Time_m'].data
         ips_time = self['proc01/IPS/Time_m'].data
-        b_ts = interpolate_bfield(magnetfield_array, ips_time, time_array)
+        b_ts = new_interpolate_bfield(magnetfield_array, ips_time, adwin_time)
 
         newChan = Channel('ADWin/B', 'ADWin', b_ts)
         newChan.setParent('proc01')
+        newChan.setStartTime(self.file_start_time)
 
         # channelKey = "{parent}/{cName}".format(parent=newChan.getParent(),
         #                                            cName=newChan.getName())
