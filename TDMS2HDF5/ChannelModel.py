@@ -508,6 +508,7 @@ class ChannelRegistry(dict):
                 #    pass
 
         # self.addTransportChannels()
+        self.removeADWinTempOffset()
 
     def add_V(self):
         """Add the processed channel 'V' derived from 'VSample'.
@@ -793,6 +794,12 @@ class ChannelRegistry(dict):
 
         self.addChannel(newChan)
 
+    def removeADWinTempOffset(self):
+        """Remove the small offset in ADWin's recorded temperature."""
+        ad_mean = self['proc01/ADWin/TSample_AD'].data.mean()
+        lk_mean = self['proc01/Lakeshore/TSample_LK'].data.mean()
+        offset = ad_mean - lk_mean
+        self['proc01/ADWin/TSample_AD'].data += offset
 
 def main(argv=None):
     """The main loop when running this module as a standalone script."""
