@@ -389,7 +389,7 @@ class Presenter(object):
                 self.view.axes.plot(xArray, yArray, label=self.ySelected,
                                     color=sns.xkcd_rgb['pale red'])
                 self.view.axes.get_yaxis().get_major_formatter()\
-                  .set_useOffset(False)
+                    .set_useOffset(False)
             except ValueError as err:
                 dialog = QMessageBox()
                 dialog.setText("Value Error: {0}".format(err))
@@ -442,7 +442,7 @@ class Presenter(object):
         """
         try:
             self.channelRegistry[self.ySelected].write_to_file = \
-              self.view.saveChannelCheckBox.isChecked()
+                self.view.saveChannelCheckBox.isChecked()
         except KeyError:
             pass
 
@@ -527,7 +527,7 @@ class Presenter(object):
         for chan in sorted(self.channelRegistry.keys()):
 
             chan_obj = self.channelRegistry[chan]
-            chan_device = chan_obj.attributes['Device']
+            # chan_device = chan_obj.attributes['Device']
 
             # Remove whitespace and minus signs from the channel name
             chan_name = chan.replace(" ", "")
