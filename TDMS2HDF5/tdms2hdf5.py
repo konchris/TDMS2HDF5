@@ -36,11 +36,16 @@ BASEDIR = '/home/chris/Documents/PhD/root/raw-data/'
 
 MEAS_TYPES = {'BSweep': 'bsweep_files.csv',
               'BRamp': 'bramp_files.csv',
+              'Cooldown': 'tsweep_files.csv',
               'Condense': 'tsweep_files.csv',
-              'Hold-Base': 'tsweep_files.csv',
+              'HoldBase': 'tsweep_files.csv',
               'TSweep': 'tsweep_files.csv',
               'TRamp': 'tsweep_files.csv',
-              'IVSweep': 'ivsweep_files.csv'}
+              'PID': 'tsweep_files.csv',
+              'Warm_up': 'tsweep_files.csv',
+              'IVSweep': 'ivsweep_files.csv',
+              'IRamp': 'ivsweep_files.csv',
+              'IVTesting': 'ivsweep_files.csv'}
 
 
 class Main(MyMainWindow):
@@ -624,7 +629,18 @@ class Presenter(object):
         hdf5FileObject.close()
 
     def addFileToGoodList(self, fname, meas_type):
-        """
+        """Add the file name to a list of usable measurement files
+
+        Add the currently displayed measurement file to a list of file names
+        based on the measurement type.
+        The valid measurement types are defined in the variable MEAS_TYPES.
+
+        Parameters
+        ----------
+        fname : str
+            The full name of the file
+        meas_type : str
+            The type of measurement
 
         """
         base_dir = os.path.dirname(fname)
@@ -634,6 +650,7 @@ class Presenter(object):
             base_name = MEAS_TYPES[[k for k in MEAS_TYPES.keys() if k in
                                     meas_type][0]]
         except (KeyError, IndexError):
+            print('A file for measurement type: {} was not found'.format())
             return
 
         full_path = os.path.join(base_dir, base_name)
