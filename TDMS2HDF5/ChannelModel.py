@@ -247,9 +247,9 @@ class Channel(object):
         if isinstance(newStartTime, np.datetime64):
             self.attributes['StartTime'] = newStartTime
             self._recalculateTimeArray()
-        else:
-            raise TypeError('The start time has to be of numpy.datetime64'
-                            'type')
+        # else:
+        #     raise TypeError('The start time has to be of numpy.datetime64'
+        #                     'type')
 
     def getStartTime(self):
         """Returns the channel's measurement starting time in numpy.datetime64
@@ -434,14 +434,15 @@ class ChannelRegistry(dict):
             print('The file {fn} does not exist!'.format(fn=filename))
             return
 
-        # try:
-        self.file_start_time = np.datetime64(tdmsFileObject.object()
-                                             .properties['StartTime'])
-        self.file_end_time = np.datetime64(tdmsFileObject.object()
-                                           .properties['EndTime'])
+        try:
+            self.file_start_time = np.datetime64(tdmsFileObject.object()
+                                                 .properties['StartTime'])
+            self.file_end_time = np.datetime64(tdmsFileObject.object()
+                                               .properties['EndTime'])
 
-        # except KeyError:
-        #     pass
+        except KeyError:
+            print('File {f} does not have StartTime or EndTime key.'
+                  .format(f=filename))
 
         # Generate channels one device at a time
         for device in tdmsFileObject.groups():
@@ -508,7 +509,11 @@ class ChannelRegistry(dict):
                 #    pass
 
         # self.addTransportChannels()
-        self.removeADWinTempOffset()
+        try:
+            self.removeADWinTempOffset()
+        except KeyError as err:
+            print('KeyError when trying to remove ADWin temp offset')
+            print(err)
 
     def add_V(self):
         """Add the processed channel 'V' derived from 'VSample'.
