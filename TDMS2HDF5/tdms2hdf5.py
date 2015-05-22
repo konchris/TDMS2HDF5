@@ -664,7 +664,7 @@ class Presenter(object):
 
         # if not np.any(df_files['file name'].str.contains(original_file)):
         if not np.any([f == original_file for f in df_files['file name']]):
-            print('Adding the file name ato the list')
+            print('Adding the file name to the list')
             new_df['file name'] = df_files['file name'].append(
                 pd.Series(original_file, index=[len(df_files['file name'])]))
 
