@@ -439,6 +439,8 @@ class ChannelRegistry(dict):
                                                  .properties['StartTime'])
             self.file_end_time = np.datetime64(tdmsFileObject.object()
                                                .properties['EndTime'])
+            print(self.file_start_time)
+            print(self.file_end_time)
 
         except KeyError:
             print('File {f} does not have StartTime or EndTime key.'
@@ -476,6 +478,11 @@ class ChannelRegistry(dict):
                     # to milliseconds for easier use with numpy timedeltas.
 
                     timeStep = chan.property("wf_increment")
+                    # if channelName == 'IPS/Magnetfield':
+                    #     #print(timeStep)
+                    #     new_dt = ((self.file_end_time - self.file_start_time)
+                    #       / len(chan.data)) / np.timedelta64(1, 's')
+                    #     timeStep = new_dt
 
                     if timeStep < 1:
                         timeStep = timeStep * 1000
