@@ -810,10 +810,15 @@ class ChannelRegistry(dict):
 
     def removeADWinTempOffset(self):
         """Remove the small offset in ADWin's recorded temperature."""
+        print("Remove the offset on ADWin's temperature reading")
         ad_mean = self['proc01/ADWin/TSample_AD'].data.mean()
         lk_mean = self['proc01/Lakeshore/TSample_LK'].data.mean()
         offset = ad_mean - lk_mean
-        self['proc01/ADWin/TSample_AD'].data += offset
+        print("The offset is: {0:.2f} - {1:.2f} = {2:.2f}".format(ad_mean*1000,
+                                                                  lk_mean*1000,
+                                                                  offset*1000))
+        self['proc01/ADWin/TSample_AD'].data -= offset
+
 
 def main(argv=None):
     """The main loop when running this module as a standalone script."""

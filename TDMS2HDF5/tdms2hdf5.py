@@ -620,8 +620,8 @@ class Presenter(object):
                     # This gets around that
                     if type(attr_value) is str:
                         attr_value = np.string_(attr_value)
-                    print(attr_name, attr_value.astype('float64') / 1e3,
-                          type(attr_value))
+                    # print(attr_name, attr_value.astype('float64') / 1e3,
+                    #       type(attr_value))
                     dset.attrs.create(attr_name, attr_value)
 
         # Process 5.3 Write data to file
@@ -664,7 +664,7 @@ class Presenter(object):
 
         # if not np.any(df_files['file name'].str.contains(original_file)):
         if not np.any([f == original_file for f in df_files['file name']]):
-            print('Adding the file name to the list')
+            # print('Adding the file name to the list')
             new_df['file name'] = df_files['file name'].append(
                 pd.Series(original_file, index=[len(df_files['file name'])]))
 
