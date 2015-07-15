@@ -248,7 +248,9 @@ class Presenter(object):
         """Open a data file to view file.
 
         """
-        formats = "TDMS files (*.tdms)"
+        formats = ("All files (*.tdms *.csv *.dat);;"
+                   "TDMS files (*.tdms);;"
+                   "CSV Files (*.csv *.dat)")
         fname = QFileDialog.getOpenFileName(self.view, "Open a TDMS File",
                                             self.baseDir, formats)
         if fname:

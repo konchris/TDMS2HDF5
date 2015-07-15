@@ -31,13 +31,18 @@ from TDMS2HDF5.Ui_MainWindow import Ui_MainWindow as MainWindow
 from TDMS2HDF5.view_model import (TreeNode, TreeModel)
 
 AXESLABELS = {r"Resistance [$\Omega$]": ["dR", "dRSample", "R", "RSample",
-                                         "Res_RuO"],
+                                         "Res_RuO", "RRef", "dRRef", "R1"],
               r"Current [$\mu$A]": ["I", "dI", "ISample", "dISample"],
-              "Voltage [mV]": ["V", "dV", "VSample", "dVSample", "VRuO"],
-              "Magnetfield [B]": ["zMagnet", "xMagnet", "Magnetfield", "B"],
+              "Voltage [mV]": ["V", "dV", "VSample", "dVSample", "VRuO",
+                               "VBias", "VRef", "dVRef", "dVRefx", "dVRefy",
+                               "dVSamplex", "dVSampley", "V1", "V1x", "V1y",
+                               "V_B", "V_Curr"],
+              "Magnetfield [B]": ["zMagnet", "xMagnet", "Magnetfield", "B",
+                                  "BzField", "BField"],
               "Temperature [K]": ["Temp_RuO", "Temperature", "1k - Pot",
                                   "He3", "Sorption", "1k-Pot", "T1K", "THe3",
-                                  "TSorp", "TSample_LK", "TSample_AD", "Tm"],
+                                  "TSorp", "TSample_LK", "TSample_AD", "Tm",
+                                  "TSample"],
               "Capacitance [nF]": ["Cap", "TCap"],
               "Time [m]": ["Time_m"],
               }

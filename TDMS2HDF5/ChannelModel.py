@@ -23,6 +23,8 @@ from datetime import datetime
 import pytz
 
 import numpy as np
+import pandas as pd
+import csv
 from scipy import stats
 
 from nptdms.tdms import TdmsFile
@@ -429,10 +431,95 @@ class ChannelRegistry(dict):
         self.clear()
 
         if os.path.exists(filename):
-            tdmsFileObject = TdmsFile(filename)
+            extention = filename.split('.')[-1]
+            if extention in ('tdms'):
+                self._loadFromTDMS(filename)
+            elif extention in ('csv', 'dat'):
+                self._loadFromCSV(filename)
         else:
             print('The file {fn} does not exist!'.format(fn=filename))
             return
+
+    def _loadFromCSV(self, filename):
+        """Load the data from a CSV file into the channel registry
+
+        Parameters
+        ----------
+        filename : str
+            The absolute path of the file to be loaded
+
+
+        """
+        start_time, col_names = self._get_csv_column_names(filename)
+
+        # col_names = ('measTime', 'RSample', 'TSorb', 'T1K', 'THe3')
+        # csvDataFrame = pd.read_csv(filename, header=None, comment='#',
+        #                            names=col_names)
+        # print(csvDataFrame.describe())
+        device = 'all'
+
+        for i, chan in enumerate(col_names):
+            chan_df = pd.read_csv(filename, header=None, comment='#',
+                                  names=[chan], usecols=[i])
+
+            data = chan_df[chan].values
+
+            chan_name = '/'.join([device, chan])
+
+            newChannel = Channel(chan_name, device=device, meas_array=data)
+
+            newChannel.setParent('proc01')
+
+            newChannel.setStartTime(start_time)
+
+            self.addChannel(newChannel)
+
+    def _get_csv_column_names(self, filename):
+        """Get the column names of a csv file.
+
+        Assuming that the last commented line, i.e. a line that starts with
+        '#', contains the header or names of the file, grab that list and
+        return it.
+
+        Parameters
+        ----------
+        filename : str
+            The absolute path of the file to be loaded
+
+        Returns
+        -------
+        datetimestamp : numpy.datetime64
+            The starting date and time stamp of the file
+        headerline : list
+            The list of strings to use as the column headers
+
+        """
+
+        with open(filename, 'r') as csvfile:
+            reader = csv.reader(csvfile, skipinitialspace=True)
+            dateline = next(reader, None)
+            line = dateline
+            while line[0][0] == '#':
+                headerline = line
+                line = next(reader, None)
+
+        datetimestamp = np.datetime64('T'.join(dateline[0].split(' ')[-2:]))
+
+        headerline[0] = headerline[0].lstrip('#').strip()
+
+        return (datetimestamp, headerline)
+
+    def _loadFromTDMS(self, filename):
+        """Load the data from a TDMS file into the channel registry
+
+        Parameters
+        ----------
+        filename : str
+            The absolute path of the file to be loaded
+
+        """
+
+        tdmsFileObject = TdmsFile(filename)
 
         try:
             self.file_start_time = np.datetime64(tdmsFileObject.object()
@@ -464,6 +551,7 @@ class ChannelRegistry(dict):
                 # Some channels are empty. This becomes apparent when trying
                 # load the properties.
                 # try:
+
                 if 'wf_start_time' in chan.properties:
                     newChannel = Channel(channelName, device=device,
                                          meas_array=chan.data)
