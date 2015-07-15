@@ -41,6 +41,7 @@ ADWIN_DICT = {"ISample": ["IAmp"], "VSample": ["VAmp"],
 CHANNEL_DICT = {"T1K": "1k - Pot",
                 "THe3": "He3",
                 "TSorp": "Sorption",
+                "TSorp": "TSorb",
                 "TSample_LK": "Temperature",
                 "TSample_AD": "Temp_RuO",
                 "Time_m": "measTime"
