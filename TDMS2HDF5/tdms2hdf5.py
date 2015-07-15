@@ -480,9 +480,14 @@ class Presenter(object):
         is called.
 
         """
-        fname = self.fileName.split('.')[0] + '.h5'
+        fname = '.'.join(self.fileName.split('.')[:-1]) + '.h5'
 
-        meas_type = os.path.basename(fname).split('_')[1]
+        try:
+            meas_type = os.path.basename(fname).split('_')[1]
+        except IndexError:
+            for m in MEAS_TYPES:
+                if m in os.path.basename(fname):
+                    meas_type = m
 
         baseDir = self.baseDir.replace('raw-data', 'data')
 
@@ -503,7 +508,7 @@ class Presenter(object):
         else:
             return
 
-        ext = fname.split('.')[1]
+        ext = fname.split('.')[-1]
 
         if ext in ['hdf5', 'he5', 'hdf']:
             self.exprtToHDF5(fname)
@@ -646,7 +651,7 @@ class Presenter(object):
 
         """
         base_dir = os.path.dirname(fname)
-        original_file = os.path.basename(fname).split('.')[0]
+        original_file = '.'.join(os.path.basename(fname).split('.')[:-1])
 
         try:
             base_name = MEAS_TYPES[[k for k in MEAS_TYPES.keys() if k in
