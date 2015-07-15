@@ -41,15 +41,17 @@ ADWIN_DICT = {"ISample": ["IAmp"], "VSample": ["VAmp"],
 CHANNEL_DICT = {"T1K": "1k - Pot",
                 "THe3": "He3",
                 "TSorp": "Sorption",
-                "ITC503": "ITC 503",
                 "TSample_LK": "Temperature",
-                "TSample_AD": "Temp_RuO"
+                "TSample_AD": "Temp_RuO",
+                "Time_m": "measTime"
                 }
+
+DEVICE_NAMES = {"ITC503": "ITC 503"}
 
 LOCAL_TZ = pytz.timezone("Europe/Berlin")
 
 
-def replace_name(name):
+def replace_name(name, dict=CHANNEL_DICT):
     """Replace a non-pythonic name with a pythonic one.
 
     The goal is to be able to utilize pandas' method of accessing parts of a
@@ -69,8 +71,8 @@ def replace_name(name):
         strings.
 
     """
-    for replString, origString in CHANNEL_DICT.items():
-        if origString in name:
+    for replString, origString in dict.items():
+        if (origString in name) and (replString not in name):
             name = name.replace(origString, replString)
     return name
 
@@ -151,7 +153,7 @@ class Channel(object):
     def __init__(self, name, device='', meas_array=np.array([])):
         super(Channel, self).__init__()
 
-        self.attributes = {"Device": replace_name(device),
+        self.attributes = {"Device": device,
                            "TimeInterval": np.timedelta64(1, 'ms'),
                            "Length": len(meas_array),
                            "StartTime": np.datetime64(datetime.now())}
@@ -220,7 +222,6 @@ class Channel(object):
             The name of the channel
 
         """
-
         if isinstance(newName, str):
             self.name = replace_name(newName)
         else:
@@ -466,6 +467,8 @@ class ChannelRegistry(dict):
 
             chan_name = '/'.join([device, chan])
 
+            device = replace_name(device, DEVICE_NAMES)
+
             newChannel = Channel(chan_name, device=device, meas_array=data)
 
             newChannel.setParent('proc01')
@@ -542,6 +545,7 @@ class ChannelRegistry(dict):
 
             # Get a list of the device's channels
             deviceChannels = tdmsFileObject.group_channels(device)
+            device = replace_name(device, DEVICE_NAMES)
 
             # Setup a channel object for each channel.
             # Sort the ADWin device properites to the proper channels if
@@ -551,6 +555,7 @@ class ChannelRegistry(dict):
                 # Some channels are empty. This becomes apparent when trying
                 # load the properties.
                 # try:
+                channelName = replace_name(channelName, DEVICE_NAMES)
 
                 if 'wf_start_time' in chan.properties:
                     newChannel = Channel(channelName, device=device,
