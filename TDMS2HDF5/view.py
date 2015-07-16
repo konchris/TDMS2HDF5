@@ -44,7 +44,8 @@ AXESLABELS = {r"Resistance [$\Omega$]": ["dR", "dRSample", "R", "RSample",
                                   "TSorp", "TSample_LK", "TSample_AD", "Tm",
                                   "TSample"],
               "Capacitance [nF]": ["Cap", "TCap"],
-              "Time [m]": ["Time_m", "measTime"],
+              "Time [m]": ["Time_m"],
+              "Time [s]": ["Time_s"]
               }
 
 sns.set_context("talk", font_scale=1.25, rc={'lines.linewidth': 3})
