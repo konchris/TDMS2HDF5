@@ -44,7 +44,7 @@ CHANNEL_DICT = {"T1K": "1k - Pot",
                 "TSorp": "TSorb",
                 "TSample_LK": "Temperature",
                 "TSample_AD": "Temp_RuO",
-                "Time_m": "measTime"
+                "Time_s": "measTime"
                 }
 
 DEVICE_NAMES = {"ITC503": "ITC 503"}
@@ -417,6 +417,12 @@ class ChannelRegistry(dict):
             self.devices.append(device)
 
         time_name = '{r}/{d}/{t}'.format(r=parent, d=device, t='Time_m')
+
+        for key in self.keys():
+            if '{r}/{d}/time'.format(r=parent, d=device) in key:
+                time_name = key
+            elif '{r}/{d}/Time'.format(r=parent, d=device) in key:
+                time_name = key
 
         if time_name not in self.keys():
             self.addTimeTracks(device, newChan.getElapsedTimeTrack())
