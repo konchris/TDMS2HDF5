@@ -31,7 +31,8 @@ from TDMS2HDF5.Ui_MainWindow import Ui_MainWindow as MainWindow
 from TDMS2HDF5.view_model import (TreeNode, TreeModel)
 
 AXESLABELS = {r"Resistance [$\Omega$]": ["dR", "dRSample", "R", "RSample",
-                                         "Res_RuO", "RRef", "dRRef", "R1"],
+                                         "Res_RuO", "RRef", "dRRef", "R1",
+                                         "RTSample"],
               r"Current [$\mu$A]": ["I", "dI", "ISample", "dISample"],
               "Voltage [mV]": ["V", "dV", "VSample", "dVSample", "VRuO",
                                "VBias", "VRef", "dVRef", "dVRefx", "dVRefy",
