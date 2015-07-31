@@ -465,7 +465,6 @@ class ChannelRegistry(dict):
             sr = None
         elif ext in ['csv']:
             start_time, col_names = self._get_csv_column_names(filename)
-            col_names.remove('Milliseconds')
             sr = 1
 
         # col_names = ('measTime', 'RSample', 'TSorb', 'T1K', 'THe3')
@@ -490,7 +489,12 @@ class ChannelRegistry(dict):
 
             newChannel.setStartTime(start_time)
 
-            self.addChannel(newChannel)
+            if 'Milli' not in chan:
+                self.addChannel(newChannel)
+
+        self.add_dISample()
+        self.add_dVSample()
+        self.add_dRSample()
 
     def _get_dat_column_names(self, filename):
         """Get the column names of a dat file.
@@ -574,8 +578,6 @@ class ChannelRegistry(dict):
                                                  .properties['StartTime'])
             self.file_end_time = np.datetime64(tdmsFileObject.object()
                                                .properties['EndTime'])
-            print(self.file_start_time)
-            print(self.file_end_time)
 
         except KeyError:
             print('File {f} does not have StartTime or EndTime key.'
@@ -813,10 +815,11 @@ class ChannelRegistry(dict):
         """
         # dRSample depends on dISample and dVSample. Try to use the raw data.
         # Fall back on the processed data.
-        if (('raw/dISample' and 'raw/dVSample') in self.keys() and
-           (('raw/dRSample' and 'raw/dR') not in self.keys())):
-            chandISample = self['raw/dISample']
-            chandVSample = self['raw/dVSample']
+        if (('proc01/all/dISample' and 'proc01/all/dVSample') in self.keys()
+            and
+           ('proc01/all/dRSample' not in self.keys())):
+            chandISample = self['proc01/all/dISample']
+            chandVSample = self['proc01/all/dVSample']
         elif ('proc/dISample' and 'proc/dVSample') in self.keys():
             chandISample = self['proc/dISample']
             chandVSample = self['proc/dVSample']
@@ -826,15 +829,79 @@ class ChannelRegistry(dict):
         # Calculate the data
         dRMeasArray = chandVSample.data/chandISample.data
         # Create the channel
-        chandRSample = Channel('dRSample', device='ADWin',
+        chandRSample = Channel('all/dRSample', device='all',
                                meas_array=dRMeasArray)
         # Set the parent
-        chandRSample.setParent('proc')
+        chandRSample.setParent('proc01')
         # Set the start time and time interval based on dISample's values
         chandRSample.setStartTime(chandISample.getStartTime())
         chandRSample.setTimeStep(chandISample.getTimeStep())
         # Add the channel to the registry
         self.addChannel(chandRSample)
+
+    def add_dISample(self):
+        """Add the processed channel 'dRSample' derived from 'dVSample' and
+        'dISample'
+
+        """
+        # dRSample depends on dISample and dVSample. Try to use the raw data.
+        # Fall back on the processed data.
+        print('Going to try to add dISample')
+
+        if (('proc01/all/dISamplex' and 'proc01/all/dISampley') in self.keys()
+            and
+           ('proc01/all/dISample' not in self.keys())):
+            chandISamplex = self['proc01/all/dISamplex']
+            chandISampley = self['proc01/all/dISampley']
+        else:
+            print('Failed')
+            return
+
+        # Calculate the data
+        dIMeasArray = np.sqrt(chandISamplex.data**2 + chandISampley.data**2)
+        # Create the channel
+        chandISample = Channel('all/dISample', device='all',
+                               meas_array=dIMeasArray)
+
+        # Set the parent
+        chandISample.setParent('proc01')
+        # Set the start time and time interval based on dISample's values
+        chandISample.setStartTime(chandISamplex.getStartTime())
+        chandISample.setTimeStep(chandISamplex.getTimeStep())
+        # Add the channel to the registry
+        self.addChannel(chandISample)
+
+    def add_dVSample(self):
+        """Add the processed channel 'dRSample' derived from 'dVSample' and
+        'dVSample'
+
+        """
+        # dRSample depends on dISample and dVSample. Try to use the raw data.
+        # Fall back on the processed data.
+        print('Going to try to add dVSample')
+
+        if (('proc01/all/dVSamplex' and 'proc01/all/dVSampley') in self.keys()
+            and
+           ('proc01/all/dVSample' not in self.keys())):
+            chandVSamplex = self['proc01/all/dVSamplex']
+            chandVSampley = self['proc01/all/dVSampley']
+        else:
+            print('Failed')
+            return
+
+        # Calculate the data
+        dVMeasArray = np.sqrt(chandVSamplex.data**2 + chandVSampley.data**2)
+        # Create the channel
+        chandVSample = Channel('all/dVSample', device='all',
+                               meas_array=dVMeasArray)
+
+        # Set the parent
+        chandVSample.setParent('proc01')
+        # Set the start time and time interval based on dVSample's values
+        chandVSample.setStartTime(chandVSamplex.getStartTime())
+        chandVSample.setTimeStep(chandVSamplex.getTimeStep())
+        # Add the channel to the registry
+        self.addChannel(chandVSample)
 
     def add_dR(self):
         """Add the processed channel 'dR' derived from 'dV' and 'dI'
