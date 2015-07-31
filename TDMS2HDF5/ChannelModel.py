@@ -458,7 +458,15 @@ class ChannelRegistry(dict):
 
 
         """
-        start_time, col_names = self._get_csv_column_names(filename)
+        ext = filename.split('.')[-1]
+
+        if ext in ['dat']:
+            start_time, col_names = self._get_dat_column_names(filename)
+            sr = None
+        elif ext in ['csv']:
+            start_time, col_names = self._get_csv_column_names(filename)
+            col_names.remove('Milliseconds')
+            sr = 1
 
         # col_names = ('measTime', 'RSample', 'TSorb', 'T1K', 'THe3')
         # csvDataFrame = pd.read_csv(filename, header=None, comment='#',
@@ -468,7 +476,7 @@ class ChannelRegistry(dict):
 
         for i, chan in enumerate(col_names):
             chan_df = pd.read_csv(filename, header=None, comment='#',
-                                  names=[chan], usecols=[i])
+                                  names=[chan], usecols=[i], skiprows=sr)
 
             data = chan_df[chan].values
 
@@ -484,8 +492,8 @@ class ChannelRegistry(dict):
 
             self.addChannel(newChannel)
 
-    def _get_csv_column_names(self, filename):
-        """Get the column names of a csv file.
+    def _get_dat_column_names(self, filename):
+        """Get the column names of a dat file.
 
         Assuming that the last commented line, i.e. a line that starts with
         '#', contains the header or names of the file, grab that list and
@@ -516,6 +524,36 @@ class ChannelRegistry(dict):
         datetimestamp = np.datetime64('T'.join(dateline[0].split(' ')[-2:]))
 
         headerline[0] = headerline[0].lstrip('#').strip()
+
+        return (datetimestamp, headerline)
+
+    def _get_csv_column_names(self, filename):
+        """Get the column names of a csv file produced by ADWin
+
+        Assuming that the last commented line, i.e. a line that starts with
+        '#', contains the header or names of the file, grab that list and
+        return it.
+
+        Parameters
+        ----------
+        filename : str
+            The absolute path of the file to be loaded
+
+        Returns
+        -------
+        headerline : list
+            The list of strings to use as the column headers
+
+        """
+
+        with open(filename, 'r') as csvfile:
+            reader = csv.reader(csvfile, skipinitialspace=True)
+            headerline = next(reader, None)
+
+        headerline[0] = headerline[0].lstrip('#').strip()
+
+        datetimestamp = np.datetime64(datetime.fromtimestamp(
+            os.path.getmtime(filename)).isoformat())
 
         return (datetimestamp, headerline)
 
