@@ -45,7 +45,8 @@ MEAS_TYPES = {'BSweep': 'bsweep_files.csv',
               'Warm_up': 'tsweep_files.csv',
               'IVSweep': 'ivsweep_files.csv',
               'IRamp': 'ivsweep_files.csv',
-              'IVTesting': 'ivsweep_files.csv'}
+              'IVTesting': 'ivsweep_files.csv',
+              'BzSweep': 'bsweep_files.csv'}
 
 
 class Main(MyMainWindow):
