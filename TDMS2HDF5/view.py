@@ -32,22 +32,24 @@ from TDMS2HDF5.view_model import (TreeNode, TreeModel)
 
 AXESLABELS = {r"Resistance [$\Omega$]": ["dR", "dRSample", "R", "RSample",
                                          "Res_RuO", "RRef", "dRRef", "R1",
-                                         "RTSample"],
+                                         "RTSample", "R2"],
               r"Current [$\mu$A]": ["I", "dI", "ISample", "dISample",
                                     "dISamplex", "dISampley"],
               "Voltage [mV]": ["V", "dV", "VSample", "dVSample", "VRuO",
                                "VBias", "VRef", "dVRef", "dVRefx", "dVRefy",
                                "dVSamplex", "dVSampley", "V1", "V1x", "V1y",
-                               "V_B", "V_Curr", "U1", "U6", "UBias"],
+                               "V_B", "V_Curr", "U1", "U6", "UBias", "U2",
+                               "U3"],
               "Magnetfield [B]": ["zMagnet", "xMagnet", "Magnetfield", "B",
                                   "BzField", "BField"],
               "Temperature [K]": ["Temp_RuO", "Temperature", "1k - Pot",
                                   "He3", "Sorption", "1k-Pot", "T1K", "THe3",
                                   "TSorp", "TSample_LK", "TSample_AD", "Tm",
-                                  "TSample"],
+                                  "TSample", "TRuO"],
               "Capacitance [nF]": ["Cap", "TCap"],
               "Time [m]": ["Time_m"],
-              "Time [s]": ["Time_s"]
+              "Time [s]": ["Time_s"],
+              "Unknown [a.u.]": ["not"]
               }
 
 sns.set_context("talk", font_scale=1.25, rc={'lines.linewidth': 3})
