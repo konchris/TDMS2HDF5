@@ -655,7 +655,7 @@ class ChannelRegistry(dict):
                 #          .format(err, channelName))
                 #    pass
 
-        # self.addTransportChannels()
+        self.addTransportChannels()
         try:
             self.removeADWinTempOffset()
         except KeyError as err:
@@ -666,8 +666,8 @@ class ChannelRegistry(dict):
         """Add the processed channel 'V' derived from 'VSample'.
 
         """
-        if 'raw/VSample' in self.keys() and 'raw/V' not in self.keys():
-            chanVSample = self['raw/VSample']
+        if 'proc01/VSample' in self.keys() and 'proc01/V' not in self.keys():
+            chanVSample = self['proc01/VSample']
         else:
             return
 
@@ -688,9 +688,9 @@ class ChannelRegistry(dict):
 
         """
         # dV depends on dVSample and LVSens
-        if (('raw/dVSample' in self.keys() and 'LVSens' in self['raw/dVSample']
-             .attributes.keys()) and ('raw/dV' not in self.keys())):
-            chandVSample = self['raw/dVSample']
+        if (('proc01/dVSample' in self.keys() and 'LVSens' in self['proc01/dVSample']
+             .attributes.keys()) and ('proc01/dV' not in self.keys())):
+            chandVSample = self['proc01/dVSample']
         else:
             return
 
@@ -711,8 +711,8 @@ class ChannelRegistry(dict):
         """Add the processed channel 'I' derived from 'ISample'
 
         """
-        if 'raw/ISample' in self.keys() and 'raw/I' not in self.keys():
-            chanISample = self['raw/ISample']
+        if 'proc01/ISample' in self.keys() and 'proc01/I' not in self.keys():
+            chanISample = self['proc01/ISample']
         else:
             return
 
@@ -733,9 +733,9 @@ class ChannelRegistry(dict):
 
         """
         # dI depends on dISample and LISens
-        if (('raw/dISample' in self.keys() and 'LISens' in self['raw/dISample']
-             .attributes.keys()) and ('raw/dI' not in self.keys())):
-            chandISample = self['raw/dISample']
+        if (('proc01/dISample' in self.keys() and 'LISens' in self['proc01/dISample']
+             .attributes.keys()) and ('proc01/dI' not in self.keys())):
+            chandISample = self['proc01/dISample']
         else:
             return
 
@@ -756,11 +756,11 @@ class ChannelRegistry(dict):
         """Add the processed channel 'R' derived from 'V' and 'I'
 
         """
-        # R depends on V and I try and get the raw (calculated by ADWin) data
+        # R depends on V and I try and get the proc01 (calculated by ADWin) data
         # and fall back on the processed data
-        if ('raw/I' and 'raw/V') in self.keys() and 'raw/R' not in self.keys():
-            chanI = self['raw/I']
-            chanV = self['raw/V']
+        if ('proc01/I' and 'proc01/V') in self.keys() and 'proc01/R' not in self.keys():
+            chanI = self['proc01/I']
+            chanV = self['proc01/V']
         elif ('proc/I' and 'proc/V') in self.keys():
             chanI = self['proc/I']
             chanV = self['proc/V']
@@ -785,11 +785,11 @@ class ChannelRegistry(dict):
 
         """
         # RSample depends on ISample and VSample. Try to get the values from
-        # the raw data. Fall back to the processed data
-        if (('raw/ISample' and 'raw/VSample') in self.keys() and
-           (('raw/RSample'and 'raw/R') not in self.keys())):
-            chanISample = self['raw/ISample']
-            chanVSample = self['raw/VSample']
+        # the proc01 data. Fall back to the processed data
+        if (('proc01/ADWin/ISample' and 'proc01/ADWin/VSample') in self.keys() and
+           (('proc01/ADWin/RSample'and 'proc01/ADWin/R') not in self.keys())):
+            chanISample = self['proc01/ADWin/ISample']
+            chanVSample = self['proc01/ADWin/VSample']
         elif ('proc/ISample' and 'proc/VSample') in self.keys():
             chanISample = self['proc/ISample']
             chanVSample = self['proc/VSample']
@@ -799,9 +799,9 @@ class ChannelRegistry(dict):
         # Calculate the data
         rMeasArray = chanVSample.data/chanISample.data
         # Create the channel
-        chanRSample = Channel('RSample', device='ADWin', meas_array=rMeasArray)
+        chanRSample = Channel('ADWin/RSample', device='ADWin', meas_array=rMeasArray)
         # Set the parent
-        chanRSample.setParent('proc')
+        chanRSample.setParent('proc01')
         # Set the start time and time interval based on ISample's values
         chanRSample.setStartTime(chanISample.getStartTime())
         chanRSample.setTimeStep(chanISample.getTimeStep())
@@ -815,21 +815,23 @@ class ChannelRegistry(dict):
         """
         # dRSample depends on dISample and dVSample. Try to use the raw data.
         # Fall back on the processed data.
-        if (('proc01/all/dISample' and 'proc01/all/dVSample') in self.keys()
-            and
-           ('proc01/all/dRSample' not in self.keys())):
-            chandISample = self['proc01/all/dISample']
-            chandVSample = self['proc01/all/dVSample']
+        if (('proc01/ADWin/dISample' in self.keys()) and
+            ('proc01/ADWin/dVSample' in self.keys()) and
+            ('proc01/ADWin/dRSample' not in self.keys())):
+            print('Condition 01 met')
+            chandISample = self['proc01/ADWin/dISample']
+            chandVSample = self['proc01/ADWin/dVSample']
         elif ('proc/dISample' and 'proc/dVSample') in self.keys():
             chandISample = self['proc/dISample']
             chandVSample = self['proc/dVSample']
         else:
+            print('No conditions met')
             return
 
         # Calculate the data
         dRMeasArray = chandVSample.data/chandISample.data
         # Create the channel
-        chandRSample = Channel('all/dRSample', device='all',
+        chandRSample = Channel('ADWin/dRSample', device='ADWin',
                                meas_array=dRMeasArray)
         # Set the parent
         chandRSample.setParent('proc01')
@@ -876,7 +878,7 @@ class ChannelRegistry(dict):
         'dVSample'
 
         """
-        # dRSample depends on dISample and dVSample. Try to use the raw data.
+        # dRSample depends on dISample and dVSample. Try to use the proc01 data.
         # Fall back on the processed data.
         print('Going to try to add dVSample')
 
@@ -907,12 +909,12 @@ class ChannelRegistry(dict):
         """Add the processed channel 'dR' derived from 'dV' and 'dI'
 
         """
-        # dR depends on dI and dV. Try to get the raw data. Fall back on the
+        # dR depends on dI and dV. Try to get the proc01 data. Fall back on the
         # processed data.
-        if (('raw/dI' and 'raw/dV') in self.keys() and
-           ('raw/dR' not in self.keys())):
-            chandI = self['raw/dI']
-            chandV = self['raw/dV']
+        if (('proc01/dI' and 'proc01/dV') in self.keys() and
+           ('proc01/dR' not in self.keys())):
+            chandI = self['proc01/dI']
+            chandV = self['proc01/dV']
         elif ('proc/dI' and 'proc/dV') in self.keys():
             chandI = self['proc/dI']
             chandV = self['proc/dV']
@@ -1016,13 +1018,29 @@ class ChannelRegistry(dict):
     def removeADWinTempOffset(self):
         """Remove the small offset in ADWin's recorded temperature."""
         print("Remove the offset on ADWin's temperature reading")
-        ad_mean = self['proc01/ADWin/TSample_AD'].data.mean()
-        lk_mean = self['proc01/Lakeshore/TSample_LK'].data.mean()
+
+        if 'proc01/ADWin/TSample_AD' in self.keys():
+            TADkey = 'proc01/ADWin/TSample_AD'
+        elif 'proc01/ADWin/TSample' in self.keys():
+            TADkey = 'proc01/ADWin/TSample'
+        else:
+            TADkey = None
+
+        if 'proc01/Lakeshore/TSample_LK' in self.keys():
+            TLKkey = 'proc01/Lakeshore/TSample_LK'
+        elif 'proc01/Lakeshore/Temperature' in self.keys():
+            TLKkey = 'proc01/Lakeshore/Temperature'
+        else:
+            TLKkey = None
+
+        ad_mean = self[TADkey].data.mean()
+        lk_mean = self[TLKkey].data.mean()
+
         offset = ad_mean - lk_mean
         print("The offset is: {0:.2f} - {1:.2f} = {2:.2f}".format(ad_mean*1000,
                                                                   lk_mean*1000,
                                                                   offset*1000))
-        self['proc01/ADWin/TSample_AD'].data -= offset
+        self[TADkey].data -= offset
 
 
 def main(argv=None):
