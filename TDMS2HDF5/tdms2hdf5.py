@@ -16,6 +16,7 @@ __status__ = "Development"
 
 import os
 import sys
+import argparse
 from datetime import datetime
 
 # Import thrid-party modules
@@ -258,8 +259,30 @@ class Presenter(object):
         formats = ("All files (*.tdms *.csv *.dat);;"
                    "TDMS files (*.tdms);;"
                    "CSV Files (*.csv *.dat)")
+
         fname = QFileDialog.getOpenFileName(self.view, "Open a TDMS File",
                                             self.baseDir, formats)
+
+        if fname:
+            self.channelRegistry.loadFromFile(fname)
+
+            self.baseDir = os.path.dirname(fname)
+
+            self.fileName = fname
+
+            windowTitle = self.view.windowTitle().split(':')[0]
+            baseName = os.path.basename(self.fileName)
+            self.view.setWindowTitle('{0}: {1}'.format(windowTitle, baseName))
+
+            self.populateSelectors()
+            self.plotSelection()
+        else:
+            return
+
+    def loadFromCLI(self, fname):
+        """Open a data file whose name was passed as an argument.
+
+        """
         if fname:
             self.channelRegistry.loadFromFile(fname)
 
@@ -705,8 +728,11 @@ class Presenter(object):
 def main(argv=None):
     """The main function."""
 
-    if argv is None:
-        argv = sys.argv
+    prog_desc = "TDMS File Viewer"
+    parser = argparse.ArgumentParser(description=prog_desc)
+    parser.add_argument('--file', '-f', help='The file to open')
+
+    args = parser.parse_args()
 
     app = QApplication(argv)
     app.setOrganizationName("TDMS2HDF5")
@@ -717,6 +743,10 @@ def main(argv=None):
     presenter.setView(Main())
     presenter.setChanReg(ChannelRegistry())
     presenter.view.show()
+
+    if args.file is not None:
+        print(args.file)
+        presenter.loadFromCLI(args.file)
 
     sys.exit(app.exec_())
 
