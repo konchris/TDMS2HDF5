@@ -113,7 +113,7 @@ class Presenter(object):
     generateAxisLabel(chan_name : str)
         Return the axes label for the channel.
     toggleWriteToFile()
-        Toggle the currently plotted y channel's write to file property.
+       Toggle the currently plotted y channel's write to file property.
     saveAllChannels()
         Select all channels to be exported.
     saveNoChannels()
@@ -483,12 +483,6 @@ class Presenter(object):
         """
         fname = '.'.join(self.fileName.split('.')[:-1]) + '.h5'
 
-        try:
-            meas_type = os.path.basename(fname).split('_')[1]
-        except IndexError:
-            for m in MEAS_TYPES:
-                if m in os.path.basename(fname):
-                    meas_type = m
 
         baseDir = self.baseDir.replace('raw-data', 'data')
 
@@ -508,6 +502,8 @@ class Presenter(object):
             fname = dialog.selectedFiles()[0]
         else:
             return
+
+        meas_type = os.path.basename(fname).split('_')[1]
 
         ext = fname.split('.')[-1]
 
