@@ -655,7 +655,7 @@ class ChannelRegistry(dict):
                 #          .format(err, channelName))
                 #    pass
 
-        self.addTransportChannels()
+        # self.addTransportChannels()
         try:
             self.removeADWinTempOffset()
         except KeyError as err:

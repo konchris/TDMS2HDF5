@@ -224,7 +224,12 @@ class Presenter(object):
                                                        "ADWin [&T]",
                                                        self.addTm,
                                                        "Ctrl+T",
-                                                       tip=r'Add $T_{mode}$')
+                                                       tip=r"Add $T_{mode}$")
+        channelAddResistanceAction = self.view.createAction("Add Resistances "
+                                                            "to ADWin [&A]",
+                                                            self.addRes,
+                                                            "Ctrl+A",
+                                                            tip="Add R and dR")
 
         # Add the 'File' menu to the menu bar
         self.fileMenu = self.view.menuBar().addMenu("&File")
@@ -235,7 +240,8 @@ class Presenter(object):
         # Add the 'Channels'
         self.channelAddMenu = self.view.menuBar().addMenu("&Add Channel")
         self.view.addActions(self.channelAddMenu, (channelAddBAction,
-                                                   channelAddTmodeAction))
+                                                   channelAddTmodeAction,
+                                                   channelAddResistanceAction))
 
         # Connections
         self.view.ySelectorView.clicked.connect(self.newYSelection)
@@ -685,6 +691,13 @@ class Presenter(object):
         """Add Tmode Data to ADWin."""
 
         self.channelRegistry.addTemperatureMode()
+
+        self.populateSelectors()
+
+    def addRes(self):
+        """Add resistance and supporting channels to ADWin."""
+
+        self.channelRegistry.addTransportChannels()
 
         self.populateSelectors()
 
