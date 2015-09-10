@@ -222,15 +222,19 @@ class Presenter(object):
                                                    self.addB,
                                                    "Ctrl+B", tip='Add B')
         channelAddTmodeAction = self.view.createAction(r"Add $T_{mode}$ to "
-                                                       "ADWin [&T]",
+                                                       "ADWin",
                                                        self.addTm,
-                                                       "Ctrl+T",
                                                        tip=r"Add $T_{mode}$")
         channelAddResistanceAction = self.view.createAction("Add Resistances "
                                                             "to ADWin [&A]",
                                                             self.addRes,
                                                             "Ctrl+A",
                                                             tip="Add R and dR")
+        channelAddTSample_AD = self.view.createAction("Add TSample_AD "
+                                                      "to ADWin [&T]",
+                                                      self.addTSample_AD,
+                                                      "Ctrl+T",
+                                                      tip="Add TSample_AD")
 
         # Add the 'File' menu to the menu bar
         self.fileMenu = self.view.menuBar().addMenu("&File")
@@ -242,7 +246,8 @@ class Presenter(object):
         self.channelAddMenu = self.view.menuBar().addMenu("&Add Channel")
         self.view.addActions(self.channelAddMenu, (channelAddBAction,
                                                    channelAddTmodeAction,
-                                                   channelAddResistanceAction))
+                                                   channelAddResistanceAction,
+                                                   channelAddTSample_AD))
 
         # Connections
         self.view.ySelectorView.clicked.connect(self.newYSelection)
@@ -723,6 +728,13 @@ class Presenter(object):
         """Add resistance and supporting channels to ADWin."""
 
         self.channelRegistry.addTransportChannels()
+
+        self.populateSelectors()
+
+    def addTSample_AD(self):
+        """Add TSample_AD and supporting channels to ADWin."""
+
+        self.channelRegistry.add_TSample_AD()
 
         self.populateSelectors()
 

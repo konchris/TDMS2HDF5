@@ -936,6 +936,44 @@ class ChannelRegistry(dict):
         # Add the channel to the registry
         self.addChannel(chandR)
 
+    def add_TSample_AD(self):
+        """Convert Lakeshore output voltage to Temperature
+
+        """
+
+        if 'proc01/ADWin/TRuO' in self.keys():
+            VRuO = self['proc01/ADWin/TRuO']
+        elif 'proc01/ADWin/VRuO' in self.keys():
+            VRuO = self['proc01/ADWin/VRuO']
+        else:
+            return
+
+        vrslope = (6.66E3 - 1.25E3) / 20
+        vroffset = (6.66E3 + 1.25E3) / 2
+
+        p0 = 8.584
+        p1 = -1.156
+        r0 = 1259.9
+
+        # Calculate the resistance
+        Res_RuO_data = VRuO.data * vrslope + vroffset
+        lnT = p0 + (p1 * np.log(Res_RuO_data - r0))
+        TSample_AD_data = np.exp(lnT)
+
+        Res_RuO = Channel('ADWin/Res_RuO', device='ADWin',
+                          meas_array=Res_RuO_data)
+        Res_RuO.setParent('proc01')
+        Res_RuO.setStartTime(VRuO.getStartTime())
+        Res_RuO.setTimeStep(VRuO.getTimeStep())
+        self.addChannel(Res_RuO)
+
+        TSample_AD = Channel('ADWin/TSample_AD', device='ADWin',
+                             meas_array=TSample_AD_data)
+        TSample_AD.setParent('proc01')
+        TSample_AD.setStartTime(VRuO.getStartTime())
+        TSample_AD.setTimeStep(VRuO.getTimeStep())
+        self.addChannel(TSample_AD)
+
     def addTransportChannels(self):
         """Add all of the transport channels
 
