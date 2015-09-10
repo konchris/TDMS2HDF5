@@ -656,6 +656,9 @@ class ChannelRegistry(dict):
                 #    pass
 
         # self.addTransportChannels()
+        self.add_RSample()
+        self.add_dRSample()
+
         try:
             self.removeADWinTempOffset()
         except KeyError as err:
@@ -818,14 +821,14 @@ class ChannelRegistry(dict):
         if (('proc01/ADWin/dISample' in self.keys()) and
             ('proc01/ADWin/dVSample' in self.keys()) and
             ('proc01/ADWin/dRSample' not in self.keys())):
-            print('Condition 01 met')
+            # print('Condition 01 met')
             chandISample = self['proc01/ADWin/dISample']
             chandVSample = self['proc01/ADWin/dVSample']
         elif ('proc/dISample' and 'proc/dVSample') in self.keys():
             chandISample = self['proc/dISample']
             chandVSample = self['proc/dVSample']
         else:
-            print('No conditions met')
+            print('No conditions met to create dRSample')
             return
 
         # Calculate the data
