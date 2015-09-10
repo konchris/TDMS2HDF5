@@ -457,6 +457,8 @@ class Presenter(object):
 
         chan_name = chan_name.split('/')[-1]
 
+        label = 'None'
+
         # Generate the axis labels based on the selected channels
         # Cycle through the labes in the AXESLABELS dictionary
         for axlbl in AXESLABELS.keys():
