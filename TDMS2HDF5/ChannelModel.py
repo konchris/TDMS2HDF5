@@ -408,7 +408,7 @@ class ChannelRegistry(dict):
         self.file_start_time = None
         self.file_end_time = None
         self.devices = []
-        self.parents = []
+        self.mods = []
 
     def addChannel(self, newChan):
         """Add a new, unique channel to the registry
@@ -706,6 +706,7 @@ class ChannelRegistry(dict):
         chanV.setTimeStep(chanVSample.getTimeStep())
         # Add the channel to the registry
         self.addChannel(chanV)
+        self.mods.append('Adding amplifier-adjusted absolute sample voltage')
 
     def add_dV(self):
         """Add the processed channel 'dV' derived from 'dVSample'
@@ -730,6 +731,8 @@ class ChannelRegistry(dict):
         chandV.setTimeStep(chandVSample.getTimeStep())
         # Add the channel to the registry
         self.addChannel(chandV)
+        self.mods.append('Adding amplifier-adjusted differential'
+                         ' sample voltage')
 
     def add_I(self):
         """Add the processed channel 'I' derived from 'ISample'
@@ -751,6 +754,8 @@ class ChannelRegistry(dict):
         chanI.setTimeStep(chanISample.getTimeStep())
         # Add the channel to the registry
         self.addChannel(chanI)
+        self.mods.append('Adding amplifier-adjusted absolute'
+                         ' sample current')
 
     def add_dI(self):
         """Add the processed channel 'dI' derived from 'dISample'
@@ -805,6 +810,8 @@ class ChannelRegistry(dict):
         chanR.setTimeStep(chanI.getTimeStep())
         # Add the channel to the registry
         self.addChannel(chanR)
+        self.mods.append('Adding amplifier-adjusted absolute'
+                         ' sample resistance')
 
     def add_RSample(self):
         """Add the processed channel 'RSample' derived from 'VSample' and
@@ -836,6 +843,7 @@ class ChannelRegistry(dict):
         chanRSample.setTimeStep(chanISample.getTimeStep())
         # Add the channel to the registry
         self.addChannel(chanRSample)
+        self.mods.append('Adding absolute sample resistance')
 
     def add_dRSample(self):
         """Add the processed channel 'dRSample' derived from 'dVSample' and
@@ -869,6 +877,7 @@ class ChannelRegistry(dict):
         chandRSample.setTimeStep(chandISample.getTimeStep())
         # Add the channel to the registry
         self.addChannel(chandRSample)
+        self.mods.append('Adding differential sample resistance')
 
     def add_dISample(self):
         """Add the processed channel 'dRSample' derived from 'dVSample' and
@@ -901,6 +910,7 @@ class ChannelRegistry(dict):
         chandISample.setTimeStep(chandISamplex.getTimeStep())
         # Add the channel to the registry
         self.addChannel(chandISample)
+        self.mods.append('Adding differential sample current')
 
     def add_dVSample(self):
         """Add the processed channel 'dRSample' derived from 'dVSample' and
@@ -933,6 +943,7 @@ class ChannelRegistry(dict):
         chandVSample.setTimeStep(chandVSamplex.getTimeStep())
         # Add the channel to the registry
         self.addChannel(chandVSample)
+        self.mods.append('Adding differential sample voltage')
 
     def add_dR(self):
         """Add the processed channel 'dR' derived from 'dV' and 'dI'
@@ -961,6 +972,8 @@ class ChannelRegistry(dict):
         chandR.setTimeStep(chandI.getTimeStep())
         # Add the channel to the registry
         self.addChannel(chandR)
+        self.mods.append('Adding amplifier-adjusted differential sample'
+                         ' resistance')
 
     def add_TSample_AD(self):
         """Convert Lakeshore output voltage to Temperature
@@ -999,6 +1012,8 @@ class ChannelRegistry(dict):
         TSample_AD.setStartTime(VRuO.getStartTime())
         TSample_AD.setTimeStep(VRuO.getTimeStep())
         self.addChannel(TSample_AD)
+        self.mods.append('Adding amplifier-adjusted differential sample'
+                         ' resistance')
 
     def addTransportChannels(self):
         """Add all of the transport channels
@@ -1065,6 +1080,8 @@ class ChannelRegistry(dict):
         #                                            cName=newChan.getName())
 
         self.addChannel(newChan)
+        self.mods.append('Adding magnetfield channel to ADWin interpolated'
+                         ' IPS data')
 
     def addTemperatureMode(self):
         """Add the mode of the temperature during the measurement to ADWin device.
@@ -1108,6 +1125,9 @@ class ChannelRegistry(dict):
                                                                   lk_mean*1000,
                                                                   offset*1000))
         self[TADkey].data -= offset
+        self.mods.append('Removing offset discrepency of ADWin compared to'
+                         ' Lakeshore. Discrepency is {:.2f} mK'
+                         .format(offset*1000))
 
 
 def main(argv=None):

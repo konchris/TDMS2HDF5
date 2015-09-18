@@ -516,7 +516,6 @@ class Presenter(object):
         """
         fname = '.'.join(self.fileName.split('.')[:-1]) + '.h5'
 
-
         baseDir = self.baseDir.replace('raw-data', 'data')
 
         if not os.path.exists(baseDir):
@@ -591,8 +590,12 @@ class Presenter(object):
                 df_register[device_df_key][chan_name] = chan_obj.data
 
         for k, v in df_register.items():
-            # print('put({}, df)'.format(k))
+            # print(k, self.channelRegistry.mods)
             hdfStore.put(k, v, format='table')
+            hdfStore.get_storer(k).attrs.mods = self.channelRegistry.mods
+            mods = hdfStore.get_storer(k).attrs.mods
+            # for mod in mods:
+            #     print('\t', mod)
 
         # Process 5.3 Write data to file
         hdfStore.close()
