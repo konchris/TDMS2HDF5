@@ -863,7 +863,7 @@ class ChannelRegistry(dict):
             chandISample = self['proc/dISample']
             chandVSample = self['proc/dVSample']
         else:
-            print('No conditions met to create dRSample')
+            # print('No conditions met to create dRSample')
             return
 
         # Calculate the data
