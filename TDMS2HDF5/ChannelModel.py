@@ -682,9 +682,10 @@ class ChannelRegistry(dict):
 
         try:
             self.removeADWinTempOffset()
-        except KeyError as err:
-            print('KeyError when trying to remove ADWin temp offset')
-            print(err)
+        except KeyError:  # as err:
+            # print('KeyError when trying to remove ADWin temp offset')
+            # print(err)
+            pass
 
     def add_V(self):
         """Add the processed channel 'V' derived from 'VSample'.
@@ -886,7 +887,7 @@ class ChannelRegistry(dict):
         """
         # dRSample depends on dISample and dVSample. Try to use the raw data.
         # Fall back on the processed data.
-        print('Going to try to add dISample')
+        # print('Going to try to add dISample')
 
         if (('proc01/all/dISamplex' and 'proc01/all/dISampley') in self.keys()
             and
@@ -894,7 +895,7 @@ class ChannelRegistry(dict):
             chandISamplex = self['proc01/all/dISamplex']
             chandISampley = self['proc01/all/dISampley']
         else:
-            print('Failed')
+            # print('Failed')
             return
 
         # Calculate the data
@@ -917,9 +918,10 @@ class ChannelRegistry(dict):
         'dVSample'
 
         """
-        # dRSample depends on dISample and dVSample. Try to use the proc01 data.
+        # dRSample depends on dISample and dVSample. Try to use the proc01
+        # data.
         # Fall back on the processed data.
-        print('Going to try to add dVSample')
+        # print('Going to try to add dVSample')
 
         if (('proc01/all/dVSamplex' and 'proc01/all/dVSampley') in self.keys()
             and
@@ -927,7 +929,7 @@ class ChannelRegistry(dict):
             chandVSamplex = self['proc01/all/dVSamplex']
             chandVSampley = self['proc01/all/dVSampley']
         else:
-            print('Failed')
+            # print('Failed')
             return
 
         # Calculate the data
@@ -1064,7 +1066,7 @@ class ChannelRegistry(dict):
         """
         for key in ['proc01/IPS/Magnetfield', 'proc01/ADWin/Time_m']:
             if key not in self.keys():
-                print('{k} data is not present. Cannot add B.'.format(k=key))
+                # print('{k} data is not present. Cannot add B.'.format(k=key))
                 return
 
         magnetfield_array = self['proc01/IPS/Magnetfield'].data
@@ -1101,7 +1103,7 @@ class ChannelRegistry(dict):
 
     def removeADWinTempOffset(self):
         """Remove the small offset in ADWin's recorded temperature."""
-        print("Remove the offset on ADWin's temperature reading")
+        # print("Remove the offset on ADWin's temperature reading")
 
         if 'proc01/ADWin/TSample_AD' in self.keys():
             TADkey = 'proc01/ADWin/TSample_AD'
@@ -1121,9 +1123,8 @@ class ChannelRegistry(dict):
         lk_mean = self[TLKkey].data.mean()
 
         offset = ad_mean - lk_mean
-        print("The offset is: {0:.2f} - {1:.2f} = {2:.2f}".format(ad_mean*1000,
-                                                                  lk_mean*1000,
-                                                                  offset*1000))
+        # print("The offset is: {0:.2f} - {1:.2f} = {2:.2f}"
+        #       .format(ad_mean*1000, lk_mean*1000, offset*1000))
         self[TADkey].data -= offset
         self.mods.append('Removing offset discrepency of ADWin compared to'
                          ' Lakeshore. Discrepency is {:.2f} mK'
