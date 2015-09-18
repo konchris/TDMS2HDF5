@@ -138,12 +138,14 @@ class Channel(object):
         Set the time step of the channel measurement
     getTimeStep()
         Return the time step of the measurement (numpy.timedelta64)
+    getElapsedTimeTrack()
+        Return the elapsed time track of the measurement (numpy.ndarry)
     getTimeTrack()
         Return the time track of the channel measurement (numpy.ndarray)
-    getElapsedTime()
-        Return the elapsed time track of the measurement (numpy.ndarry)
     toggleWrite()
         Toggle's the channels write_to_file value
+    getDevice()
+        Return the name of the device that recorded the channel.
 
     See Also
     --------
@@ -348,6 +350,12 @@ class ChannelRegistry(dict):
         The start time recorded in the TDMS file's properties
     file_end_time :  numpy.datetime64
         The end time recorded in the TDMS file's properties
+    devices : list
+        A list of strings, each string is the name of a measurement device from
+        which data in the channel registry was recorded.
+    mods : list
+        A list of strings, each string describing a modification or processing
+        step carried out on data in the channel registry.
 
     Methods
     -------
@@ -371,13 +379,26 @@ class ChannelRegistry(dict):
     add_dRSample():
         Add the processed channel 'dRSample' derived from 'dVSample' and
         'dISample'
+    add_dISample():
+        Add the processed channel 'dRSample' derived from 'dVSample' and
+        'dISample'
+    add_dVSample():
+        Add the processed channel 'dRSample' derived from 'dVSample' and
+        'dVSample'
     add_dR():
         Add the processed channel 'dR' derived from 'dV' and 'dI'
+    add_TSample_AD():
+        Convert Lakeshore output voltage to Temperature
     addTransportChannels():
         Add all of the transport channels
     addTimeTracks():
         Add the time tracks for each device.
-
+    addInterpolatedB():
+        Add the interpolated BField data to ADWin device.
+    addTemperatureMode():
+        Add the mode of the temperature during the measurement to ADWin device.
+    removeADWinTempOffset():
+        Remove the small offset in ADWin's recorded temperature.
     """
 
     def __init__(self):
@@ -754,14 +775,17 @@ class ChannelRegistry(dict):
         chandI.setTimeStep(chandISample.getTimeStep())
         # Add the channel to the registry
         self.addChannel(chandI)
+        self.mods.append('Adding amplifier-adjusted differential'
+                         ' sample current')
 
     def add_R(self):
         """Add the processed channel 'R' derived from 'V' and 'I'
 
         """
-        # R depends on V and I try and get the proc01 (calculated by ADWin) data
-        # and fall back on the processed data
-        if ('proc01/I' and 'proc01/V') in self.keys() and 'proc01/R' not in self.keys():
+        # R depends on V and I try and get the proc01 (calculated by ADWin)
+        # data and fall back on the processed data
+        if ('proc01/I' and 'proc01/V') in self.keys() and \
+           'proc01/R' not in self.keys():
             chanI = self['proc01/I']
             chanV = self['proc01/V']
         elif ('proc/I' and 'proc/V') in self.keys():
@@ -789,7 +813,8 @@ class ChannelRegistry(dict):
         """
         # RSample depends on ISample and VSample. Try to get the values from
         # the proc01 data. Fall back to the processed data
-        if (('proc01/ADWin/ISample' and 'proc01/ADWin/VSample') in self.keys() and
+        if (('proc01/ADWin/ISample' and 'proc01/ADWin/VSample') in self.keys()
+            and
            (('proc01/ADWin/RSample'and 'proc01/ADWin/R') not in self.keys())):
             chanISample = self['proc01/ADWin/ISample']
             chanVSample = self['proc01/ADWin/VSample']
@@ -802,7 +827,8 @@ class ChannelRegistry(dict):
         # Calculate the data
         rMeasArray = chanVSample.data/chanISample.data
         # Create the channel
-        chanRSample = Channel('ADWin/RSample', device='ADWin', meas_array=rMeasArray)
+        chanRSample = Channel('ADWin/RSample', device='ADWin',
+                              meas_array=rMeasArray)
         # Set the parent
         chanRSample.setParent('proc01')
         # Set the start time and time interval based on ISample's values
@@ -820,7 +846,7 @@ class ChannelRegistry(dict):
         # Fall back on the processed data.
         if (('proc01/ADWin/dISample' in self.keys()) and
             ('proc01/ADWin/dVSample' in self.keys()) and
-            ('proc01/ADWin/dRSample' not in self.keys())):
+           ('proc01/ADWin/dRSample' not in self.keys())):
             # print('Condition 01 met')
             chandISample = self['proc01/ADWin/dISample']
             chandVSample = self['proc01/ADWin/dVSample']

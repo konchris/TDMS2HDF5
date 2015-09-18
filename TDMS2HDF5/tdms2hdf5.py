@@ -102,6 +102,8 @@ class Presenter(object):
         The presenter's channel registry.
     fileOpen()
         Open a data file to view.
+    loadFromCLI()
+        Open a data file whose name was passed as an argument.
     populateSelectors()
         Populate the x and y selectors with the names of the available
         channels.
@@ -127,6 +129,16 @@ class Presenter(object):
         Export the channels to a csv file.
     exprtToHDF5()
         Export the channels to a HDF5 file using h5py.
+    addFileToGoodList()
+        Add the file name to a list of usable measurement files
+    addB()
+        Add BField Data to ADWin.
+    addTm()
+        Add Tmode Data to ADWin.
+    addRes()
+        Add resistance and supporting channels to ADWin.
+    addTSample_AD()
+        Add TSample_AD and supporting channels to ADWin.
 
     """
 
@@ -362,8 +374,6 @@ class Presenter(object):
             self.ySelected_root = "{0}/{1}".format(grandParentName, parentName)
             # print('The Y-Channel {0} was selected.'.format(self.ySelected))
 
-            self.populateOffsetEditor()
-            self.populateAttributeViewer()
             self.plotSelection()
             channelObj = self.channelRegistry[self.ySelected]
             self.view.saveChannelCheckBox.setChecked(channelObj.write_to_file)
@@ -386,19 +396,6 @@ class Presenter(object):
         # print('The X-Channel {0} was selected.'.format(self.xSelected))
 
         self.plotSelection()
-
-    def populateOffsetEditor(self):
-        """(Coming soon!)Display the offset in the offset editor.
-
-        """
-        pass
-
-    def populateAttributeViewer(self):
-        """(Coming soon!)Display the channel's attributes in the attribute
-        viewer.
-
-        """
-        pass
 
     def plotSelection(self):
         """Plot the data channels indicated by xSelected and ySelected.
