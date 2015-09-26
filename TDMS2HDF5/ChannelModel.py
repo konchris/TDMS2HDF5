@@ -1014,8 +1014,7 @@ class ChannelRegistry(dict):
         TSample_AD.setStartTime(VRuO.getStartTime())
         TSample_AD.setTimeStep(VRuO.getTimeStep())
         self.addChannel(TSample_AD)
-        self.mods.append('Adding amplifier-adjusted differential sample'
-                         ' resistance')
+        self.mods.append('Adding sample temperature based on TRuO or VRuO')
 
     def addTransportChannels(self):
         """Add all of the transport channels
@@ -1084,22 +1083,6 @@ class ChannelRegistry(dict):
         self.addChannel(newChan)
         self.mods.append('Adding magnetfield channel to ADWin interpolated'
                          ' IPS data')
-
-    def addTemperatureMode(self):
-        """Add the mode of the temperature during the measurement to ADWin device.
-
-        """
-
-        t_mode = stats.mode(self['proc01/ADWin/TSample_AD'].data)[0][0]
-        t_adjust = self['proc01/ADWin/TSample_AD'].data - t_mode
-
-        newChan = Channel('ADWin/Tm', 'ADWin', t_adjust)
-        newChan.setParent('proc01')
-
-        # channelKey = "{parent}/{cName}".format(parent=newChan.getParent(),
-        #                                            cName=newChan.getName())
-
-        self.addChannel(newChan)
 
     def removeADWinTempOffset(self):
         """Remove the small offset in ADWin's recorded temperature."""
