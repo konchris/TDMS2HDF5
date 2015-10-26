@@ -1,6 +1,5 @@
-from setuptools import find_packages
+from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
-from cx_Freeze import setup, Executable
 import io
 import codecs
 import os
@@ -9,9 +8,6 @@ import sys
 import TDMS2HDF5
 
 here = os.path.abspath(os.path.dirname(__file__))
-
-application_title = "TDMS2HDF5"
-main_python_file = "TDMS2HDF5/tdms2hdf5.py"
 
 def read(*filenames, **kwargs):
     encoding = kwargs.get('encoding', 'utf-8')
@@ -35,12 +31,8 @@ class PyTest(TestCommand):
         errcode = pytest.main(self.test_args)
         sys.exit(errcode)
 
-base = None
-if sys.platform == 'win32':
-    base = 'Win32GUI'
-
 setup(
-    name=application_title,
+    name='TDMS2HDF5',
     version=TDMS2HDF5.__version__,
     url='http://github.com/konchris/TDMS2HDF5/',
     license='GNU GPLv2',
@@ -72,8 +64,6 @@ setup(
             'tdms2hdf5 = TDMS2HDF5.tdms2hdf5:main'
             ]
         },
-    #options = {"build_exe": {
-    executables=[Executable(main_python_file, base=base)],
     author_email='github@konchris.de',
     description="View National Instruments' TDMS files and export to HDF5",
     long_description=long_description,
