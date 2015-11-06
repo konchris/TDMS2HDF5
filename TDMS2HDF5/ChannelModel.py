@@ -395,8 +395,6 @@ class ChannelRegistry(dict):
         Add the time tracks for each device.
     addInterpolatedB():
         Add the interpolated BField data to ADWin device.
-    addTemperatureMode():
-        Add the mode of the temperature during the measurement to ADWin device.
     removeADWinTempOffset():
         Remove the small offset in ADWin's recorded temperature.
     """
@@ -1084,6 +1082,29 @@ class ChannelRegistry(dict):
         self.addChannel(newChan)
         self.mods.append('Adding magnetfield channel to ADWin interpolated'
                          ' IPS data')
+
+    def removeMagetfieldZeros(self):
+        """Remove the zero spikes in the magnetfield signal from the IPS
+
+        """
+
+        magfield_key = 'proc01/IPS/Magnetfield'
+        magtime_key = 'proc01/IPS/Time_m'
+
+        if magfield_key not in self.keys():
+            return
+
+        # First deal with IPS/Time_m before writing over the Magnetfield data
+        self[magtime_key].data = self[magtime_key]\
+            .data[np.abs(self[magfield_key].data) > 0]
+        self[magtime_key].time = self[magtime_key]\
+            .time[np.abs(self[magfield_key].data) > 0]
+
+        # First deal with Magnetfield time before writing over the data
+        self[magfield_key].time = self[magfield_key]\
+            .time[np.abs(self[magfield_key].data) > 0]
+        self[magfield_key].data = self[magfield_key]\
+            .data[np.abs(self[magfield_key].data) > 0]
 
     def removeADWinTempOffset(self):
         """Remove the small offset in ADWin's recorded temperature."""

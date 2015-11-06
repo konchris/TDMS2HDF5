@@ -234,15 +234,16 @@ class Presenter(object):
         channelAddBAction = self.view.createAction("Add B to ADWin [&B]",
                                                    self.addB,
                                                    "Ctrl+B", tip='Add B')
-        channelAddTmodeAction = self.view.createAction(r"Add $T_{mode}$ to "
-                                                       "ADWin",
-                                                       self.addTm,
-                                                       tip=r"Add $T_{mode}$")
         channelAddResistanceAction = self.view.createAction("Add Resistances "
                                                             "to ADWin [&A]",
                                                             self.addRes,
                                                             "Ctrl+A",
                                                             tip="Add R and dR")
+        channelRemBZeros = self.view.createAction("Remove [&Z]eros from "
+                                                  "IPS/Magnetfield",
+                                                  self.remZ,
+                                                  "Ctrl+Z",
+                                                  tip="Remove zero spikes")
         channelAddTSample_AD = self.view.createAction("Add TSample_AD "
                                                       "to ADWin [&T]",
                                                       self.addTSample_AD,
@@ -257,10 +258,10 @@ class Presenter(object):
 
         # Add the 'Channels'
         self.channelAddMenu = self.view.menuBar().addMenu("&Add Channel")
-        self.view.addActions(self.channelAddMenu, (channelAddBAction,
-                                                   channelAddTmodeAction,
+        self.view.addActions(self.channelAddMenu, (channelRemBZeros,
+                                                   channelAddBAction,
                                                    channelAddResistanceAction,
-                                                   channelAddTSample_AD))
+                                                   channelAddTSample_AD,))
 
         # Connections
         self.view.ySelectorView.clicked.connect(self.newYSelection)
@@ -717,6 +718,13 @@ class Presenter(object):
         self.channelRegistry.addInterpolatedB()
 
         self.populateSelectors()
+
+    def remZ(self):
+        """Add BField Data to ADWin."""
+
+        self.channelRegistry.removeMagetfieldZeros()
+
+        #self.populateSelectors()
 
     def addTm(self):
         """Add Tmode Data to ADWin."""
