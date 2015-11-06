@@ -458,6 +458,7 @@ class ChannelRegistry(dict):
 
         """
         self.clear()
+        self.__init__()
 
         if os.path.exists(filename):
             extention = filename.split('.')[-1]
