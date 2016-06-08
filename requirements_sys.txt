@@ -1,0 +1,10 @@
+libpng12-dev
+libfreetype6-dev
+libhdf5-dev
+libncurses5-dev
+libblas-dev
+liblapack-dev
+libatlas-base-dev
+gfortran
+libagg-dev
+libbz2-dev
