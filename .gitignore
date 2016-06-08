@@ -60,3 +60,4 @@ target/
 # Emacs backups
 *~
 *.tdms*
+*.h5
