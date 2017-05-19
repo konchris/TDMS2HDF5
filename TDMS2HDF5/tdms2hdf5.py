@@ -25,8 +25,9 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 
-# PyQt4
-from PyQt4.QtGui import (QApplication, QFileDialog, QKeySequence, QMessageBox)
+# PyQt5
+from PyQt5.QtWidgets import (QApplication, QFileDialog, QMessageBox)
+from PyQt5.QtGui import QKeySequence
 
 # Import our own modules
 from TDMS2HDF5.view import (MyMainWindow, AXESLABELS)
@@ -279,8 +280,8 @@ class Presenter(object):
                    "TDMS files (*.tdms);;"
                    "CSV Files (*.csv *.dat)")
 
-        fname = QFileDialog.getOpenFileName(self.view, "Open a TDMS File",
-                                            self.baseDir, formats)
+        fname, _ = QFileDialog.getOpenFileName(self.view, "Open a TDMS File",
+                                               self.baseDir, formats)
 
         if fname:
             self.channelRegistry.loadFromFile(fname)
@@ -757,7 +758,7 @@ def main(argv=None):
 
     args = parser.parse_args()
 
-    app = QApplication(argv)
+    app = QApplication(sys.argv)
     app.setOrganizationName("TDMS2HDF5")
     app.setApplicationName("TDMS-2-HDF5 Converter")
 

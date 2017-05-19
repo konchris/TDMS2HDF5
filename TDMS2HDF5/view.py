@@ -15,15 +15,15 @@ __status__ = "Development"
 
 import sys
 
-from PyQt4.QtCore import (SIGNAL)
-from PyQt4.QtGui import (QApplication, QSizePolicy, QMainWindow,
-                         QAction, QIcon)
+# from PyQt5.QtCore import (SIGNAL)
+from PyQt5.QtWidgets import (QApplication, QSizePolicy, QMainWindow, QAction)
+from PyQt5.QtGui import QIcon
 import matplotlib as mpl
 from tzlocal import get_localzone
 from matplotlib.figure import Figure
-from matplotlib.backends.backend_qt4agg import (FigureCanvasQTAgg as
+from matplotlib.backends.backend_qt5agg import (FigureCanvasQTAgg as
                                                 FigureCanvas)
-from matplotlib.backends.backend_qt4agg import (NavigationToolbar2QT as
+from matplotlib.backends.backend_qt5agg import (NavigationToolbar2QT as
                                                 NavigationToolbar)
 import seaborn as sns
 
@@ -194,7 +194,8 @@ class MyMainWindow(QMainWindow, MainWindow):
             action.setStatusTip(tip)
         # Connect it to a signal
         if slot is not None:
-            self.connect(action, SIGNAL(signal), slot)
+            action.triggered.connect(slot)
+            # self.connect(action, SIGNAL(signal), slot)
         # Make it checkable
         if checkable:
             action.setCheckable(True)

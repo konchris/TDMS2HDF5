@@ -15,8 +15,9 @@ __maintainer__ = "Christopher Espy"
 __email__ = "christopher.espy@uni-konstanz.de"
 __status__ = "Development"
 
-from PyQt4.QtCore import (QAbstractItemModel, QModelIndex, Qt)
-from PyQt4.QtGui import (QApplication, QTreeView, QStringListModel)
+from PyQt5.QtCore import (QAbstractItemModel, QModelIndex, Qt)
+from PyQt5.QtWidgets import (QApplication, QTreeView)
+from PyQt5.QtCore import QStringListModel
 
 from TDMS2HDF5.ChannelModel import ChannelRegistry
 
