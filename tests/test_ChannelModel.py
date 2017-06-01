@@ -22,10 +22,8 @@ import numpy as np
 from TDMS2HDF5.ChannelModel import Channel, ChannelRegistry
 
 DATADIR = '/home/chris/Documents/PhD/root/raw-data/'
-DATADIR = os.path.join('Z:', 'root', 'raw-data')
 
-TESTFILE01 = os.path.join(DATADIR, "sio2al149/cryo_measurement/2014-02-14/2014-02-14T14-39-08-First-Cooldown.tdms")
-TESTFILE02 = os.path.join(DATADIR, "fonin_heliox/2014-09-22-Testing-Run/2014-09-23T09-05-59-Pump-to-1.6K.tdms")
+TESTFILE01 = os.path.join(DATADIR, "sio2al149/cryo_measurements/2014-02-14/2014-02-14T14-39-08-First-Cooldown.tdms")
 
 class TestChannel(unittest.TestCase):
     """Tests the channel object used by the model."""
@@ -38,7 +36,7 @@ class TestChannel(unittest.TestCase):
         self.assertIsInstance(self.channel.name, str)
 
     def test_channel_has_parent_group(self):
-        self.assertEqual(self.channel.parent, 'raw', 'Parent group is not raw')
+        self.assertEqual(self.channel.parent, 'proc01', 'Parent group is not proc01')
 
     def test_set_get_parent_group(self):
         current_parent = self.channel.getParent()
@@ -82,10 +80,6 @@ class TestChannelRegistry(unittest.TestCase):
 
     def test_load_clear_load_from_file(self):
         self.channel_registry.loadFromFile(TESTFILE01)
-        for k, v in self.channel_registry.items():
-            self.assertIsInstance(k, str)
-            self.assertIsInstance(v, Channel)
-        self.channel_registry.loadFromFile(TESTFILE02)
         for k, v in self.channel_registry.items():
             self.assertIsInstance(k, str)
             self.assertIsInstance(v, Channel)
