@@ -18,3 +18,8 @@ pytest>=2.6.3
 seaborn>=0.4.0
 Sphinx>=1.2.3
 tzlocal>=1.1.2
+jedi
+importmagic
+autopep8
+yapf
+flake8
