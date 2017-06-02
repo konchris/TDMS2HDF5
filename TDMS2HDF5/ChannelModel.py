@@ -165,7 +165,7 @@ class Channel(object):
         self.data = meas_array
         self.time = np.array([])
         self.elapsed_time = np.array([])
-        self.parent = None
+        self.parent = 'proc01'
         self.unit = 'n.a.'
         self.write_to_file = True
 
@@ -700,7 +700,7 @@ class ChannelRegistry(dict):
         # Create the channel
         chanV = Channel('V', device='ADWin', meas_array=vMeasArray)
         # Set the parent
-        chanV.setParent('proc')
+        chanV.setParent('proc01')
         # Set the start time and time interval based on VSample's values
         chanV.setStartTime(chanVSample.getStartTime())
         chanV.setTimeStep(chanVSample.getTimeStep())
@@ -725,7 +725,7 @@ class ChannelRegistry(dict):
         # Create the channel
         chandV = Channel('dV', device='ADWin', meas_array=dVMeasArray)
         # Set the parent
-        chandV.setParent('proc')
+        chandV.setParent('proc01')
         # Set the start time and time interval based on dVSample's values
         chandV.setStartTime(chandVSample.getStartTime())
         chandV.setTimeStep(chandVSample.getTimeStep())
@@ -748,7 +748,7 @@ class ChannelRegistry(dict):
         # Create the channel
         chanI = Channel('I', device='ADWin', meas_array=iMeasArray)
         # Set the parent
-        chanI.setParent('proc')
+        chanI.setParent('proc01')
         # Set the start time and time interval based on ISample's values
         chanI.setStartTime(chanISample.getStartTime())
         chanI.setTimeStep(chanISample.getTimeStep())
@@ -774,7 +774,7 @@ class ChannelRegistry(dict):
         # Create the channel
         chandI = Channel('dI', device='ADWin', meas_array=dIMeasArray)
         # Set the parent
-        chandI.setParent('proc')
+        chandI.setParent('proc01')
         # Set the start time and time interval from dISample's values
         chandI.setStartTime(chandISample.getStartTime())
         chandI.setTimeStep(chandISample.getTimeStep())
@@ -804,7 +804,7 @@ class ChannelRegistry(dict):
         # Create the channel
         chanR = Channel('R', device='ADWin', meas_array=rMeasArray)
         # Set the parent
-        chanR.setParent('proc')
+        chanR.setParent('proc01')
         # Set the start time and time interval based on I's values'
         chanR.setStartTime(chanI.getStartTime())
         chanR.setTimeStep(chanI.getTimeStep())
@@ -967,7 +967,7 @@ class ChannelRegistry(dict):
         # Create the channel
         chandR = Channel('dR', device='ADWin', meas_array=dRMeasArray)
         # Set the parent
-        chandR.setParent('proc')
+        chandR.setParent('proc01')
         # Set the start time and time interval based on dI's values
         chandR.setStartTime(chandI.getStartTime())
         chandR.setTimeStep(chandI.getTimeStep())

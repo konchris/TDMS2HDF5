@@ -23,7 +23,10 @@ from TDMS2HDF5.ChannelModel import Channel, ChannelRegistry
 
 DATADIR = '/home/chris/Documents/PhD/root/raw-data/'
 
-TESTFILE01 = os.path.join(DATADIR, "sio2al149/cryo_measurements/2014-02-14/2014-02-14T14-39-08-First-Cooldown.tdms")
+TESTFILE01 = os.path.join(DATADIR, 'sio2al149', 'cryo_measurements',
+                          '2014-02-14',
+                          '2014-02-14T14-39-08-First-Cooldown.tdms')
+
 
 class TestChannel(unittest.TestCase):
     """Tests the channel object used by the model."""
@@ -36,17 +39,21 @@ class TestChannel(unittest.TestCase):
         self.assertIsInstance(self.channel.name, str)
 
     def test_channel_has_parent_group(self):
-        self.assertEqual(self.channel.parent, 'proc01', 'Parent group is not proc01')
+        print(self.channel.parent)
+        self.assertEqual(self.channel.parent, 'proc01',
+                         'Parent group is not proc01')
 
     def test_set_get_parent_group(self):
         current_parent = self.channel.getParent()
         self.channel.setParent('proc')
-        self.assertNotEqual(self.channel.getParent(), current_parent, 'Parent group is unchanged')
+        self.assertNotEqual(self.channel.getParent(), current_parent,
+                            'Parent group is unchanged')
 
     def test_set_get_name(self):
         current_name = self.channel.getName()
         self.channel.setName('TestChannel02')
-        self.assertNotEqual(self.channel.getName(), current_name, 'Name is unchanged')
+        self.assertNotEqual(self.channel.getName(), current_name,
+                            'Name is unchanged')
 
     def test_set_get_starttime_now(self):
         now = np.datetime64(datetime.now())
@@ -64,6 +71,7 @@ class TestChannel(unittest.TestCase):
         current_write_state = self.channel.write_to_file
         self.channel.toggleWrite()
         self.assertNotEqual(self.channel.write_to_file, current_write_state)
+
 
 class TestChannelRegistry(unittest.TestCase):
 
@@ -90,6 +98,6 @@ class TestChannelRegistry(unittest.TestCase):
     def test_add_diff_resistance(self):
         pass
 
+
 if __name__ == "__main__":
     unittest.main()
-
